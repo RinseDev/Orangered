@@ -107,7 +107,7 @@ static BOOL isInitialized = NO;
 -(void)_buttonClicked:(UIAlertButton *)clicked{
 	%orig;
 
-	if([[clicked title] isEqualToString:@"Now"] && ([[self bodyText] rangeOfString:@"Orangered" options:nil].location != NSNotFound)){
+	if([[clicked title] isEqualToString:@"Now"] && ([[self message] rangeOfString:@"Orangered" options:nil].location != NSNotFound)){
 		[ORLogger log:@"user sent respring request from UIAlertView!" fromSource:@"Orangered.xm"];
 		[[ORProvider sharedProvider] respring];
 	}

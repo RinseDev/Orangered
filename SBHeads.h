@@ -42,19 +42,3 @@
 -(id)bodyText;
 -(id)title;
 @end
-
-/*
-@interface BBSectionInfo : NSObject
-@property(assign, nonatomic) unsigned pushSettings;
-@property(assign, nonatomic) unsigned notificationCenterLimit;
-+(id)defaultSectionInfoForType:(unsigned)type;
--(id)_pushSettingsDescription;
-@end
-
-@interface BBServer : NSObject
--(id)_defaultSectionInfoForDataProvider:(id)dataProvider;
--(void)settingsGateway:(id)gateway setSectionInfo:(id)info forSectionID:(id)sectionID;
--(void)settingsGateway:(id)gateway setOrderedSectionIDs:(id)ids;
--(void)settingsGateway:(id)gateway setSectionOrderRule:(unsigned)rule;
--(void)settingsGateway:(id)gateway getSectionInfoWithHandler:(id)handler;
-@end*/

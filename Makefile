@@ -12,5 +12,4 @@ Orangered_LDFLAGS = -Wlactivator -Ltheos/lib
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 SUBPROJECTS += ORPreferences
-SUBPROJECTS += ORListener
 include $(THEOS_MAKE_PATH)/aggregate.mk

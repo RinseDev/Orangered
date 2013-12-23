@@ -204,7 +204,7 @@ static NSDictionary *given;
 			if([messages count] > 1){
 				newBulletin.date = [NSDate date];
 				newBulletin.title = name;
-				newBulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", [messages count]];
+				newBulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)[messages count]];
 			}//end if
 
 			else{
