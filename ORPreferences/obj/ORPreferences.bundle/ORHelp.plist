@@ -1,0 +1,156 @@
+		<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>How does Orangered work?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>585</integer>
+			<key>label</key>		<string>Orangered's retrieval system is comparable to Mail's "Fetch" service. Unfortunately, Orangered cannot support ideal "Push" notifications, as that would require an expensive and robust server infrastructure (which may come with overall success of the tweak), but this is as close as can be. The lifecycle of the tweak is straightforward— it will sit idle, consuming no battery life or memory while between intervals, and only use minimal power when searching for messages. Due to Reddit's broad API, it isn't possible to pull only select messages from a user's inbox; when searching for new messages, Orangered will pull the entire unread data (reddit.com/message/unread.json), and notify you accordingly. We will NEVER store or use your information in any way, and refuse to connect to any servers except for Reddit's official databases. If you have any privacy concerns, please don't hesitate to contact using the buttons in the main Settings area.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Does Orangered affect battery life?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>160</integer>
+			<key>label</key>		<string>As noted in the answer above— minimally. It's impossible to avoid some battery usage when gathering information from a server, but Orangered tries to keep things as basic as possible, optimizing memory and battery power.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Why do I have to respring to save?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>330</integer>
+			<key>label</key>		<string>Sadly, respringing is the most reliable way to confirm a stable, accurate environment for Orangered. However, I'm working as diligently as possible to remove this requirement for future builds. Previous attempts at Orangered had recurring issues with incorrect inbox retrievals, and crashes when deleting your primary Reddit client. Don't worry— I'm even more bothered by this than you. Luckily, we use a graceful respring method, so your Usage stats should be retained across resprings.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Can I change the way Orangered alerts work?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>255</integer>
+			<key>label</key>		<string>Yes! Orangered cleverly adds a section for your Reddit client in the Notifications area of Settings. You can alter things as you want from there. If you wish to change the notification sound, Orangered is fully compatible with PushTone from Cydia. However, if you have an idea for a superior alternative you'd like implemented by default, please send me your requests using Support &amp; Feedback immediately!</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>How do I set Minute Intervals?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>195</integer>
+			<key>label</key>		<string>The Minute Intervals toggle in the "Changes" section of the Settings changes the function of the interval field. As of the current build, the placeholder stays at "1 hour," but the default value is now "60 minutes." Put in any minute value you want, and see it work!</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>What does "Always Notify" mean?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>150</integer>
+			<key>label</key>		<string>Always Notify allows you to be notified every time Orangered checks your inbox. Even if you have an empty inbox, or you've already been notified of a message, Orangered will send you a banner saying so.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Why do I keep getting "Reddit problem!"s?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>205</integer>
+			<key>label</key>		<string>Reddit problems are messages caught by Orangered that reflect a problem with Reddit's login or retrieval services. Orangered can't do anything about these issues, and is in no way responsible for them. If you put in the wrong password, make sure to quickly change it so you don't get a "you're doing that too much" error!</string>
+		</dict>
+
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>How does Orangered know what app to use?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>215</integer>
+			<key>label</key>		<string>Orangered uses a simple, objective algorithm to decide which Reddit client to use after every respring. Very simply: Orangered will cycle through a check for each Reddit client supported (in the following order: Alien Blue, Karma, upvote, iAlien, amrc, Redditor), and will stop once it detects an installation of one of them. If it doesn't find any, it'll default to Safari.</string>
+		</dict>
+
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Can you make Orangered open to my inbox in X?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>310</integer>
+			<key>label</key>		<string>Sadly, even though I agree that this would be a useful feature, it's unlikely to be implemented. To perform this function, I'd have to mess around with the internals of each app, decompiling the "header" files (instructions that each section of app performs), and figuring out where to inject my code so that the inbox view opens. Although possible, not only would it be somewhat difficult (and require much more effort to support every Reddit client), it would also upset and be disrespectful to the developers of each. Sorry!</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Can you add/change X about Orangered?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>100</integer>
+			<key>label</key>		<string>Of course! Let me know your ideas right away using Support &amp; Feedback. I'm also highly active on Twitter, if you want direct and casual responses.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Is it true that there are easter eggs?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>65</integer>
+			<key>label</key>		<string>Yep! Let me know if you find them, and I'll give you a treat.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Are you working on a Reddit client to go along with Orangered?</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSTextViewCell</string>
+			<key>cellClass</key>	<string>ORHelpCell</string>
+			<key>height</key> 		<integer>35</integer>
+			<key>label</key>		<string>Yes! How'd you know?</string>
+		</dict>
+	</array>
+	<key>title</key>	<string>Help</string>
+</dict>
+</plist>

@@ -1,0 +1,13 @@
+Package: com.insanj.orangered
+Name: Orangered
+Depends: firmware (>= 5.0), mobilesubstrate
+Version: 1.1~beta3
+Architecture: iphoneos-arm
+Description: Reddit push notifications.
+ In this release: optimized the code all around, added retention of Timers between resprings (doesn't check every respring anymore).
+ Coming soon: account switching, multiple accounts, safari fix?
+Homepage: http://insanj.com/orangered
+Maintainer: insanj <me@insanj.com>
+Author: Julian "insanj" Weiss
+Section: Tweaks
+Icon: file:///Library/PreferenceBundles/ORPreferences.bundle/icon@2x.png
