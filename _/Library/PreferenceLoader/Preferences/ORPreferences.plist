@@ -1,0 +1,10 @@
+{
+    entry = {
+		bundle = ORPreferences;
+		cell = PSLinkCell;
+		detail = ORPreferencesListController;
+		icon = icon.png;
+		isController = 1;
+		label = "Orangered";
+    };
+}

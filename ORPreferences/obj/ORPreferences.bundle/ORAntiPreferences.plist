@@ -7,7 +7,7 @@
 
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key>		<string>Details</string>
+			<key>label</key>		<string>Reddit Validation</string>
 		</dict>
 
 		<dict>
@@ -50,8 +50,8 @@
 
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key> 		<string>More</string>
-			<key>footerText</key> 	<string>Toggle Badges, Banners, and Sounds in Notifications.</string>
+			<key>label</key> 		<string>Settings</string>
+			<key>footerText</key> 	<string>Toggle Badges, Banners, and Sounds in Notifications. Activator currently unsupported.</string>
 		</dict>
 
 		<dict>
@@ -96,12 +96,12 @@
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
 			<key>label</key> 		<string>Contact</string>
-			<key>footerText</key>	<string>Thanks for purchasing Orangered! You're running beta release 4 (1.1)</string>
+			<key>footerText</key>	<string>Thanks for using Orangered! You're running beta release 1 (1.1.1)</string>
 		</dict>
 
 		<dict>
 			<key>cell</key> 		<string>PSButtonCell</string>
-			<key>label</key> 		<string>   Support &amp; Feedback</string>
+			<key>label</key> 		<string>Support &amp; Feedback</string>
 			<key>icon</key> 		<string>mail.png</string>
 			<key>action</key> 		<string>mail</string>
 		</dict>
@@ -115,6 +115,7 @@
 
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>&#169; 2013 Julian Weiss</string>
 		</dict>
 
 		<dict>
@@ -129,15 +130,6 @@
 			<key>detail</key>		<string>ORHelpListController</string>
 			<key>isController</key>	<true/>
 			<key>label</key>		<string>Help</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSGroupCell</string>
-		</dict>
-
-		<dict>
-			<key>cellClass</key> 	<string>PeriwinkleCell</string>
-			<key>label</key> 		<string>&#169; 2013 Julian Weiss</string>
 		</dict>
 	</array>
 	<key>title</key>	<string>Orangered</string>

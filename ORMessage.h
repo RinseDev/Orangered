@@ -1,4 +1,3 @@
-
 @interface ORMessage : NSObject <NSCoding>
 
 @property (retain, nonatomic) NSString *subject;

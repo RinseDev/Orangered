@@ -7,11 +7,11 @@
 #import "CydiaSubstrate.h"
 #import "NWURLConnection.h"
 #import "BulletinBoard/BulletinBoard.h"
-#import "SBBulletinBannerController.h"
 
 #import "ORMessage.h"
 #import "ORLogger.h"
 #import "ORProvider.h"
+#import "SBHeads.h"
 
 @interface NSDistributedNotificationCenter : NSNotificationCenter
 @end

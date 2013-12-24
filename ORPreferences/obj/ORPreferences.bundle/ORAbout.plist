@@ -14,16 +14,14 @@
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
 			<key>label</key>		<string>@thekirbylover</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>2t</string>
+			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
 			<key>label</key>		<string>@aehmlo</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>2b</string>
+			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
@@ -36,24 +34,21 @@
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
 			<key>label</key>		<string>@mr_abbz</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>3t</string>
+			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
 			<key>label</key>		<string>@hizinfiz</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>3m</string>
+			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
 			<key>label</key>		<string>@teslief</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>3b</string>
+			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 		
@@ -72,43 +67,12 @@
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
 			<key>label</key>		<string>Hearts</string>
-			<key>footerText</key>	<string>&lt;3</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
 			<key>label</key>		<string>@sentry_nc</string>
 			<key>icon</key> 		<string>twitter.png</string>
-			<key>action</key>  		<string>twitter:</string>
-		</dict>
-
-
-		<dict>
-			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key>		<string>Beta All-Stars</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@eazter_eggz</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>3t</string>
-			<key>action</key>  		<string>twitter:</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@kevin_stallone</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>3m</string>
-			<key>action</key>  		<string>twitter:</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@keenerz</string>
-			<key>cellClass</key>	<string>ORGroupedCell</string>
-			<key>location</key>		<string>3b</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
@@ -123,16 +87,7 @@
 			<key>cell</key>			<string>PSGroupCell</string>
 			<key>label</key> 		<string>Coming Soon</string>
 			<key>alignment</key> 	<integer>1</integer>
-		</dict>
-
-		<dict>
-			<key>cellClass</key> 	<string>RequestCell</string>
-			<key>label</key> 		<string>User switching and multiple account support. Quick reply. Your wildest dreams: tap here to send me your request!</string>
-		</dict>
-
-
-		<dict>
-			<key>cell</key>			<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>User switching and multiple account support. Quick reply. Your wildest dreams.</string>
 		</dict>
 
 	</array>
