@@ -101,7 +101,6 @@ static NSDictionary *given;
 }
 
 -(void)dataProviderDidLoad{
-
 	if(!ran){
 		[logger log:@"tying up the strings for the bulletin sender, shouldn't notify..."];
 		ran = YES;

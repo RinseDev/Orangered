@@ -1,6 +1,5 @@
-//Orangered 1.1
+//Orangered 1.1.1
 //Created by Julian Weiss
-
 #import "SBHeads.h"
 
 #import "ORPuller.h"
@@ -21,13 +20,22 @@
 %end
 
 %hook BBServer
--(void)_loadAllDataProviderPluginBundles{
+-(void)_loadDataProvidersAndSettings{
 	%orig;
 
 	[ORLogger log:@"adding the Orangered notifier to the Notification Center..." fromSource:@"Orangered.xm"];
-	[self _addDataProvider:[ORProvider sharedProvider] sortSectionsNow:YES];
-}//end _loadAll
+	[self _addDataProvider:[ORProvider sharedProvider] forFactory:nil];
+}
+
+
+-(void)_addDataProvider:(id)arg1 forFactory:(id)arg2{
+	%orig(arg1, arg2);
+
+	NSLog(@"sniffed: %@ -- from %@", arg1, arg2);
+}
 %end
+
+
 
 /* Device Initializations and First Runs */
 %hook SBUIController

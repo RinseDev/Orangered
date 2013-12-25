@@ -4,11 +4,14 @@
 <dict>
 	<key>items</key>
 	<array>
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>Orangered was created with love by Julian (insanj) Weiss. The final version, however, couldn't have been possible without verious help from...</string>
+		</dict>
 
 		<dict>
-
 			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key>		<string>Development</string>
+			<key>label</key>		<string>Developers</string>
 		</dict>
 
 		<dict>
@@ -20,20 +23,38 @@
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@aehmlo</string>
+			<key>label</key>		<string>@Aehmlo</string>
 			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key>		<string>Testing &amp; Support</string>
-			<key>footerText</key>   <string>Thanks for pushing me to keep working, stay motivated, and never forget my peeps.</string>
+			<key>label</key>		<string>Creative Personnel</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@mr_abbz</string>
+			<key>label</key>		<string>@THARTMOVMNT</string>
+			<key>icon</key> 		<string>twitter.png</string>
+			<key>action</key>  		<string>twitter:</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSButtonCell</string>
+			<key>label</key>		<string>@Sentry_NC</string>
+			<key>icon</key> 		<string>twitter.png</string>
+			<key>action</key>  		<string>twitter:</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSGroupCell</string>
+			<key>label</key>		<string>Testers</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>			<string>PSButtonCell</string>
+			<key>label</key>		<string>@Mr_Abbz</string>
 			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
@@ -47,49 +68,21 @@
 
 		<dict>
 			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@teslief</string>
-			<key>icon</key> 		<string>twitter.png</string>
-			<key>action</key>  		<string>twitter:</string>
-		</dict>
-		
-		<dict>
-			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key>		<string>Sounds</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@thartmovmnt</string>
+			<key>label</key>		<string>@Teslief</string>
 			<key>icon</key> 		<string>twitter.png</string>
 			<key>action</key>  		<string>twitter:</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key>		<string>Hearts</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSButtonCell</string>
-			<key>label</key>		<string>@sentry_nc</string>
-			<key>icon</key> 		<string>twitter.png</string>
-			<key>action</key>  		<string>twitter:</string>
+			<key>label</key>		<string>Projects</string>
 		</dict>
 
 		<dict>
 			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key> 		<string>Special Thanks</string>
-			<key>alignment</key> 	<integer>1</integer>
-			<key>footerText</key> 	<string>To the entire /r/jailbreak community as a whole— thanks for being awesome, and I hope I was worth your upvotes (and more recently, your cash).</string>
+			<key>label</key>		<string>FDKeychain</string>
+			<key>footerText</key> 	<string>The MIT License (MIT)&#10;---------------------&#10;Copyright (c) 2012 Reid Main&#10;Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:&#10;&#10;The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.&#10;&#10;THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
 		</dict>
-
-		<dict>
-			<key>cell</key>			<string>PSGroupCell</string>
-			<key>label</key> 		<string>Coming Soon</string>
-			<key>alignment</key> 	<integer>1</integer>
-			<key>footerText</key> 	<string>User switching and multiple account support. Quick reply. Your wildest dreams.</string>
-		</dict>
-
 	</array>
 	<key>title</key>	<string>About</string>
 </dict>
