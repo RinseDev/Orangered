@@ -9,8 +9,7 @@
 #import "ORProvider.h"
 #import "ORLogger.h"
 
-//Creates a sharedProvider (GCD) for the ORProvider (what handles sending notifications).
-//This allows the currently living instance of ORProvider to be accessed from any class/process.
+/* Notification Providing and Notifiers */
 %hook SpringBoard
 %new +(id)ORSharedProvider{ 
  	return [ORProvider sharedProvider];
@@ -21,25 +20,6 @@
 }
 %end
 
-//Called when the devices recovers from a respring, safe mode, or boot-- when the LS is initializing.
-//Dispatches the creation of an ORNotifier, which manages when to check for messages/notify user.
-//Waits 15 seconds to prevent annoyances with booting times/network connectivity (could be better).
-%hook SBAwayController
-static BOOL isInitialized = NO;
-
--(id)awayView {
-	if(!isInitialized){
-		isInitialized = YES;
-		[ORLogger log:@"started successfully from respring, loading notifier from settings to check unreads..." fromSource:@"Orangered.xm"];
-		[[ORNotifier sharedNotifier] grabSeconds];
-	}//end if
-
-	return %orig;
-}//end awayView
-%end
-
-//Adds the ORProvider (a BBDataProvider) to the central list of all BBDataProviders, allowing it
-//to send messages and communicate with BulletinBoard/the Notification Center.
 %hook BBServer
 -(void)_loadAllDataProviderPluginBundles{
 	%orig;
@@ -49,23 +29,28 @@ static BOOL isInitialized = NO;
 }//end _loadAll
 %end
 
-//Called when the device is returning to the homescreen-- checks to see if the user has run
-//the tweak before, and if not, sends them the welcome popup. Should be changes to use the
-//com.insanj.orangeredprefs.plist in the future (NSUD unrecommended).
+/* Device Initializations and First Runs */
 %hook SBUIController
-static BOOL kORUnlocked;
+static BOOL kORUnlocked, kORInitialized;
 
 -(void)_deviceLockStateChanged:(NSNotification *)changed{
 	%orig;
 
 	NSNumber *state = changed.userInfo[@"kSBNotificationKeyState"];
-	if(!state.boolValue)
+	if(!state.boolValue){
 		kORUnlocked = YES;
+
+		if(!kORInitialized){
+			kORInitialized = YES;
+			[ORLogger log:@"started successfully from respring, loading notifier from settings to check unreads..." fromSource:@"Orangered.xm"];
+			[[ORNotifier sharedNotifier] grabSeconds];
+		}//end if
+	}//end if
 }//end method
 %end
 
 %hook SBUIAnimationController
-- (void)endAnimation{
+-(void)endAnimation{
 	%orig;
 
 	if(kORUnlocked && ![[NSUserDefaults standardUserDefaults] boolForKey:@"ORDidRun"]){
@@ -76,8 +61,7 @@ static BOOL kORUnlocked;
 }
 %end
 
-//Called when an app launched. Checks to see if the launched app was our current Reddit
-//client, and if so, clears the badge (which would have been set by the Provider.)
+/* Notification Clearing and Removal Checking */
 %hook SBApplicationIcon
 -(void)launch{
 	%orig;
@@ -89,8 +73,6 @@ static BOOL kORUnlocked;
 }//end launch
 %end
 
-//Tells the user that when deleting an app that it'll screw up everything (used to try -resetInfo, but):
-//SpringBoard[9399]: *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '*** -[__NSArrayM insertObject:atIndex:]: object cannot be nil'
 %hook SBApplicationController
 -(void)removeApplicationsFromModelWithBundleIdentifier:(id)arg1{
 	if([arg1 isEqualToString:[ORProvider determineHandle]]){
@@ -100,12 +82,8 @@ static BOOL kORUnlocked;
 
 	%orig;
 }//end remove
-
 %end
 
-//Instead of creating my own UIAlertView in a %hook, I just %hook UIAlertView, and if the
-//alert in question (when a tapped button) has "Orangered" in it, and the user tapped
-//a "Now", respring.
 %hook UIAlertView
 -(void)_buttonClicked:(UIAlertButton *)clicked{
 	%orig;

@@ -19,7 +19,6 @@ static NSDictionary *given;
 }//end sharedProvider
 
 -(id)init{
-
 	if ((self = [super init])){
 		logger = [[ORLogger alloc] initFromSource:@"ORProvider.m"];
 		handle = [ORProvider determineHandle];

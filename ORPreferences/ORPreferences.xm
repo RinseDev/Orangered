@@ -1,20 +1,7 @@
-#import <UIKit/UIActivityViewController.h>
-#import <AudioToolbox/AudioToolbox.h>
-#import <QuartzCore/QuartzCore.h>
-#import <Twitter/Twitter.h>
-
-#import <Preferences/PSSpecifier.h>
-#import <Preferences/PSRootController.h>
-#import <objc/runtime.h>
-#import "CydiaSubstrate.h"
-
-#import "../ORLogger.h"
 #import "../SBHeads.h"
+#import "../ORLogger.h"
 #import "../ORPuller.h"
 #import "../ORProvider.h"
-
-#define IS_RETINA ([UIScreen mainScreen].scale > 1)
-#define IS_IPAD (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
 
 @interface PSViewController : UIViewController
 -(id)initForContentSize:(CGSize)contentSize;
@@ -28,7 +15,7 @@
 -(void)loadView;
 -(void)reloadSpecifier:(PSSpecifier*)specifier animated:(BOOL)animated;
 -(void)reloadSpecifier:(PSSpecifier*)specifier;
-- (NSArray *)loadSpecifiersFromPlistName:(NSString *)name target:(id)target;
+-(NSArray *)loadSpecifiersFromPlistName:(NSString *)name target:(id)target;
 -(PSSpecifier*)specifierForID:(NSString*)specifierID;
 @end
 
@@ -159,162 +146,6 @@ static NSString *prevName, *prevInterval;
 -(void)mail{
 	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"mailto:me%40insanj.com?subject=Orangered%20(1.0)%20Support"]];//
 }
-
--(void)debugView{
-
-	[logger log:@"you found my crazy fucking idea! not putting that in yet..."];
-	/*if(logger.debugView){
-		[logger log:@"removing crazy idea..."];
-		[logger removeView];
-	}
-
-	else{
-		[logger log:@"creating crazy fucking debug view idea..."];
-		[logger createView];
-	}*/
-}
-
-@end
-
-@interface PeriwinkleCell : PSTableCell {
-	NSString *label;
-	UIButton *button;
-
-	NSTimer *downTimer;
-	BOOL down;
-}
-
--(void)reactToHold;
--(void)buttonTapped;
--(void)falsify;
--(void)touchDown;
-@end
-
-@implementation PeriwinkleCell
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
-	self = [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
-
-	if (self) {
-		self.backgroundView = [[UIView alloc] init];
-		self.textLabel.hidden = YES;
-
-		button = [[UIButton alloc] init];
-
-		downTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(reactToHold) userInfo:nil repeats:YES];
-		[button addTarget:self action:@selector(buttonTapped) forControlEvents:UIControlEventTouchUpInside];
-		[button addTarget:self action:@selector(falsify) forControlEvents:UIControlEventTouchUpOutside];
-		[button addTarget:self action:@selector(touchDown) forControlEvents:UIControlEventTouchDown];
-
-		label = [specifier.properties objectForKey:@"label"];
-		[button setTitle:label forState:UIControlStateNormal];
-
-		[button setTitleColor:[UIColor colorWithRed:76.f / 255.f green:86.f / 255.f blue:108.f / 255.f alpha:1] forState:UIControlStateNormal];
-		[button setTitleColor:[UIColor colorWithRed:56.f / 255.f green:66.f / 255.f blue:88.f / 255.f alpha:1] forState:UIControlStateHighlighted];
-		[button setTitleShadowColor:[UIColor colorWithWhite:1 alpha:0.5f] forState:UIControlStateNormal];
-		
-		button.titleLabel.textAlignment = UITextAlignmentCenter;
-		button.titleLabel.font = [UIFont systemFontOfSize:15];
-		button.titleLabel.shadowOffset = CGSizeMake(0, 1);
-		button.backgroundColor = [UIColor clearColor];
-		button.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-
-		CGRect buttonFrame = button.frame;
-		buttonFrame.size.width = self.contentView.frame.size.width;
-		buttonFrame.size.height = self.contentView.frame.size.height;
-		button.frame = buttonFrame;
-		
-		[button setCenter:CGPointMake(button.center.x, button.center.y - 25)];
-		[self.contentView addSubview:button];
-	}//end if
-
-	return self;
-}//end init
-
--(void)reactToHold{
-    if (down){
-    	SystemSoundID ORRYEAH;
-		CFURLRef cfurl = (CFURLRef)CFBridgingRetain([[NSBundle bundleWithPath:@"/Library/PreferenceBundles/ORPreferences.bundle"] URLForResource:@"ORRYEAH" withExtension:@"aiff"]);
-		AudioServicesCreateSystemSoundID(cfurl, &ORRYEAH);
-		AudioServicesPlaySystemSound(ORRYEAH);
-    }
-}//end reactToHold
-
--(void)touchDown{
-	down = TRUE;
-}
-
--(void)falsify{
-	down = FALSE;
-}
-
--(void)buttonTapped {
-	down = FALSE;
-	NSString *fun = @"Team Periwinkle for life!";
-
-	if([[button.titleLabel text] isEqualToString:fun])
-		[button setTitle:label forState:UIControlStateNormal];
-	
-	else
-		[button setTitle:fun forState:UIControlStateNormal];
-}//end buttontapped
-
--(float)preferredHeightForWidth:(float)width {
-	return [button.titleLabel.text sizeWithFont:button.titleLabel.font].height;
-}
-@end
-
-@interface RequestCell : PSTableCell {
-	NSString *label;
-	UIButton *button;
-}
-@end
-
-@implementation RequestCell
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
-	self = [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
-
-	if (self) {
-		self.backgroundView = [[UIView alloc] init];
-		self.textLabel.hidden = YES;
-
-		button = [[UIButton alloc] init];
-		[button addTarget:self action:@selector(buttonTapped) forControlEvents:UIControlEventTouchUpInside];
-
-		label = [specifier.properties objectForKey:@"label"];
-		[button setTitle:label forState:UIControlStateNormal];
-
-		[button setTitleColor:[UIColor colorWithRed:76.f / 255.f green:86.f / 255.f blue:108.f / 255.f alpha:1] forState:UIControlStateNormal];
-		[button setTitleColor:[UIColor colorWithRed:56.f / 255.f green:66.f / 255.f blue:88.f / 255.f alpha:1] forState:UIControlStateHighlighted];
-		[button setTitleShadowColor:[UIColor colorWithWhite:1 alpha:1.0f] forState:UIControlStateNormal];
-		
-		button.titleLabel.textAlignment = UITextAlignmentCenter;
-		button.titleLabel.font = [UIFont systemFontOfSize:15];
-		button.titleLabel.shadowOffset = CGSizeMake(0, 1);
-		button.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
-		button.backgroundColor = [UIColor clearColor];
-		button.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-
-		CGRect buttonFrame = button.frame;
-		buttonFrame.size.width = self.contentView.frame.size.width;
-		buttonFrame.size.height = self.contentView.frame.size.height + 20;
-		button.frame = buttonFrame;
-
-		[self.contentView addSubview:button];
-	}//end if
-
-	return self;
-}//end init
-
--(void)buttonTapped {
-	[button setTitle:@"Thanks! I'll make sure to get back to you soon, but feel free check up on me via Twitter :)" forState:UIControlStateNormal];
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_current_queue(), ^{
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"mailto:me%40insanj.com?subject=Orangered%20(1.0)%20Request!&body=%0A%0A%3C3"]];
-	});
-}//end buttontapped
-
--(float)preferredHeightForWidth:(float)width {
-	return [button.titleLabel.text sizeWithFont:button.titleLabel.font].height + 100;
-}
 @end
 
 @interface ORAboutListController : PSListController
@@ -322,8 +153,7 @@ static NSString *prevName, *prevInterval;
 @end
 
 @implementation ORAboutListController
-
-- (id)specifiers {
+-(id)specifiers {
 	if(!_specifiers)
 		_specifiers = [self loadSpecifiersFromPlistName:@"ORAbout" target:self];
 
@@ -349,96 +179,16 @@ static NSString *prevName, *prevInterval;
 	else 
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[@"https://mobile.twitter.com/" stringByAppendingString:user]]];
 }//end twitter
-
 @end
-
-@interface ORGroupedCell : PSTableCell {
-	UIImageView *imageView;
-}
-@end
-
-@implementation ORGroupedCell
-
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
-	self = [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
-
-	if (self) {
-		NSString *location = [specifier propertyForKey:@"location"];
-
-		if(!location)
-			return self;
-
-		//sets three-high image
-		if([location characterAtIndex:0] == '3') {
-			imageView = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/ORPreferences.bundle/triple.png"]];
-							
-			if([location characterAtIndex:1] == 't')
-				[imageView setCenter:CGPointMake(32.5, imageView.center.y - 0.5)];
-			
-			else if([location characterAtIndex:1] == 'm')
-				[imageView setCenter:CGPointMake(32.5, (imageView.center.y - 0.5) - 45)];
-			
-			else
-				[imageView setCenter:CGPointMake(32.5, (imageView.center.y + 0.5) - 90)];
-		}//end if
-
-		//sets two-high image
-		else {
-			imageView = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/ORPreferences.bundle/double.png"]];
-					
-			if([location characterAtIndex:1] == 't')
-				[imageView setCenter:CGPointMake(32.5, imageView.center.y - 0.5)];
-			
-			else
-				[imageView setCenter:CGPointMake(32.5, (imageView.center.y - 0.5) - (imageView.frame.size.height / (IS_RETINA?2:4)))];
-		}//end else
-
-		if(!IS_RETINA)
-			[imageView setFrame:CGRectMake(imageView.frame.origin.x + 21.5, imageView.frame.origin.y, imageView.frame.size.width / 2, imageView.frame.size.height /2)];
-
-		if(IS_IPAD)
-			[imageView setFrame:CGRectMake(imageView.frame.origin.x + 21.5, imageView.frame.origin.y, imageView.frame.size.width, imageView.frame.size.height)];
-
-		[self addSubview:imageView];
-	}//end if
-
-	return self;
-}//end init
-@end
-
 
 @interface ORHelpListController : PSListController
 @end
 
 @implementation ORHelpListController
-
-- (id)specifiers {
-	if(!_specifiers){
-		_specifiers = [self loadSpecifiersFromPlistName:IS_IPAD?@"ORiPadHelp":@"ORHelp" target:self];
-	}
+-(id)specifiers {
+	if(!_specifiers)
+		_specifiers = [self loadSpecifiersFromPlistName:@"ORHelp" target:self];
 
 	return _specifiers;
 }//end specifiers
-
 @end
-
-
-@interface ORHelpCell : PSTableCell
-@end
-
-@implementation ORHelpCell
-
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
-	self = [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
-
-	if(self){
-		self.textLabel.numberOfLines = 0;
-	    self.textLabel.font = [UIFont systemFontOfSize:16.f];
-	    self.textLabel.lineBreakMode = NSLineBreakByWordWrapping;
-   	}
-
-   	return self;
-}//end init
-
-@end
-

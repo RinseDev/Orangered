@@ -1,11 +1,18 @@
 #import <AppSupport/CPDistributedMessagingCenter.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import <Foundation/Foundation.h>
-#import "BulletinBoard/BulletinBoard.h"
+#import <Preferences/PSSpecifier.h>
+#import <Preferences/PSRootController.h>
+#import <Twitter/Twitter.h>
+#import <UIKit/UIActivityViewController.h>
 #import <UIKit/UIKit.h>
+#import <QuartzCore/QuartzCore.h>
+
 #import <objc/runtime.h>
 #include <stdlib.h>
 
 #import "CydiaSubstrate.h"
+#import "BulletinBoard/BulletinBoard.h"
 
 /* ios 7 */
 @interface SBUIController
