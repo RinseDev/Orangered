@@ -1,21 +1,13 @@
 //Orangered 1.1
 //Created by Julian Weiss
 
-#import <AppSupport/CPDistributedMessagingCenter.h>
-#import <Foundation/Foundation.h>
-#import "BulletinBoard/BulletinBoard.h"
-#import <UIKit/UIKit.h>
-#import <objc/runtime.h>
-#include <stdlib.h>
+#import "SBHeads.h"
 
-#import "CydiaSubstrate.h"
 #import "ORPuller.h"
 #import "ORMessage.h"
 #import "ORNotifier.h"
 #import "ORProvider.h"
 #import "ORLogger.h"
-#import "SBHeads.h"
-
 
 //Creates a sharedProvider (GCD) for the ORProvider (what handles sending notifications).
 //This allows the currently living instance of ORProvider to be accessed from any class/process.
@@ -61,14 +53,27 @@ static BOOL isInitialized = NO;
 //the tweak before, and if not, sends them the welcome popup. Should be changes to use the
 //com.insanj.orangeredprefs.plist in the future (NSUD unrecommended).
 %hook SBUIController
--(void)finishedUnscattering{
+static BOOL kORUnlocked;
+
+-(void)_deviceLockStateChanged:(NSNotification *)changed{
 	%orig;
 
-	if(![[NSUserDefaults standardUserDefaults] boolForKey:@"ORNotFirstRun"]){
-		[[[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Thanks for purchasing Orangered! Check the Settings to set your Reddit information, then let Orangered work its magic! You can also adjust how alerts work in the Notifications area." delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil] show];
-		[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"ORNotFirstRun"];
-	}
-}//end finishedUnscattering
+	NSNumber *state = changed.userInfo[@"kSBNotificationKeyState"];
+	if(!state.boolValue)
+		kORUnlocked = YES;
+}//end method
+%end
+
+%hook SBUIAnimationController
+- (void)endAnimation{
+	%orig;
+
+	if(kORUnlocked && ![[NSUserDefaults standardUserDefaults] boolForKey:@"ORDidRun"]){
+		kORUnlocked = NO;
+		[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"ORDidRun"];
+		[[[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Thanks for installing Orangered! Check Settings to verify your Reddit information, then let Orangered work its magic! You can also adjust how alerts work in the Notifications area." delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil] show];
+	}//end if
+}
 %end
 
 //Called when an app launched. Checks to see if the launched app was our current Reddit
@@ -87,9 +92,7 @@ static BOOL isInitialized = NO;
 //Tells the user that when deleting an app that it'll screw up everything (used to try -resetInfo, but):
 //SpringBoard[9399]: *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '*** -[__NSArrayM insertObject:atIndex:]: object cannot be nil'
 %hook SBApplicationController
-
-- (void)removeApplicationsFromModelWithBundleIdentifier:(id)arg1{
-
+-(void)removeApplicationsFromModelWithBundleIdentifier:(id)arg1{
 	if([arg1 isEqualToString:[ORProvider determineHandle]]){
 		[ORLogger log:[NSString stringWithFormat:@"detected model removal of: %@", arg1] fromSource:@"Orangered.xm"];
 		[[[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Detected deletion of primary Reddit client! Please respring to get Orangered back in order.\n(Please ignore if updating the application)" delegate:nil cancelButtonTitle:@"Later" otherButtonTitles:@"Now", nil] show];
