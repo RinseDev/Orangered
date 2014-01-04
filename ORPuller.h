@@ -1,17 +1,7 @@
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <objc/runtime.h>
-#include <stdlib.h>
-#import <AppSupport/CPDistributedMessagingCenter.h>
-
-#import "CydiaSubstrate.h"
-#import "NWURLConnection.h"
-#import "BulletinBoard/BulletinBoard.h"
-
+#import "SBHeads.h"
 #import "ORMessage.h"
 #import "ORLogger.h"
 #import "ORProvider.h"
-#import "SBHeads.h"
 
 @interface NSDistributedNotificationCenter : NSNotificationCenter
 @end

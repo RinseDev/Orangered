@@ -1,5 +1,5 @@
 THEOS_PACKAGE_DIR_NAME = debs
-TARGET=:clang
+TARGET =: clang
 ARCHS = armv7 arm64
 include theos/makefiles/common.mk
 
@@ -12,4 +12,5 @@ Orangered_LDFLAGS = -Wlactivator -Ltheos/lib
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 SUBPROJECTS += ORPreferences
+SUBPROJECTS += ORListener
 include $(THEOS_MAKE_PATH)/aggregate.mk

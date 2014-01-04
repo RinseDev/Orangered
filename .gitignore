@@ -5,3 +5,5 @@
 .theos
 .DS_Store
 _
+theos
+*.stamp

@@ -1,14 +1,6 @@
-#import <AudioToolbox/AudioToolbox.h>
-#import <Foundation/Foundation.h>
-#import "BulletinBoard/BulletinBoard.h"
-#import <UIKit/UIKit.h>
-#import <objc/runtime.h>
-#include <stdlib.h>
-
-#import "CydiaSubstrate.h"
+#import "SBHeads.h"
 #import "ORMessage.h"
 #import "ORLogger.h"
-#import "SBHeads.h"
 
 @interface ORProvider : NSObject <BBDataProvider> {
 	NSArray *messages;
@@ -25,6 +17,7 @@
 +(ORProvider *)sharedProvider;
 
 -(id)init;
+-(BOOL)initialized;
 -(NSString *)sectionIdentifier;
 -(NSArray *)sortDescriptors;
 -(NSArray *)bulletinsFilteredBy:(unsigned)by count:(unsigned)count lastCleared:(id)cleared;

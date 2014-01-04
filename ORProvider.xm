@@ -19,7 +19,8 @@ static NSDictionary *given;
 }//end sharedProvider
 
 -(id)init{
-	if ((self = [super init])){
+	if(!self){
+		self = [super init];
 		logger = [[ORLogger alloc] initFromSource:@"ORProvider.m"];
 		handle = [ORProvider determineHandle];
 		name = [ORProvider determineName];
@@ -31,6 +32,11 @@ static NSDictionary *given;
 	}//end if
 	
 	return self;
+}
+
+
+-(BOOL)initialized{
+	return (self != nil);
 }
 
 -(NSString *)sectionIdentifier{
@@ -108,7 +114,6 @@ static NSDictionary *given;
 	}//end !ran
 
 	if(given){
-
 		[logger log:[NSString stringWithFormat:@"processing manual notification request (error or check): %@", given]];
 		BBBulletinRequest *newBulletin = [[BBBulletinRequest alloc] init];
 		newBulletin.sectionID = handle;
