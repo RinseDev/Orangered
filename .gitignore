@@ -1,9 +1,7 @@
 *.o
-*.dylib
-*.deb
-*.bundle
+debs
 .theos
-.DS_Store
-_
 theos
-*.stamp
+obj
+_
+.DS_Store

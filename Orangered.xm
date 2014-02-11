@@ -1,5 +1,4 @@
 #import "ORHeaders.h"
-
 #import "ORPuller.h"
 #import "ORMessage.h"
 #import "ORNotifier.h"
@@ -18,13 +17,29 @@
 %end
 
 %hook BBServer
--(void)_loadDataProvidersAndSettings{
+-(id)init{
+	BBServer *server = %orig();
+	[server _addDataProvider:[ORProvider sharedProvider] sortSectionsNow:YES];
+	[ORLogger log:@"adding the Orangered notifier to the Notification Center..." fromSource:@"Orangered.xm"];
+	return server;
+}
+%end
+
+/*
+%hook BBDataProviderManager
+-(void)_loadAllDataProviderPluginBundles {
 	%orig;
 
 	[ORLogger log:@"adding the Orangered notifier to the Notification Center..." fromSource:@"Orangered.xm"];
-	[self dpManager:MSHookIvar<BBDataProviderManager *>(self, "_dataProviderManager") addDataProvider:[ORProvider sharedProvider] withSectionInfo:[[ORProvider sharedProvider] defaultSectionInfo]];
+	
+	if(IS_OS_7_OR_LATER)
+		[self _addDataProvider:[ORProvider sharedProvider] sortSectionsNow:YES];
+	else
+		[self _addDataProvider:[ORProvider sharedProvider] sortSectionsNow:YES];
 }
-%end
+%end*/
+
+
 
 /* Device Initializations and First Runs */
 %hook SBUIController

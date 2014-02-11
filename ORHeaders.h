@@ -2,7 +2,6 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <Foundation/Foundation.h>
 #import <Preferences/PSSpecifier.h>
-#import <Preferences/PSRootController.h>
 #import <Twitter/Twitter.h>
 #import <UIKit/UIActivityViewController.h>
 #import <UIKit/UIKit.h>
@@ -14,7 +13,13 @@
 #import "CydiaSubstrate.h"
 #import "NWURLConnection.h"
 
+#define IS_OS_7_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0)
+
 @interface BBSectionInfo : NSObject
+@property NSUInteger notificationCenterLimit;
+@property (nonatomic, retain) NSString *sectionID;
+
++(id)defaultSectionInfoForType:(NSUInteger)type;
 @end
 
 @interface BBSectionIcon : NSObject
@@ -22,20 +27,19 @@
 -(id)_bestVariantForUIFormat:(int)arg1;
 -(id)_bestVariantForFormat:(int)arg1;
 -(void)addVariant:(id)arg1;
--(void)setVariants:(id)arg1;
--(id)variants;
+-(void)setVariants:(NSSet *)arg1;
+-(NSSet *)variants;
 @end
 
 @interface BBDataProviderIdentity : NSObject
-@property(copy) NSString * sectionIdentifier;
-@property(copy) BBSectionInfo * defaultSectionInfo;
-@property(copy) NSString * sectionDisplayName;
-@property(copy) BBSectionIcon * sectionIcon;
-@property(copy) NSArray * sortDescriptors;
-@property(retain) BBSectionParameters * sectionParameters;
-@property(copy) NSArray * defaultSubsectionInfos;
-@property(copy) NSString * sortKey;
-@property(copy) NSDictionary * subsectionDisplayNames;
+@property(copy) NSString *sectionIdentifier;
+@property(copy) BBSectionInfo *defaultSectionInfo;
+@property(copy) NSString *sectionDisplayName;
+@property(copy) BBSectionIcon *sectionIcon;
+@property(copy) NSArray *sortDescriptors;
+@property(copy) NSArray *defaultSubsectionInfos;
+@property(copy) NSString *sortKey;
+@property(copy) NSDictionary *subsectionDisplayNames;
 @property(readonly) BOOL syncsBulletinDismissal;
 @end
 
@@ -47,8 +51,10 @@
 -(void)dataProviderConnection:(id)arg1 addDataProviderWithSectionID:(id)arg2;
 -(void)dataProviderOperational:(id)arg1;
 -(void)_addDataProvider:(id)arg1 forFactory:(id)arg2 factoryInfo:(id)arg3;
+-(void)_addDataProvider:(id)arg1 sortSectionsNow:(BOOL)arg2; // not so sure about this
 @end
 
+/*
 @interface BBServer : NSObject{
 	BBDataProviderManager *_dataProviderManager;
 }
@@ -61,79 +67,104 @@
 -(id)dpManager:(id)arg1 sectionInfoForSectionID:(id)arg2;
 -(void)_loadDataProvidersAndSettings;
 -(void)_removeDataProvider:(id)arg1 forFactory:(id)arg2;
--(void)_addDataProvider:(id)arg1 forFactory:(id)arg2;
+-(void)_addDataProvider:(id)arg1 forFactory:(id)arg2;*/
+
+@interface BBAction : NSObject
++(id)actionWithTextReplyCallblock:(id)arg1;
++(id)actionWithLaunchBundleID:(id)arg1 callblock:(id)arg2;
++(id)actionWithLaunchURL:(id)arg1 callblock:(id)arg2;
++(id)actionWithCallblock:(id)arg1;
 @end
 
 @interface BBSound : NSObject
 @property int soundType;
 @property unsigned long systemSoundID;
 @property unsigned int soundBehavior;
-@property(copy) NSString * ringtoneName;
-- (id)initWithToneAlert:(int)arg1 toneIdentifier:(id)arg2 vibrationIdentifier:(id)arg3;
-- (id)initWithToneAlert:(int)arg1;
-- (id)initWithRingtone:(id)arg1 vibrationPattern:(id)arg2 repeats:(BOOL)arg3;
+@property(nonatomic, retain) NSString *ringtoneName;
++(id)alertSoundWithSystemSoundID:(unsigned long)arg1;
+-(id)initWithToneAlert:(int)arg1 toneIdentifier:(id)arg2 vibrationIdentifier:(id)arg3;
+-(id)initWithToneAlert:(int)arg1;
+-(id)initWithRingtone:(id)arg1 vibrationPattern:(id)arg2 repeats:(BOOL)arg3;
 @end
 
 @interface BBBulletin : NSObject
+@property(nonatomic, retain) BBAction *defaultAction;
 @property(readonly) NSString *sectionDisplayName;
 @property(readonly) BBSectionIcon *sectionIcon;
 @property(readonly) unsigned int messageNumberOfLines;
 @property(readonly) NSString *fullUnlockActionLabel;
 @property(readonly) NSString *unlockActionLabel;
 @property(readonly) unsigned int realertCount;
-@property(copy) NSString *bulletinID;
-@property(copy) NSString *section;
-@property(copy) NSString *sectionID;
-@property(copy) NSSet *subsectionIDs;
-@property(copy) NSString *recordID;
-@property(copy) NSString *publisherBulletinID;
-@property(copy) NSString *dismissalID;
-@property(copy) NSString *title;
-@property(copy) NSString *subtitle;
-@property(copy) NSString *message;
-@property(retain) NSDate *date;
-@property(retain) BBSound *sound;
+@property(nonatomic, retain) NSString *bulletinID;
+@property(nonatomic, retain) NSString *section;
+@property(nonatomic, retain) NSString *sectionID;
+@property(nonatomic, retain) NSSet *subsectionIDs;
+@property(nonatomic, retain) NSString *recordID;
+@property(nonatomic, retain) NSString *publisherBulletinID;
+@property(nonatomic, retain) NSString *dismissalID;
+@property(nonatomic, retain) NSString *title;
+@property(nonatomic, retain)NSString *subtitle;
+@property(nonatomic, retain) NSString *message;
+@property(nonatomic, retain) NSDate *date;
+@property(nonatomic, retain) BBSound *sound;
+@property(nonatomic, retain) NSDictionary *context;
+@property(nonatomic, retain) NSDate *lastInterruptDate;
+
+@property BOOL showsUnreadIndicator;
 
 -(id)init;
--(void)setObservers:(id)arg1;
--(void)setContent:(id)arg1;
--(void)setActions:(id)arg1;
--(void)setContext:(id)arg1;
--(void)setTitle:(id)arg1;
--(void)setSection:(id)arg1;
--(void)setMessage:(id)arg1;
--(void)setSubtitle:(id)arg1;
--(void)setDate:(id)arg1;
--(void)setRecordID:(id)arg1;
--(void)setBulletinID:(id)arg1;
--(void)setSectionID:(id)arg1;
--(void)setSound:(id)arg1;
--(void)setUnlockActionLabelOverride:(id)arg1;
 @end
 
 @interface BBBulletinRequest : BBBulletin
-- (void)generateNewBulletinID;
-- (id)publisherMatchID;
-- (BOOL)hasContentModificationsRelativeTo:(id)arg1;
-- (void)setTentative:(BOOL)arg1;
-- (BOOL)showsUnreadIndicator;
-- (void)generateBulletinID;
-- (void)addAlertSuppressionAppID:(id)arg1;
-- (void)setRealertCount:(unsigned int)arg1;
-- (unsigned int)realertCount;
-- (void)setUnlockActionLabel:(id)arg1;
-- (void)withdraw;
-- (void)addButton:(id)arg1;
-- (void)setPrimaryAttachmentType:(int)arg1;
-- (void)setContextValue:(id)arg1 forKey:(id)arg2;
-- (void)setShowsUnreadIndicator:(BOOL)arg1;
-- (void)publish:(BOOL)arg1;
-- (void)addAttachmentOfType:(int)arg1;
-- (void)setExpirationEvents:(unsigned int)arg1;
-- (unsigned int)expirationEvents;
-- (BOOL)tentative;
-- (void)publish;
+-(void)generateNewBulletinID;
+-(id)publisherMatchID;
+-(BOOL)hasContentModificationsRelativeTo:(id)arg1;
+-(void)setTentative:(BOOL)arg1;
+-(BOOL)showsUnreadIndicator;
+-(void)generateBulletinID;
+-(void)addAlertSuppressionAppID:(id)arg1;
+-(void)setRealertCount:(unsigned int)arg1;
+-(unsigned int)realertCount;
+-(void)setUnlockActionLabel:(id)arg1;
+-(void)withdraw;
+-(void)addButton:(id)arg1;
+-(void)setPrimaryAttachmentType:(int)arg1;
+-(void)setContextValue:(id)arg1 forKey:(id)arg2;
+-(void)setShowsUnreadIndicator:(BOOL)arg1;
+-(void)publish:(BOOL)arg1;
+-(void)addAttachmentOfType:(int)arg1;
+-(void)setExpirationEvents:(unsigned int)arg1;
+-(unsigned int)expirationEvents;
+-(BOOL)tentative;
+-(void)publish;
 @end
+
+@protocol BBDataProvider <NSObject>
+
+@required
+-(NSArray *)bulletinsFilteredBy:(NSUInteger)by count:(NSUInteger)count lastCleared:(NSDate *)cleared;
+-(NSString *)sectionIdentifier;
+-(NSArray *)sortDescriptors;
+
+@optional
+-(BBSectionInfo *)defaultSectionInfo;
+-(NSString *)sectionDisplayName;
+-(NSArray *)sortDescriptors;
+
+@end
+
+@interface BBServer : NSObject
+-(void)_addDataProvider:(id<BBDataProvider>)dataProvider sortSectionsNow:(BOOL)sortSections;
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+	extern void BBDataProviderAddBulletin(id<BBDataProvider> dataProvider, BBBulletinRequest *bulletinRequest);
+	extern void BBDataProviderWithdrawBulletinsWithRecordID(id<BBDataProvider> dataProvider, NSString *recordID);
+#ifdef __cplusplus
+}
+#endif
 
 /* ios 7 */
 @interface SBUIController
@@ -142,25 +173,25 @@
 @end
 
 @interface SBUIAnimationController
-- (void)__startAnimation;
-- (int)_animationState;
-- (void)_cleanupAnimation;
-- (void)_noteAnimationDidCommit:(BOOL)_noteAnimation withDuration:(double)duration afterDelay:(double)delay;
-- (void)_noteAnimationDidFail;
-- (void)_noteAnimationDidFinish;
-- (void)endAnimation;
-- (BOOL)isComplete;
+-(void)__startAnimation;
+-(int)_animationState;
+-(void)_cleanupAnimation;
+-(void)_noteAnimationDidCommit:(BOOL)_noteAnimation withDuration:(double)duration afterDelay:(double)delay;
+-(void)_noteAnimationDidFail;
+-(void)_noteAnimationDidFinish;
+-(void)endAnimation;
+-(BOOL)isComplete;
 @end
 
 @interface SBUIMainScreenAnimationController : SBUIAnimationController
 @end
 
 @interface SBUILockscreenSlideAnimationController : SBUIMainScreenAnimationController 
-- (void)_finishedSliding;
-- (BOOL)_isApplicationLaunchFinished;
-- (void)_maybeReportAnimationFinished;
-- (void)_prepareAnimation;
-- (void)_startAnimation;
+-(void)_finishedSliding;
+-(BOOL)_isApplicationLaunchFinished;
+-(void)_maybeReportAnimationFinished;
+-(void)_prepareAnimation;
+-(void)_startAnimation;
 @end
 
 /* ios 5-6 */

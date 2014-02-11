@@ -1,4 +1,4 @@
-#import "../SBHeads.h"
+#import "../ORHeaders.h"
 #import "../ORLogger.h"
 #import "../ORPuller.h"
 #import "../ORProvider.h"
@@ -8,7 +8,7 @@
 -(void)setPreferenceValue:(id)value specifier:(id)specifier;
 @end
 
-@interface PSListController : PSViewController{
+@interface PSListController : PSViewController {
 	NSArray *_specifiers;
 }
 

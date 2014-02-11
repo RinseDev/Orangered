@@ -1,9 +1,16 @@
+#line 1 "../ORProvider.xm"
 #import "ORProvider.h"
 #define ipad (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
 
 @interface NSDistributedNotificationCenter : NSNotificationCenter
 @end
 
+#include <logos/logos.h>
+#include <substrate.h>
+@class SBApplicationController; @class SBIconController; @class SpringBoard; 
+
+static __inline__ __attribute__((always_inline)) Class _logos_static_class_lookup$SBApplicationController(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SBApplicationController"); } return _klass; }static __inline__ __attribute__((always_inline)) Class _logos_static_class_lookup$SBIconController(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SBIconController"); } return _klass; }static __inline__ __attribute__((always_inline)) Class _logos_static_class_lookup$SpringBoard(void) { static Class _klass; if(!_klass) { _klass = objc_getClass("SpringBoard"); } return _klass; }
+#line 7 "../ORProvider.xm"
 @implementation ORProvider
 static BOOL ran, show;
 static ORProvider *sharedProvider;
@@ -16,7 +23,7 @@ static NSDictionary *given;
     });
 
 	return sharedProvider;
-}//end sharedProvider
+}
 
 -(id)init{
 	if(!self){
@@ -29,7 +36,7 @@ static NSDictionary *given;
 		[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(handleWithGiven:) name:@"ORGivenNotification" object:nil];
 		[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(respring) name:@"ORRespringNotification" object:nil];
 		[logger log:@"creating a listener for Reddit notifications..."];
-	}//end if
+	}
 	
 	return self;
 }
@@ -66,7 +73,7 @@ static NSDictionary *given;
 
 	[self setBadgeTo:0];
 	BBDataProviderWithdrawBulletinsWithRecordID(self, @"com.insanj.orangered.banner");
-}//end reset
+}
 
 -(void)resetInfo{
 	[logger log:@"resetting handle/name information and pulling notifications..."];
@@ -110,7 +117,7 @@ static NSDictionary *given;
 		[logger log:@"tying up the strings for the bulletin sender, shouldn't notify..."];
 		ran = YES;
 		return;
-	}//end !ran
+	}
 
 	if(given){
 		[logger log:[NSString stringWithFormat:@"processing manual notification request (error or check): %@", given]];
@@ -148,11 +155,11 @@ static NSDictionary *given;
 		show = [[given objectForKey:@"show"] boolValue];
 		bulletin = newBulletin;
 
-		NSString *stash;	//replacement for NSLog
+		NSString *stash;	
 		stash = [newBulletin description];
 		BBDataProviderAddBulletin(self, newBulletin);
 		[logger log:[NSString stringWithFormat:@"dealt with manual alert: %@", given]];
-	}//end given
+	}
 
 	else{
 		[logger log:@"processing automatic notification request (message notification)"];
@@ -187,11 +194,11 @@ static NSDictionary *given;
 				newBulletin.subtitle = @"";
 				newBulletin.message = @"No new Reddit messages found!";
 
-				NSString *stash;	//replacement for NSLog
+				NSString *stash;	
 				stash = [newBulletin description];
 				BBDataProviderAddBulletin(self, newBulletin);
-			}//end notifyAlways
-		}//end if
+			}
+		}
 
 		else{
 			[logger log:@"found an array of new messages to notify the user of, starting to create and send..."];
@@ -207,35 +214,35 @@ static NSDictionary *given;
 				newBulletin.date = [NSDate date];
 				newBulletin.title = name;
 				newBulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)[messages count]];
-			}//end if
+			}
 
 			else{
 				ORMessage *m = [messages objectAtIndex:0];
 				newBulletin.title = m.subject;
 				newBulletin.subtitle = m.author;
 				newBulletin.message = m.body;
-			}//end else
+			}
 
 			newBulletin.sound = [BBSound alertSoundWithSystemSoundID:ORGood];
 			[logger log:[NSString stringWithFormat:@"received a new bulletin:%@, whereas the old bulletin was:%@", newBulletin.message, bulletin.message]];
 			if(![newBulletin.message isEqualToString:bulletin.message] || notifyAlways){
 				bulletin = newBulletin;
 				
-				NSString *stash;	//replacement for NSLog
+				NSString *stash;	
 				stash = [newBulletin description];
 				BBDataProviderAddBulletin(self, newBulletin);
 				[logger log:[NSString stringWithFormat:@"sending message bulletin with title: %@", newBulletin.title]];
-			}//end if
+			}
 
 			else
 				[logger log:@"already sent the requested bulletin, not sending again (on user request)..."];
 		
-		}//end else
+		}
 		
 		show = NO;
-	}//end else	
+	}
 		
-}//end dataProviderDidLoad
+}
 
 
 +(NSString *)determineName{
@@ -243,27 +250,27 @@ static NSDictionary *given;
 	if([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alienblue://"]])
 		return @"Alien Blue";
 
-	else if ([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:@"com.NateChiger.Reddit"])
+	else if ([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:@"com.NateChiger.Reddit"])
 		return @"Ruby";
 
-	else if ([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:@"com.mediaspree.karma"])
+	else if ([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:@"com.mediaspree.karma"])
 		return @"Karma";
 
-	else if ([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:@"com.nicholasleedesigns.upvote"])
+	else if ([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:@"com.nicholasleedesigns.upvote"])
 		return @"upvote";
 
-	else if ([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:@"com.jinsongniu.ialien"])
+	else if ([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:@"com.jinsongniu.ialien"])
 		return @"iAlien";
 
-	else if ([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:@"com.amleszk.amrc"])
+	else if ([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:@"com.amleszk.amrc"])
 		return @"amrc";
 
-	else if ([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:@"com.tyanya.reddit"])
+	else if ([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:@"com.tyanya.reddit"])
 		return @"Redditor";
 
 	else
 		return @"Orangered";
-}//end name
+}
 
 +(NSString *)determineHandle{
 
@@ -272,29 +279,29 @@ static NSDictionary *given;
 			return @"com.designshed.alienbluehd";
 		else
 			return @"com.designshed.alienblue";
-	}//end if
+	}
 
 	NSArray *clients = [NSArray arrayWithObjects:@"com.NateChiger.Reddit", @"com.mediaspree.karma", @"com.nicholasleedesigns.upvote", @"com.jinsongniu.ialien", @"com.amleszk.amrc", @"com.tyanya.reddit", nil];
 	for(NSString *s in clients)
-		if([[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:s])
+		if([[_logos_static_class_lookup$SBApplicationController() sharedInstance] applicationWithDisplayIdentifier:s])
 			return s;
 
 	return @"com.apple.mobilesafari";
-}//end handle
+}
 
 -(void)respring{
-	[(SpringBoard *)[%c(SpringBoard) sharedApplication] _relaunchSpringBoardNow];
+	[(SpringBoard *)[_logos_static_class_lookup$SpringBoard() sharedApplication] _relaunchSpringBoardNow];
 }
 
 -(void)setBadgeTo:(int)num{
 
-	SBIconModel *iconModel = MSHookIvar<SBIconModel *>([%c(SBIconController) sharedInstance], "_iconModel");
+	SBIconModel *iconModel = MSHookIvar<SBIconModel *>([_logos_static_class_lookup$SBIconController() sharedInstance], "_iconModel");
 
 	if(num > 0)
 		[[iconModel applicationIconForDisplayIdentifier:handle] setBadge:[NSString stringWithFormat:@"%i", num]];
 	else
 		[[iconModel applicationIconForDisplayIdentifier:handle] setBadge:nil];
-}//end set
+}
 
 -(void)dealloc {
 	sharedProvider = nil;
@@ -303,3 +310,4 @@ static NSDictionary *given;
 }
 
 @end
+#line 306 "../ORProvider.xm"
