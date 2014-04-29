@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Package: com.insanj.orangered
 Name: Orangered
 Depends: firmware (>= 7.0), mobilesubstrate
@@ -12,3 +13,15 @@ Maintainer: insanj <me@insanj.com>
 Author: Julian (insanj) Weiss
 Section: Tweaks
 Icon: file:///Library/PreferenceBundles/ORPreferences.bundle/icon@2x.png
+=======
+Package: com.phillipt.orangered
+Name: Orangered For iOS 7
+Depends: mobilesubstrate, libactivator
+Version: 0.0.1
+Architecture: iphoneos-arm
+Icon: icon.png
+Description: Native Reddit push notifications!
+Maintainer: Phillip Tennen
+Author: Phillip Tennen
+Section: Tweaks
+>>>>>>> rewrite
