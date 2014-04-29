@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-*.o
-debs
-.theos
-theos
-obj
-_
-.DS_Store
-=======
 .theos
 theos
 .DS_Store
@@ -16,4 +7,3 @@ debs
 *.stamp
 _
 obj
->>>>>>> rewrite
