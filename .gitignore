@@ -1,2 +1,9 @@
-_/ *.deb theos _/* .DS_Store */.DS_Store */theos */.deb .theos
-obj/
+.theos
+theos
+.DS_Store
+*.deb
+debs
+*.o
+*.stamp
+_
+obj
