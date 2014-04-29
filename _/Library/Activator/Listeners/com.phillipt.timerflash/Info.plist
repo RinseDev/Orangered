@@ -1,4 +1,0 @@
-{title = "TimerFlash";
-    description = "An awesome Activator listener!";
-    "compatible-modes" = ("springboard", "application", "lockscreen");}
-
