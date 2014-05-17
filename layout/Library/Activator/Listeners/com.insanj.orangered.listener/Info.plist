@@ -1,6 +1,5 @@
 {
 	title = "Orangered";
     description = "Check your Reddit inbox";
-    "compatible-modes" = ("springboard", "application", "lockscreen");
 }
 

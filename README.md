@@ -5,6 +5,8 @@ native push notifications for iOS 7. orangered is a dynamic, virtually seamless 
 
 Commercial tweak, currently closed source. Available from BigBoss.
 
+![](Icon.png)
+
 ---------------------------------------	
 [Creative Commons Attribution-NonCommercial 3.0 United States License](http://creativecommons.org/licenses/by-nc/3.0/us/) as of 2013-2014:
 
