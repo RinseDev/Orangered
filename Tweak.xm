@@ -7,7 +7,7 @@ NSString *username, *password, *redditClient;
 CGFloat refreshInterval;
 BOOL enabled, alwaysNotify, minutesInterval, alwaysMarkRead;
 
-RKClient __block *client;
+RKClient *client;
 RKPagination *pagination;
 
 @implementation RKClient (Refresh)
@@ -80,11 +80,11 @@ static void loadOrangeredPreferences (){
 
 	NSString *thingsNotProvided = @"";
 	if (!username) {
-		thingsNotProvided = [thingsNotProvided stringByAppendingString:@", %@", username];
+		thingsNotProvided = [NSString stringWithFormat:@"%@, %@", thingsNotProvided, username];
 	}
 
 	if (!password) {
-		thingsNotProvided = [thingsNotProvided stringByAppendingString:@", %@", password];
+		thingsNotProvided = [NSString stringWithFormat:@"%@, %@", thingsNotProvided, password];
 	}
 
 	UIAlertView *urgentAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"Oops! Looks like a valid %@ wasn't provided. Check your Settings before Orangered is activated again to resolve this issue!", thingsNotProvided] delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];

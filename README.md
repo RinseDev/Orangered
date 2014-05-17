@@ -1,35 +1,27 @@
 [Orangered](http://insanj.com/orangered)
 =======================
 
-Native push notifications for iOS (7). Previous commits and arrangements lost in migration from Bitbucket. Uses iOS timers to check and pull inbox from Reddit API (NWURLConnection) before processing relevant Bulletins to user.
+native push notifications for iOS 7. orangered is a dynamic, virtually seamless way to unite ios and reddit in perfect harmony. using programically-tight methods of retrieving, processing, and presenting reddit information, this is the best way to stay on top of your inbox. after proving your identity, orangered will automatically check your reddit inbox for unread messages and replies. set up your ideal checking interval (how long you want orangered to wait before checking your inbox again, in minutes or hours), save your information, and let orangered works its magic. never think about your new posts, comments, or mentions again.
 
 Commercial tweak, currently closed source. Available from BigBoss.
 
----------------------------------------
-	Simplified BSD License
-	Copyright (c) 2013, Julian Weiss
-	All rights reserved.
+---------------------------------------	
+[Creative Commons Attribution-NonCommercial 3.0 United States License](http://creativecommons.org/licenses/by-nc/3.0/us/) as of 2013-2014:
 
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met: 
-
-	1. Redistributions of source code must retain the above copyright notice, this
-	list of conditions and the following disclaimer. 
-	2. Redistributions in binary form must reproduce the above copyright notice,
-	this list of conditions and the following disclaimer in the documentation
-	and/or other materials provided with the distribution. 
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-	The views and conclusions contained in the software and documentation are those
-	of the authors and should not be interpreted as representing official policies, 
-	either expressed or implied, of the FreeBSD Project.
+	Creative Commons Attribution-NonCommercial 3.0 United States License
+	Please visit above link for full license.
+	Human-readable summary of your abilities has been transcribed below.
+	
+	You are free to:
+	Share — copy and redistribute the material in any medium or format
+	Adapt — remix, transform, and build upon the material
+	The licensor cannot revoke these freedoms as long as you follow the license terms.
+	
+	Under the following terms:
+	Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+	NonCommercial — You may not use the material for commercial purposes.
+	No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+	
+	Notices:
+	You do not have to comply with the license for elements of the material in the public domain or where your use is permitted by an applicable exception or limitation.
+	No warranties are given. The license may not give you all of the permissions necessary for your intended use. For example, other rights such as publicity, privacy, or moral rights may limit how you use the material.

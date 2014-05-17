@@ -1,8 +1,12 @@
 #import <UIKit/UIKit.h>
 #import <libactivator/libactivator.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
-#import "RedditKit/RedditKit.h"
-#import "ClassyHelper.mm"
+
+#import "Communication/AFNetworking.h"
+#import "Communication/RedditKit.h"
+#import "Communication/ClassyHelper.h"
+#import "Communication/Mantle.h"
+
 #import "substrate.h"
 
 #ifdef DEBUG

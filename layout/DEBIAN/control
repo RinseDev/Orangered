@@ -1,4 +1,4 @@
-Package: com.insanj.orangered
+Package: com.insanj.orangered7
 Name: Orangered for iOS 7
 Pre-Depends: firmware (>= 7.0)
 Depends: mobilesubstrate
