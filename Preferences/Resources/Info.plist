@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>OrangeredForiOS7</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.phillipt.orangered</string>
+	<string>com.insanj.orangered</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -23,6 +23,6 @@
 	<key>MinimumOSVersion</key>
 	<string>3.0</string>
 	<key>NSPrincipalClass</key>
-	<string>OrangeredForiOS7ListController</string>
+	<string>ORListController</string>
 </dict>
 </plist>
