@@ -133,7 +133,7 @@
 			<key>label</key>
 			<string>Refresh Interval</string>
 			<key>placeholder</key>
-			<string>60 (minutes)</string>
+			<string>1, 60, 120, 340, 1337</string>
 		</dict>
 
 		<dict>
@@ -161,12 +161,12 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Support available in Cydia.&#10;© 2013-2014 Julian Weiss &amp; Phillip Tennen</string>
+			<string>Support available in Cydia.&#10;© 2013-2014 Julian Weiss &amp; Phillip Tennen&#10;Icons © 2014 Kyle Paul</string>
 		</dict>
 
         <dict>
             <key>cell</key>         <string>PSButtonCell</string>
-            <key>label</key>        <string>Check Now</string>
+            <key>label</key>        <string>Apply Changes Now</string>
             <key>action</key>       <string>check</string>
         </dict>
 

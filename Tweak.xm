@@ -1,6 +1,70 @@
 #import "Orangered.h"
 
+#define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
 #define RANDOM_PHRASE(str) [@[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill."][arc4random_uniform(8)] stringByAppendingString:str];
+
+
+/**************************************************************************************/
+/************************ CRAVDelegate (used from first run) ****************************/
+/***************************************************************************************/
+
+@interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex;
+@end
+
+@implementation ORAlertViewDelegate
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+	if (buttonIndex == [alertView cancelButtonIndex]) {
+		return;
+	}
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/PreferenceOrganizer.dylib"]) {
+		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Cydia&path=Orangered"]];
+	}
+
+	else {
+		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Orangered"]];
+	}
+}
+
+@end
+
+/***************************************************************************************/
+/********************************* First Run Prompts  **********************************/
+/***************************************************************************************/
+
+static ORAlertViewDelegate *orangeredAlertDelegate;
+
+%hook SBUIController
+
+- (void)_deviceLockStateChanged:(NSNotification *)changed {
+	%orig();
+
+	NSNumber *state = changed.userInfo[@"kSBNotificationKeyState"];
+	if (!state.boolValue) {
+		orangeredAlertDelegate = [[ORAlertViewDelegate alloc] init];
+	}
+}
+
+%end
+
+%hook SBUIAnimationController
+
+- (void)endAnimation {
+	%orig();
+
+	NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	if (orangeredAlertDelegate && !settings[@"didRun"]) {
+		[settings setObject:@(YES) forKey:@"didRun"];
+		[settings writeToFile:PREFS_PATH atomically:YES];
+
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Welcome to Orangered. You'll never miss a message again. Tap Begin to get started, or head to the settings anytime." delegate:orangeredAlertDelegate cancelButtonTitle:@"Later" otherButtonTitles:@"Begin", nil];
+		[alert show];
+	}
+}
+
+%end
 
 /**************************************************************************************/
 /*************************** Static Convenience Functions *****************************/
@@ -46,7 +110,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 %ctor {
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	// Load some preferences...
-		NSDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.insanj.orangered.plist"];
+		NSDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 
 		BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
 		if (!enabled) {
