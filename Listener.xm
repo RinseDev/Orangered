@@ -8,8 +8,7 @@
 @implementation OrangeredForiOS7Listener
 
 - (void)activator:(LAActivator *)activator receiveEvent:(LAEvent *)event {
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"OrangeredLoadPrefs" object:nil];
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"OrangeredClientRefresh" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 	
 	if (event) {
 		[event setHandled:YES];

@@ -13,7 +13,7 @@ Orangered_LDFLAGS = -L/usr/lib/ -lactivator
 Orangered_LIBRARIES += z
 
 include $(THEOS_MAKE_PATH)/tweak.mk
-# SUBPROJECTS += ORPrefs
+SUBPROJECTS += ORPrefs
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
 after-install::

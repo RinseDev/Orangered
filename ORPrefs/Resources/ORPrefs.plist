@@ -16,12 +16,23 @@
 			<true/>
 			<key>defaults</key>
 			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
 			<key>key</key>
 			<string>enabled</string>
 			<key>label</key>
 			<string>Enabled</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>Activation Methods</string>
+			<key>isController</key>
+			<true/>
+			<key>bundle</key>
+			<string>LibActivator</string>			
+			<key>activatorListener</key>
+			<string>com.insanj.orangered.listener</string>
 		</dict>
 
 		<dict>
@@ -38,8 +49,6 @@
 			<string>PSDetailController</string>
 			<key>defaults</key>
 			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
 			<key>key</key>
 			<string>username</string>
 			<key>label</key>
@@ -51,12 +60,12 @@
 		<dict>
 			<key>cell</key>
 			<string>PSSecureEditTextCell</string>
+			<key>cellClass</key>
+			<string>OREditTextCell</string>
 			<key>detail</key>
 			<string>PSDetailController</string>
 			<key>defaults</key>
 			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
 			<key>key</key>
 			<string>password</string>
 			<key>label</key>
@@ -69,7 +78,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Always notify you when Orangered checks your inbox, even if you don't have mail</string>
+			<string>Always notify you when Orangered checks your inbox, even if you don't have mail.</string>
 		</dict>
 
 		<dict>
@@ -79,8 +88,6 @@
 			<true/>
 			<key>defaults</key>
 			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
 			<key>key</key>
 			<string>alwaysNotify</string>
 			<key>label</key>
@@ -91,7 +98,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Mark messages as read when Orangered sends you a notification</string>
+			<string>Mark messages as read after Orangered sends you a notification.</string>
 		</dict>
 
 		<dict>
@@ -101,8 +108,6 @@
 			<false/>
 			<key>defaults</key>
 			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
 			<key>key</key>
 			<string>alwaysMarkRead</string>
 			<key>label</key>
@@ -112,8 +117,6 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>footerText</key>
-			<string>Interpret refresh interval above as minutes (instead of hours).</string>
 		</dict>
 
 		<dict>
@@ -123,61 +126,50 @@
 			<string>PSDetailController</string>
 			<key>defaults</key>
 			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
 			<key>isNumeric</key>
 			<true/>
 			<key>key</key>
 			<string>refreshInterval</string>
 			<key>label</key>
-			<string>Refresh Interval:</string>
+			<string>Refresh Interval</string>
 			<key>placeholder</key>
-			<string>60 (minute)</string>
+			<string>60 (minutes)</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<true/>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
-			<key>key</key>
-			<string>minutesInterval</string>
-			<key>label</key>
-			<string>Minutes</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>label</key>
-			<string>Activation Methods</string>
-			<key>PostNotification</key>
-			<string>com.insanj.orangered/preferencechanged</string>
-			<key>isController</key>
-			<true/>
-			<key>bundle</key>
-			<string>LibActivator</string>			
-			<key>activatorListener</key>
-			<string>com.insanj.orangeredforios7listener</string>
-		</dict>
+            <key>cell</key>        
+			<string>PSSegmentCell</string>
+            <key>defaults</key>    
+            <string>com.insanj.orangered</string>
+            <key>id</key>           
+            <string>IntervalControl</string>
+            <key>key</key>         
+            <string>intervalControl</string>
+            <key>validTitles</key> <array>
+                <string>Seconds</string>
+                <string>Minutes</string>
+                <string>Hours</string>
+            </array>
+            <key>validValues</key> <array>
+                <real>1.0</real>
+                <real>60.0</real>
+                <real>3600.0</real>
+            </array>
+        </dict>
 
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>footerAlignment</key>
-			<integer>1</integer>
 			<key>footerText</key>
-			<string>Support available in Cydia.&#10;&#10;© 2013-2014 Julian Weiss &amp; Phillip Tennen</string>
+			<string>Support available in Cydia.&#10;© 2013-2014 Julian Weiss &amp; Phillip Tennen</string>
 		</dict>
+
+        <dict>
+            <key>cell</key>         <string>PSButtonCell</string>
+            <key>label</key>        <string>Check Now</string>
+            <key>action</key>       <string>check</string>
+        </dict>
+
 	</array>
 	<key>title</key>
 	<string>Orangered</string>

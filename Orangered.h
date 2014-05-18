@@ -1,6 +1,8 @@
 #import <UIKit/UIKit.h>
 #import <libactivator/libactivator.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
+#import <SpringBoard/SBApplication.h>
+#import <SpringBoard/SBApplicationController.h>
 
 #import "Communication/AFNetworking.h"
 #import "Communication/RedditKit.h"

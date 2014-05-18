@@ -1,124 +1,117 @@
 #import "Orangered.h"
 
-// TODO: Really not cool, have to fix in future...
-NSMutableDictionary *prefs;
-NSTimer *timer;
-NSString *username, *password, *redditClient;
-CGFloat refreshInterval;
-BOOL enabled, alwaysNotify, minutesInterval, alwaysMarkRead;
+#define RANDOM_PHRASE(str) [@[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill."][arc4random_uniform(8)] stringByAppendingString:str];
 
-RKClient *client;
-RKPagination *pagination;
+/**************************************************************************************/
+/*************************** Static Convenience Functions *****************************/
+/**************************************************************************************/
 
-@implementation RKClient (Refresh)
+static NSString * orangeredClientIdentifier() {
+	if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alienblue://"]]) {
+		return (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? @"com.designshed.alienbluehd" : @"com.designshed.alienblue";
+	}
 
-- (void)refresh {
-	[client signInWithUsername:username password:password completion:^(NSError *error) {
-		if (!error) {
-			ORLOG(@"signed in!");
-			[client unreadMessagesWithPagination:pagination markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
-				RKMessage *messageContent = [messages firstObject];
-				ORLOG(@"%@" messageContent);
+	for (NSString *s in @[@"com.NateChiger.Reddit", @"com.mediaspree.karma", @"com.nicholasleedesigns.upvote", @"com.jinsongniu.ialien", @"com.amleszk.amrc", @"com.tyanya.reddit"]) {
+		SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
+		if ([controller applicationWithDisplayIdentifier:s]) {
+			return s;
+		}
+	}
 
-				if (messageContent) {
-					ORLOG(@"body: %@", messageContent.body);
-					
-                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-					request.title = [NSString stringWithFormat:@"Message from %@", [messageContent author]];
-					request.message = [NSString stringWithFormat:@"%@", [messageContent messageBody]];
-					request.sectionID = redditClient;
+	return @"com.apple.mobilesafari";
+}
 
-					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-				}
+/**************************************************************************************/
+/*********************** Tiny Helper Firing Object (T.H.F.O) **************************/
+/**************************************************************************************/
 
-				else {
-					ORLOG(@"no new messages, %@" ? alwaysNotify ? @"notify" : @"don't notify");
-					if (alwaysNotify) {
-                    	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-						request.title = @"No Messages";
-						request.message = @"Inbox empty";
-						request.sectionID = redditClient;
-						[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-					}
-				}
-    		}];
+@interface OrangeredChecker : NSObject
+- (void)fireAway;
+@end
 
-    	}
+@implementation OrangeredChecker
 
-    	else {
-			ORLOG(@"didn't signed in: %@", error);
-        	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-			request.title = @"Orangered Error";
-			request.message = @"Error logging in. Please make sure your login information is correct and you have an active internet connection.";
-			request.sectionID = redditClient;
-			[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-    	}
-	}];
+- (void)fireAway {
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 
 @end
 
-static void loadOrangeredPreferences (){
-	prefs = [NSMutableDictionary dictionaryWithContentsOfFile:[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.insanj.orangered.plist"]];
-	ORLOG(@"%@", prefs);
+/**************************************************************************************/
+/************************* Primary RedditKit Communications ***************************/
+/**************************************************************************************/
 
-	enabled = !prefs[@"enabled"] || [prefs[@"enabled"] boolValue];
-	username = prefs[@"username"];
-	password = prefs[@"password"];
-	alwaysNotify = !prefs[@"alwaysNotify"] || [prefs[@"alwaysNotify"] boolValue];
-	minutesInterval = !prefs[@"minutesInterval"] || [prefs[@"minutesInterval"] boolValue];
-	alwaysMarkRead = prefs[@"alwaysMarkRead"] && [prefs[@"alwaysMarkRead"] boolValue];
-
-	NSString *refreshIntervalString = prefs[@"refreshInterval"];
-	if (refreshIntervalString) {
-		refreshInterval = minutesInterval ? [refreshIntervalString floatValue] : [refreshIntervalString floatValue] * 60.0;
-	}
-
-	else {
-		refreshInterval = minutesInterval ? 3600.0 : 216000.0;
-	}
-
-	NSString *thingsNotProvided = @"";
-	if (!username) {
-		thingsNotProvided = [NSString stringWithFormat:@"%@, %@", thingsNotProvided, username];
-	}
-
-	if (!password) {
-		thingsNotProvided = [NSString stringWithFormat:@"%@, %@", thingsNotProvided, password];
-	}
-
-	UIAlertView *urgentAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"Oops! Looks like a valid %@ wasn't provided. Check your Settings before Orangered is activated again to resolve this issue!", thingsNotProvided] delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
-	[urgentAlert show];
-
-	if ([timer isValid]) {
-		[timer invalidate];
-	}
-   
-    if (enabled) {
-    	timer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:client selector:@selector(refresh) userInfo:nil repeats:YES];
-    	ORLOG(@"started timer with %d interval on loadPrefs", refreshInterval);
-    }
-
-    else {
-    	[timer invalidate];
-    }
-}
+static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer someday
 
 %ctor {
-	client = [[RKClient alloc] init];
-	pagination = [RKPagination paginationWithLimit:10];
+    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+    	// Load some preferences...
+		NSDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.insanj.orangered.plist"];
 
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)&loadOrangeredPreferences, CFSTR("com.insanj.orangered/preferencechanged"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
-    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"OrangeredLoadPrefs" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification){
-    	loadOrangeredPreferences();
+		BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
+		if (!enabled) {
+			return;
+		}
+
+		NSString *username = preferences[@"username"];
+		NSString *password = preferences[@"password"];
+
+	    // Apparently RedditKit crashes out if either are nil? Bizarre.
+	    if (!username || !password) {
+	    	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+			request.title = @"Orangered";
+			request.message = @"Uh-oh! Please check your username and password in the settings.";
+			request.sectionID = @"com.apple.Preferences";
+			[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+			return;
+	    }
+
+		BOOL alwaysNotify = !preferences[@"alwaysNotify"] || [preferences[@"alwaysNotify"] boolValue];
+		BOOL alwaysMarkRead = preferences[@"alwaysMarkRead"] && [preferences[@"alwaysMarkRead"] boolValue];
+		
+		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
+		NSString *refreshIntervalString = preferences[@"refreshInterval"];
+		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
+
+    	orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredChecker new] selector:@selector(fireAway) userInfo:nil repeats:NO];
+
+	    // Set-up some variables...
+		RKClient *client = [[RKClient alloc] init];
+		RKPagination *pagination = [RKPagination paginationWithLimit:10];
+
+    	// Sign in using RedditKit and supplied login information (retrieved earlier, presumably)...
+    	[client signInWithUsername:username password:password completion:^(NSError *error) {
+    		if (error) {
+	        	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+				request.title = @"Orangered";
+				request.message = [@"Oops! Looks like there was a problem logging you in. Please make sure your login information is correct and you have an active internet connection. Error: " stringByAppendingString:[error localizedDescription]];
+				request.sectionID = @"com.apple.Preferences";
+				[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+				return;
+    		}
+
+			// If properly signed in, check for unread messages...			
+			[client unreadMessagesWithPagination:pagination markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
+				RKMessage *messageContent = [messages firstObject];
+
+				if (messageContent) {					
+                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+					request.title = [NSString stringWithFormat:@"%@ from %@", messageContent.subject, messageContent.author];
+					request.message = [messageContent messageBody];
+					request.sectionID = orangeredClientIdentifier();
+
+					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+				}
+
+				else if (alwaysNotify) {
+                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+					request.title = @"Orangered";
+					request.message = RANDOM_PHRASE(@" No new messages found.");
+					request.sectionID = orangeredClientIdentifier();
+
+					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+				}
+    		}];
+		}];
     }];
-
-    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"OrangeredClientRefresh" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification){
-    	[client refresh];
-    }];
-
-
-	loadOrangeredPreferences();
-
-	timer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:client selector:@selector(refresh) userInfo:nil repeats:YES];
 }
