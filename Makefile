@@ -5,15 +5,14 @@ ARCHS = armv7 armv7s arm64
 include theos/makefiles/common.mk
 
 TWEAK_NAME = Orangered
-Orangered_FILES = Tweak.xm Listener.xm $(wildcard *.m) $(wildcard Communication/*.m)
+Orangered_FILES = Orangered.xm $(wildcard Communication/*.m)
 Orangered_FRAMEWORKS = AudioToolbox CFNetwork CoreLocation Security StoreKit UIKit QuartzCore CoreGraphics SystemConfiguration Security MobileCoreServices
 Orangered_PRIVATE_FRAMEWORKS = BulletinBoard
-Orangered_CFLAGS = -fobjc-arc
-Orangered_LDFLAGS = -L/usr/lib/ -lactivator
 Orangered_LIBRARIES += z
+Orangered_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/tweak.mk
-SUBPROJECTS += ORPrefs
+SUBPROJECTS += ORPrefs ORListener
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
 after-install::

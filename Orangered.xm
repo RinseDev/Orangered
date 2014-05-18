@@ -89,11 +89,53 @@ static NSString * orangeredClientIdentifier() {
 /*********************** Tiny Helper Firing Object (T.H.F.O) **************************/
 /**************************************************************************************/
 
-@interface OrangeredChecker : NSObject
+@interface OrangeredProvider : NSObject <BBDataProvider>
 - (void)fireAway;
 @end
 
-@implementation OrangeredChecker
+@implementation OrangeredProvider
+
++ (instancetype)sharedInstance {
+	static OrangeredProvider *sharedInstance;
+
+	static dispatch_once_t provider_token = 0;
+	dispatch_once(&provider_token, ^{
+		sharedInstance = [[self alloc] init];
+	});
+
+	return sharedInstance;
+}
+
+- (void)pushBulletins:(NSMutableArray *)bulletins {
+	BBDataProviderWithdrawBulletinsWithRecordID(self, @"com.insanj.orangered.bulletin");
+
+	for (BBBulletinRequest *bulletin in bulletins) {
+		BBDataProviderAddBulletin(self, bulletin);
+	}
+}
+
+- (NSArray *)bulletinsFilteredBy:(NSUInteger)filter count:(NSUInteger)count lastCleared:(NSDate *)lastCleared {
+	return nil;
+}
+
+- (BBSectionInfo *)defaultSectionInfo {
+	BBSectionInfo *sectionInfo = [BBSectionInfo defaultSectionInfoForType:0];
+	sectionInfo.notificationCenterLimit = 10;
+	sectionInfo.sectionID = self.sectionIdentifier;
+	return sectionInfo;
+}
+
+- (NSString *)sectionIdentifier {
+	return @"com.insanj.orangered.bulletin";
+}
+
+- (NSString *)sectionDisplayName {
+	return @"Orangered";
+}
+
+- (NSArray *)sortDescriptors {
+	return [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+}
 
 - (void)fireAway {
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
@@ -137,7 +179,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 		NSString *refreshIntervalString = preferences[@"refreshInterval"];
 		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
-    	orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredChecker new] selector:@selector(fireAway) userInfo:nil repeats:NO];
+    	orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil repeats:NO];
 
 	    // Set-up some variables...
 		RKClient *client = [[RKClient alloc] init];
@@ -146,9 +188,11 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
     	// Sign in using RedditKit and supplied login information (retrieved earlier, presumably)...
     	[client signInWithUsername:username password:password completion:^(NSError *error) {
     		if (error) {
+				NSLog(@"[Orangered] Error logging in: %@", [error localizedDescription]);
+
 	        	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 				request.title = @"Orangered";
-				request.message = [@"Oops! Looks like there was a problem logging you in. Please make sure your login information is correct and you have an active internet connection. Error: " stringByAppendingString:[error localizedDescription]];
+				request.message = [NSString stringWithFormat:@"Oops! There was a problem logging you in. Check syslog for error (%i).", (int)[error code]];
 				request.sectionID = @"com.apple.Preferences";
 				[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
 				return;
@@ -156,17 +200,29 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 
 			// If properly signed in, check for unread messages...			
 			[client unreadMessagesWithPagination:pagination markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
-				RKMessage *messageContent = [messages firstObject];
 
-				if (messageContent) {					
-                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-					request.title = [NSString stringWithFormat:@"%@ from %@", messageContent.subject, messageContent.author];
-					request.message = [messageContent messageBody];
-					request.sectionID = orangeredClientIdentifier();
+				if (messages && messages.count > 0) {
+					NSMutableArray *bulletins = [[NSMutableArray alloc] init];
 
-					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+					for (RKMessage *message in messages) {
+	                	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+						bulletin.recordID = @"com.insanj.orangered.bulletin";
+						bulletin.sectionID = orangeredClientIdentifier();
+
+	        			bulletin.showsUnreadIndicator = message.unread;
+						bulletin.title = message.subject;
+						bulletin.subtitle = [@"from " stringByAppendingString:message.author];
+						bulletin.message = message.messageBody;
+						bulletin.date = message.created;
+
+						bulletin.lastInterruptDate = [NSDate date];
+						[bulletins addObject:bulletin];
+						// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+					}
+
+					[[OrangeredProvider sharedInstance] pushBulletins:bulletins];
 				}
-
+	
 				else if (alwaysNotify) {
                 	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 					request.title = @"Orangered";
