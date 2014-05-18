@@ -39,7 +39,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Login</string>
+			<string>Options</string>
 		</dict>
 
 		<dict>
@@ -117,6 +117,8 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Make sure to apply changes after altering the interval.</string>
 		</dict>
 
 		<dict>
