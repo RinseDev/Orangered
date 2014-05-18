@@ -180,26 +180,75 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
     	orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil repeats:NO];
+		NSLog(@"[Orangered] Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
 
 	    // Set-up some variables...
-		RKClient *client = [[RKClient alloc] init];
-		RKPagination *pagination = [RKPagination paginationWithLimit:10];
+		RKClient *client = [RKClient sharedClient];
+		if ([client isSignedIn] && (![client.currentUser.username isEqualToString:username])) {
+			NSLog(@"[Orangered] Detected user changed, signing out...");
+			[client signOut];
+		}
 
-    	// Sign in using RedditKit and supplied login information (retrieved earlier, presumably)...
-    	[client signInWithUsername:username password:password completion:^(NSError *error) {
-    		if (error) {
-				NSLog(@"[Orangered] Error logging in: %@", [error localizedDescription]);
+		if (![client isSignedIn]) {
+			NSLog(@"[Orangered] No existing user session detected, signing in...");
 
-	        	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-				request.title = @"Orangered";
-				request.message = [NSString stringWithFormat:@"Oops! There was a problem logging you in. Check syslog for error (%i).", (int)[error code]];
-				request.sectionID = @"com.apple.Preferences";
-				[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-				return;
-    		}
+			// Sign in using RedditKit and supplied login information, and ping for unread messages.
+	    	[client signInWithUsername:username password:password completion:^(NSError *error) {
+	    		if (error) {
+					NSLog(@"[Orangered] Error logging in: %@", [error localizedDescription]);
 
-			// If properly signed in, check for unread messages...			
-			[client unreadMessagesWithPagination:pagination markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
+		        	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+					request.title = @"Orangered";
+					request.message = [NSString stringWithFormat:@"Oops! There was a problem logging you in. Check syslog for error (%i).", (int)[error code]];
+					request.sectionID = @"com.apple.Preferences";
+					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+					return;
+	    		}
+
+				// If properly signed in, check for unread messages...			
+				[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
+			    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
+
+					if (messages && messages.count > 0) {
+						NSMutableArray *bulletins = [[NSMutableArray alloc] init];
+
+						for (RKMessage *message in messages) {
+		                	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+							bulletin.recordID = @"com.insanj.orangered.bulletin";
+							bulletin.sectionID = orangeredClientIdentifier();
+
+		        			bulletin.showsUnreadIndicator = message.unread;
+							bulletin.title = message.subject;
+							bulletin.subtitle = [@"from " stringByAppendingString:message.author];
+							bulletin.message = message.messageBody;
+							bulletin.date = message.created;
+
+							bulletin.lastInterruptDate = [NSDate date];
+							[bulletins addObject:bulletin];
+							// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+						}
+
+						[[OrangeredProvider sharedInstance] pushBulletins:bulletins];
+					}
+		
+					else if (alwaysNotify) {
+	                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+						request.title = @"Orangered";
+						request.message = RANDOM_PHRASE(@" No new messages found.");
+						request.sectionID = orangeredClientIdentifier();
+
+						[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+					}
+	    		}];
+			}];
+		}
+
+		else {
+			NSLog(@"[Orangered] Existing user session detected, pinging Reddit...");
+
+			// Check for unread messages...			
+			[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
+		    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
 
 				if (messages && messages.count > 0) {
 					NSMutableArray *bulletins = [[NSMutableArray alloc] init];
@@ -232,6 +281,6 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
 				}
     		}];
-		}];
+		}
     }];
 }
