@@ -4,7 +4,6 @@
 
 #import "Communication/AFNetworking.h"
 #import "Communication/RedditKit.h"
-#import "Communication/ClassyHelper.h"
 #import "Communication/Mantle.h"
 
 #import "substrate.h"
