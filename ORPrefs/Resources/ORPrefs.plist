@@ -135,7 +135,7 @@
 			<key>label</key>
 			<string>Refresh Interval</string>
 			<key>placeholder</key>
-			<string>1, 60, 120, 340, 1337</string>
+			<string>3600, 60, 1</string>
 		</dict>
 
 		<dict>
@@ -162,8 +162,6 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>footerText</key>
-			<string>Support available in Cydia.&#10;© 2013-2014 Julian Weiss &amp; Phillip Tennen&#10;Icons © 2014 Kyle Paul</string>
 		</dict>
 
         <dict>
@@ -171,6 +169,12 @@
             <key>label</key>        <string>Apply Changes Now</string>
             <key>action</key>       <string>check</string>
         </dict>
+
+		<dict>
+			<key>cell</key> 			<string>PSStaticTextCell</string>
+			<key>cellClass</key>		<string>ORCreditsCell</string>
+			<key>height</key> 	  	    <integer>54</integer>
+		</dict>
 
 	</array>
 	<key>title</key>
