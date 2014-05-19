@@ -1,7 +1,6 @@
 #import "Orangered.h"
 
 #define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
-#define RANDOM_PHRASE(str) [@[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill."][arc4random_uniform(8)] stringByAppendingString:str];
 
 /**************************************************************************************/
 /************************ CRAVDelegate (used from first run) ****************************/
@@ -101,6 +100,11 @@ static NSString * orangeredClientIdentifier() {
 	}
 
 	return @"com.apple.mobilesafari";
+}
+
+static NSString * orangeredPhrase() {
+	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
+	return [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
 }
 
 /**************************************************************************************/
@@ -236,7 +240,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 					else if (alwaysNotify) {
 	                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 						request.title = @"Orangered";
-						request.message = RANDOM_PHRASE(@" No new messages found.");
+						request.message = orangeredPhrase();
 						request.sectionID = orangeredClientIdentifier();
 
 						[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
@@ -277,7 +281,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 				else if (alwaysNotify) {
                 	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 					request.title = @"Orangered";
-					request.message = RANDOM_PHRASE(@" No new messages found.");
+					request.message = orangeredPhrase();
 					request.sectionID = orangeredClientIdentifier();
 
 					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
