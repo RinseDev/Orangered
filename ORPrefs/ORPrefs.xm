@@ -6,6 +6,7 @@
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 #define TINT_COLOR [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
+
 @interface ORListController: PSListController
 @end
 
@@ -19,7 +20,7 @@
 	return _specifiers;
 }
 
-- (void)loadView {
+- (void)loadView {	
 	[super loadView];
 
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = TINT_COLOR;

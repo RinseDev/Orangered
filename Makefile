@@ -5,7 +5,7 @@ ARCHS = armv7 armv7s arm64
 include theos/makefiles/common.mk
 
 TWEAK_NAME = Orangered
-Orangered_FILES = Orangered.xm $(wildcard Communication/*.m)
+Orangered_FILES = $(wildcard *.xm) $(wildcard Communication/*.m)
 Orangered_FRAMEWORKS = AudioToolbox CFNetwork CoreLocation Security StoreKit UIKit QuartzCore CoreGraphics SystemConfiguration Security MobileCoreServices
 Orangered_PRIVATE_FRAMEWORKS = BulletinBoard
 Orangered_LIBRARIES += z

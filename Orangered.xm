@@ -3,7 +3,6 @@
 #define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
 #define RANDOM_PHRASE(str) [@[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill."][arc4random_uniform(8)] stringByAppendingString:str];
 
-
 /**************************************************************************************/
 /************************ CRAVDelegate (used from first run) ****************************/
 /***************************************************************************************/
@@ -66,6 +65,25 @@ static ORAlertViewDelegate *orangeredAlertDelegate;
 
 %end
 
+/***************************************************************************************/
+/**************************** Super-Import Server Saving  ******************************/
+/***************************************************************************************/
+
+static BBServer *server;
+
+%hook BBServer
+
+- (id)init {
+	server = %orig();
+
+	OrangeredProvider *provider = [OrangeredProvider sharedInstance];
+	[server _addDataProvider:provider forFactory:provider.factory];
+
+	return server;
+}
+
+%end
+
 /**************************************************************************************/
 /*************************** Static Convenience Functions *****************************/
 /**************************************************************************************/
@@ -86,109 +104,6 @@ static NSString * orangeredClientIdentifier() {
 }
 
 /**************************************************************************************/
-/******************* Not-so Tiny Helper Firing Objects (N.T.H.F.O) ********************/
-/**************************************************************************************/
-
-@implementation OrangeredProvider
-
-+ (instancetype)sharedInstance {
-	static OrangeredProvider *sharedInstance;
-
-	static dispatch_once_t provider_token = 0;
-	dispatch_once(&provider_token, ^{
-		sharedInstance = [[self alloc] init];
-		sharedInstance.factory = [[OrangeredProviderFactory alloc] init];
-	});
-
-	return sharedInstance;
-}
-
-- (NSString *)sectionDisplayName {
-	return [[[self sectionIdentifier] componentsSeparatedByString:@"."] lastObject];
-}
-
-- (BBSectionInfo *)defaultSectionInfo {
-	BBSectionInfo *sectionInfo = [BBSectionInfo defaultSectionInfoForType:0];
-	sectionInfo.notificationCenterLimit = 10;
-	sectionInfo.sectionID = [self sectionIdentifier];
-	return sectionInfo;
-}
-
-- (id)sectionIdentifier {
-	return self.customSectionID ?: @"com.insanj.orangered.bulletin";
-}
-
-// -(id)sectionIcon;
-// -(id)sectionIconData;
-
-
-- (NSArray *)bulletinsFilteredBy:(NSUInteger)filter count:(NSUInteger)count lastCleared:(NSDate *)lastCleared {
-	return nil;
-}
-
-- (NSArray *)sortDescriptors {
-	return [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
-}
-
-- (void)pushBulletins:(NSMutableArray *)bulletins {
-	BBDataProviderWithdrawBulletinsWithRecordID(self, @"com.insanj.orangered.bulletin");
-
-	for (BBBulletinRequest *bulletin in bulletins) {
-		BBDataProviderAddBulletin(self, bulletin);
-	}
-}
-
-- (void)fireAway {
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
-}
-
-@end
-
-
-@implementation OrangeredProviderFactory
-
-- (id)dataProviders {
-	return @[[OrangeredProvider sharedInstance]];
-}
-
-- (NSString *)sectionDisplayName {
-	return [[self dataProviders][0] sectionDisplayName];
-}
-
-- (BBSectionInfo *)defaultSectionInfo {
-	return [[self dataProviders][0] defaultSectionInfo];
-}
-
-- (id)sectionIdentifier {
-	return [[self dataProviders][0] sectionIdentifier];
-}
-
-- (NSArray *)bulletinsFilteredBy:(NSUInteger)filter count:(NSUInteger)count lastCleared:(NSDate *)lastCleared {
-	return [[self dataProviders][0] bulletinsFilteredBy:filter count:count lastCleared:lastCleared];
-}
-
-- (NSArray *)sortDescriptors {
-	return [[self dataProviders][0] sortDescriptors];
-}
-
-@end
-
-static BBServer *server;
-
-%hook BBServer
-
-- (id)init {
-	server = %orig();
-
-	OrangeredProvider *provider = [OrangeredProvider sharedInstance];
-	[server _addDataProvider:provider forFactory:provider.factory];
-
-	return server;
-}
-
-%end
-
-/**************************************************************************************/
 /************************* Primary RedditKit Communications ***************************/
 /**************************************************************************************/
 
@@ -197,7 +112,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 %ctor {
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	// Load some preferences...
-		NSDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+		NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 
 		BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
 		if (!enabled) {
@@ -205,10 +120,10 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 		}
 
 		NSString *username = preferences[@"username"];
-		NSString *password = preferences[@"password"];
+		NSMutableString *passwordKey = [[NSMutableString alloc] initWithString:preferences[@"password"]];
 
 	    // Apparently RedditKit crashes out if either are nil? Bizarre.
-	    if (!username || !password) {
+	    if (!username || !passwordKey) {
 	    	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 			request.title = @"Orangered";
 			request.message = @"Uh-oh! Please check your username and password in the settings.";
@@ -226,6 +141,35 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 
     	orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil repeats:NO];
 		NSLog(@"[Orangered] Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
+
+		// Let's get the real password, now that we've covered all the bases...
+		NSError *getItemForKeyError;
+		NSString *password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
+		if (getItemForKeyError) {
+			NSLog(@"[Orangered] Error trying to retrieve secured password, must have to secure it...");
+			password = [NSString stringWithString:passwordKey];
+			passwordKey = [[NSMutableString alloc] init];
+
+		    for (int i = 0; i < password.length; i++) {
+		        [passwordKey appendFormat:@"%c", arc4random_uniform(26) + 'a'];
+		    }
+
+			NSError *saveItemForKeyError;
+			[FDKeychain saveItem:password forKey:passwordKey forService:@"Orangered" error:&saveItemForKeyError];
+			if (saveItemForKeyError) {
+				NSLog(@"[Orangered] Encountered an unfortunate error trying to secure password. Well shit. Cover your eyes: %@", saveItemForKeyError);
+			}
+
+			else {
+				NSLog(@"[Orangered] Secured password successfully! :)");
+				[preferences setObject:passwordKey forKey:@"password"];
+				[preferences writeToFile:PREFS_PATH atomically:YES];
+			}
+		}
+
+		else {
+			NSLog(@"[Orangered] Accessed secured password successfully!");
+		}
 
 	    // Set-up some variables...
 		RKClient *client = [RKClient sharedClient];
@@ -253,6 +197,12 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 				// If properly signed in, check for unread messages...			
 				[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
 			    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
+					if (alwaysMarkRead) {
+						NSLog(@"[Orangered] Ensuring messages are all marked read...");
+						[client markMessageArrayAsRead:messages completion:^(NSError *error) {
+							NSLog(@"[Orangered] %@ cleared out unread messages.", error ? [NSString stringWithFormat:@"Failed (%@). Wishing I", [error localizedDescription]] : @"Successfully");
+						}];
+					}
 
 			    	NSString *sectionID = orangeredClientIdentifier();
 			    	OrangeredProvider *provider = [OrangeredProvider sharedInstance];
@@ -278,8 +228,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 							NSLog(@"[Orangered] Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
 							BBDataProviderAddBulletin(provider, bulletin);
 
-							//[server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
-
+							// [server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
 							// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
 						}
 					}

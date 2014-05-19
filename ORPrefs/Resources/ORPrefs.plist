@@ -40,6 +40,8 @@
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Options</string>
+			<key>footerText</key>
+			<string>Activate Orangered to secure your password.</string>
 		</dict>
 
 		<dict>
