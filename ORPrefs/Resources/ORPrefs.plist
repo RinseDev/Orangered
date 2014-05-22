@@ -175,7 +175,7 @@
 		<dict>
 			<key>cell</key> 			<string>PSStaticTextCell</string>
 			<key>cellClass</key>		<string>ORCreditsCell</string>
-			<key>height</key> 	  	    <integer>70</integer>
+			<key>height</key> 	  	    <integer>74</integer>
 		</dict>
 
 	</array>

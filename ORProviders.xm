@@ -35,7 +35,7 @@
 			return ((self.customSectionID = @"com.designshed.alienblue"));
 		}
 
-		for (NSString *s in @[@"com.NateChiger.Reddit", @"com.mediaspree.karma", @"com.nicholasleedesigns.upvote", @"com.jinsongniu.ialien", @"com.amleszk.amrc", @"com.tyanya.reddit"]) {
+		for (NSString *s in CLIENT_LIST) {
 			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
 			if ([controller applicationWithDisplayIdentifier:s]) {
 				return ((self.customSectionID = s));

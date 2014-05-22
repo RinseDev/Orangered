@@ -1,7 +1,13 @@
 [Orangered](http://insanj.com/orangered)
 =======================
 
-native push notifications for iOS 7. orangered is a dynamic, virtually seamless way to unite ios and reddit in perfect harmony. using programically-tight methods of retrieving, processing, and presenting reddit information, this is the best way to stay on top of your inbox. after proving your identity, orangered will automatically check your reddit inbox for unread messages and replies. set up your ideal checking interval (how long you want orangered to wait before checking your inbox again, in minutes or hours), save your information, and let orangered works its magic. never think about your new posts, comments, or mentions again.
+Native push notifications for Reddit. Orangered seamlessly connects your device to Reddit, as quickly and flexibly as possible. With an impressive list of supported clients, and simple, configurable options, you'll never feel closer to your inbox. Set up recurring inbox checks, or simply trigger Orangered with built-in Activator support (or even manually in the Settings).
+
+Built with love and care by Julian Weiss and Phillip Tennen. Supports all devices running iOS 7. Icon and website design by Kyle Paul.
+
+Currently supports:
+
+	Alien Blue, Alien Blue HD, narwhal, Cake, Reddme, Aliens, amrc, Redditor, BaconReader, Reddito, Karma, Redd, Upvote, Flippit, MyReddit, Mars, OJ Free, OJ, Karma Train, iAlien
 
 Commercial tweak, currently closed source. Available from BigBoss.
 
