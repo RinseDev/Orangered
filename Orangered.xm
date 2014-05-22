@@ -180,9 +180,10 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 			if (messages && messages.count > 0) {
             	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
-				bulletin.sectionID = sectionID;
 				bulletin.lastInterruptDate = [NSDate date];
-				
+				bulletin.sectionID = sectionID;
+				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
+
 				RKMessage *message = messages[0];
     			bulletin.showsUnreadIndicator = message.unread;
 				bulletin.date = message.created;
