@@ -68,17 +68,17 @@ static ORAlertViewDelegate *orangeredAlertDelegate;
 /**************************** Super-Import Server Saving  ******************************/
 /***************************************************************************************/
 
-static BBServer *server;
+static BBServer *orangeredServer;
 
 %hook BBServer
 
 - (id)init {
-	server = %orig();
+	orangeredServer = %orig();
 
-	OrangeredProvider *provider = [OrangeredProvider sharedInstance];
-	[server _addDataProvider:provider forFactory:provider.factory];
+	OrangeredProvider *sharedProvider = [OrangeredProvider sharedInstance];
+	[orangeredServer _addDataProvider:sharedProvider forFactory:sharedProvider.factory];
 
-	return server;
+	return orangeredServer;
 }
 
 %end
@@ -86,21 +86,6 @@ static BBServer *server;
 /**************************************************************************************/
 /*************************** Static Convenience Functions *****************************/
 /**************************************************************************************/
-
-static NSString * orangeredClientIdentifier() {
-	if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alienblue://"]]) {
-		return (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? @"com.designshed.alienbluehd" : @"com.designshed.alienblue";
-	}
-
-	for (NSString *s in @[@"com.NateChiger.Reddit", @"com.mediaspree.karma", @"com.nicholasleedesigns.upvote", @"com.jinsongniu.ialien", @"com.amleszk.amrc", @"com.tyanya.reddit"]) {
-		SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
-		if ([controller applicationWithDisplayIdentifier:s]) {
-			return s;
-		}
-	}
-
-	return @"com.apple.mobilesafari";
-}
 
 static NSString * orangeredPhrase() {
 	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
@@ -177,6 +162,63 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 
 	    // Set-up some variables...
 		RKClient *client = [RKClient sharedClient];
+		RKListingCompletionBlock unreadCompletionBlock = ^(NSArray *messages, RKPagination *pagination, NSError *error) {
+	    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
+			if (alwaysMarkRead) {
+				NSLog(@"[Orangered] Ensuring messages are all marked read...");
+				[client markMessageArrayAsRead:messages completion:^(NSError *error) {
+					NSLog(@"[Orangered] %@ cleared out unread messages.", error ? [NSString stringWithFormat:@"Failed (%@). Wishing I", [error localizedDescription]] : @"Successfully");
+				}];
+			}
+
+			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
+	    	NSString *sectionID = [provider sectionIdentifier];
+
+    		BBDataProviderWithdrawBulletinsWithRecordID(provider, @"com.insanj.orangered.bulletin");
+			// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
+
+			if (messages && messages.count > 0) {
+            	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				bulletin.sectionID = sectionID;
+				bulletin.lastInterruptDate = [NSDate date];
+				
+				RKMessage *message = messages[0];
+    			bulletin.showsUnreadIndicator = message.unread;
+				bulletin.date = message.created;
+
+				if (messages.count == 1) {
+					bulletin.title = message.author;
+					bulletin.subtitle = message.subject;
+					bulletin.message = message.messageBody;
+				}
+
+				else {
+					bulletin.title = @"Orangered";
+					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
+				}
+
+				NSLog(@"[Orangered] Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
+				BBDataProviderAddBulletin(provider, bulletin);
+
+				// [provider pushBulletin:bulletin intoServer:orangeredServer];
+				// BBDataProviderAddBulletin(provider, bulletin);
+				// [server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
+				// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+			}
+
+			else if (alwaysNotify) {
+            	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
+				request.title = @"Orangered";
+				request.message = orangeredPhrase();
+				request.sectionID = sectionID;
+
+				[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+			}
+		}; // end unreadCompletionBlock
+
+
+		// Time to do some WERK
 		if ([client isSignedIn] && (![client.currentUser.username isEqualToString:username])) {
 			NSLog(@"[Orangered] Detected user changed, signing out...");
 			[client signOut];
@@ -199,94 +241,14 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 	    		}
 
 				// If properly signed in, check for unread messages...			
-				[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
-			    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
-					if (alwaysMarkRead) {
-						NSLog(@"[Orangered] Ensuring messages are all marked read...");
-						[client markMessageArrayAsRead:messages completion:^(NSError *error) {
-							NSLog(@"[Orangered] %@ cleared out unread messages.", error ? [NSString stringWithFormat:@"Failed (%@). Wishing I", [error localizedDescription]] : @"Successfully");
-						}];
-					}
-
-			    	NSString *sectionID = orangeredClientIdentifier();
-			    	OrangeredProvider *provider = [OrangeredProvider sharedInstance];
-			    	provider.customSectionID = sectionID;
-
-		    		BBDataProviderWithdrawBulletinsWithRecordID(provider, @"com.insanj.orangered.bulletin");
-					// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
-
-					if (messages && messages.count > 0) {
-						for (RKMessage *message in messages) {
-		                	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
-							bulletin.recordID = @"com.insanj.orangered.bulletin";
-							bulletin.sectionID = sectionID;
-
-		        			bulletin.showsUnreadIndicator = message.unread;
-							bulletin.title = message.subject;
-							bulletin.subtitle = [@"from " stringByAppendingString:message.author];
-							bulletin.message = message.messageBody;
-							bulletin.date = message.created;
-
-							bulletin.lastInterruptDate = [NSDate date];
-
-							NSLog(@"[Orangered] Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
-							BBDataProviderAddBulletin(provider, bulletin);
-
-							// [server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
-							// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-						}
-					}
-		
-					else if (alwaysNotify) {
-	                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-						request.title = @"Orangered";
-						request.message = orangeredPhrase();
-						request.sectionID = orangeredClientIdentifier();
-
-						[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-					}
-	    		}];
+				[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:unreadCompletionBlock];
 			}];
 		}
 
 		else {
 			NSLog(@"[Orangered] Existing user session detected, pinging Reddit...");
-
 			// Check for unread messages...			
-			[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:^(NSArray *messages, RKPagination *pagination, NSError *error) {
-		    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
-
-				if (messages && messages.count > 0) {
-					NSMutableArray *bulletins = [[NSMutableArray alloc] init];
-
-					for (RKMessage *message in messages) {
-	                	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
-						bulletin.recordID = @"com.insanj.orangered.bulletin";
-						bulletin.sectionID = orangeredClientIdentifier();
-
-	        			bulletin.showsUnreadIndicator = message.unread;
-						bulletin.title = message.subject;
-						bulletin.subtitle = [@"from " stringByAppendingString:message.author];
-						bulletin.message = message.messageBody;
-						bulletin.date = message.created;
-
-						bulletin.lastInterruptDate = [NSDate date];
-						[bulletins addObject:bulletin];
-						// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-					}
-
-					[[OrangeredProvider sharedInstance] pushBulletins:bulletins];
-				}
-	
-				else if (alwaysNotify) {
-                	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-					request.title = @"Orangered";
-					request.message = orangeredPhrase();
-					request.sectionID = orangeredClientIdentifier();
-
-					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-				}
-    		}];
+			[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:unreadCompletionBlock];
 		}
     }];
 }

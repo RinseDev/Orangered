@@ -26,12 +26,30 @@
 }
 
 - (id)sectionIdentifier {
-	return self.customSectionID ?: @"com.insanj.orangered.bulletin";
+	if (!self.customSectionID) {
+		if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alienblue://"]]) {
+			if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+				return ((self.customSectionID = @"com.designshed.alienbluehd"));
+			}
+
+			return ((self.customSectionID = @"com.designshed.alienblue"));
+		}
+
+		for (NSString *s in @[@"com.NateChiger.Reddit", @"com.mediaspree.karma", @"com.nicholasleedesigns.upvote", @"com.jinsongniu.ialien", @"com.amleszk.amrc", @"com.tyanya.reddit"]) {
+			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
+			if ([controller applicationWithDisplayIdentifier:s]) {
+				return ((self.customSectionID = s));
+			}
+		}
+
+		return ((self.customSectionID = @"com.apple.mobilesafari"));
+	}
+
+	return self.customSectionID;
 }
 
 // -(id)sectionIcon;
 // -(id)sectionIconData;
-
 
 - (NSArray *)bulletinsFilteredBy:(NSUInteger)filter count:(NSUInteger)count lastCleared:(NSDate *)lastCleared {
 	return nil;
@@ -41,12 +59,17 @@
 	return [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
 }
 
-- (void)pushBulletins:(NSMutableArray *)bulletins {
-	BBDataProviderWithdrawBulletinsWithRecordID(self, @"com.insanj.orangered.bulletin");
+- (void)pushBulletin:(BBBulletinRequest *)bulletin intoServer:(BBServer *)server {
+	//if (!loaded) {
+	//	[server _addDataProvider:self forFactory:self.factory];
+	//	loaded = YES;
+	//}
 
-	for (BBBulletinRequest *bulletin in bulletins) {
+	// BBDataProviderWithdrawBulletinsWithRecordID(self, @"com.insanj.orangered.bulletin");
+
+	// for (BBBulletinRequest *bulletin in bulletins) {
 		BBDataProviderAddBulletin(self, bulletin);
-	}
+	// }
 }
 
 - (void)fireAway {
@@ -54,7 +77,6 @@
 }
 
 @end
-
 
 @implementation OrangeredProviderFactory
 

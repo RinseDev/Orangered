@@ -1,15 +1,16 @@
-#import <UIKit/UIKit.h>
-#import <Foundation/NSDistributedNotificationCenter.h>
-#import <BulletinBoard/BulletinBoard.h>
+#import "Orangered.h"
 
 @interface OrangeredProviderFactory : NSObject <BBDataProviderFactory>
 @end
 
-@interface OrangeredProvider : NSObject <BBRemoteDataProvider>
+@interface OrangeredProvider : NSObject <BBRemoteDataProvider> {
+	BOOL loaded;
+}
+
 @property(nonatomic, retain) NSObject<BBDataProviderFactory> *factory;
 @property(nonatomic, retain) NSString *customSectionID;
 
 + (instancetype)sharedInstance;
-- (void)pushBulletins:(NSMutableArray *)bulletins;
+- (void)pushBulletin:(BBBulletinRequest *)bulletin intoServer:(BBServer *)server;
 - (void)fireAway;
 @end
