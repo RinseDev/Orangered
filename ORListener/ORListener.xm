@@ -8,7 +8,8 @@
 @implementation ORListener
 
 - (void)activator:(LAActivator *)activator receiveEvent:(LAEvent *)event{
-	NSLog(@"recieved event, posting notification....");
+	NSLog(@"[Orangered] Sending check message from Activator...");
+
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 

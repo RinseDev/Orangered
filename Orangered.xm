@@ -163,7 +163,9 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 	    // Set-up some variables...
 		RKClient *client = [RKClient sharedClient];
 		RKListingCompletionBlock unreadCompletionBlock = ^(NSArray *messages, RKPagination *pagination, NSError *error) {
+			[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 	    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
+
 			if (alwaysMarkRead) {
 				NSLog(@"[Orangered] Ensuring messages are all marked read...");
 				[client markMessageArrayAsRead:messages completion:^(NSError *error) {
@@ -174,19 +176,19 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
 	    	NSString *sectionID = [provider sectionIdentifier];
 
-    		BBDataProviderWithdrawBulletinsWithRecordID(provider, @"com.insanj.orangered.bulletin");
+	    	// [orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
+    		BBDataProviderWithdrawBulletinsWithRecordID(provider, sectionID);
 			// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
 
 			if (messages && messages.count > 0) {
             	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
-				bulletin.lastInterruptDate = [NSDate date];
 				bulletin.sectionID = sectionID;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
+				bulletin.date = [NSDate date];
 
 				RKMessage *message = messages[0];
     			bulletin.showsUnreadIndicator = message.unread;
-				bulletin.date = message.created;
 
 				if (messages.count == 1) {
 					bulletin.title = message.author;
@@ -200,8 +202,10 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 				}
 
 				NSLog(@"[Orangered] Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
-				BBDataProviderAddBulletin(provider, bulletin);
+				// [orangeredServer _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
+				// [orangeredServer publishBulletinRequest:bulletin destinations:2];
 
+				BBDataProviderAddBulletin(provider, bulletin);
 				// [provider pushBulletin:bulletin intoServer:orangeredServer];
 				// BBDataProviderAddBulletin(provider, bulletin);
 				// [server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
@@ -218,12 +222,13 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 			}
 		}; // end unreadCompletionBlock
 
-
 		// Time to do some WERK
 		if ([client isSignedIn] && (![client.currentUser.username isEqualToString:username])) {
 			NSLog(@"[Orangered] Detected user changed, signing out...");
 			[client signOut];
 		}
+
+		[[UIApplication sharedApplication] _beginShowingNetworkActivityIndicator];
 
 		if (![client isSignedIn]) {
 			NSLog(@"[Orangered] No existing user session detected, signing in...");
@@ -238,6 +243,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 					request.message = [NSString stringWithFormat:@"Oops! There was a problem logging you in. Check syslog for error (%i).", (int)[error code]];
 					request.sectionID = @"com.apple.Preferences";
 					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 					return;
 	    		}
 

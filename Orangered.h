@@ -34,3 +34,9 @@
 // @interface BBServer (Private)
 // + (instancetype)sharedInstance;
 // @end
+
+@interface UIApplication (Private)
+- (void)_beginShowingNetworkActivityIndicator;
+- (void)_hideNetworkActivityIndicator;
+- (void)_endShowingNetworkActivityIndicator;
+@end
