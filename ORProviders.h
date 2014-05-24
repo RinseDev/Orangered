@@ -12,5 +12,5 @@
 
 + (instancetype)sharedInstance;
 - (void)pushBulletin:(BBBulletinRequest *)bulletin intoServer:(BBServer *)server;
-- (void)fireAway:(NSTimer *)sender;
+- (void)fireAway;
 @end

@@ -1,16 +1,17 @@
 #import <UIKit/UIKit.h>
-#import <libactivator/libactivator.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
+#import <UIKit/UITableViewCell+Private.h>
+#import <Twitter/Twitter.h>
+#import <objc/runtime.h>
+
 #import <SpringBoard/SBApplication.h>
 #import <SpringBoard/SBApplicationController.h>
 #import <SpringBoard/SBBulletinBannerController.h>
 #import <BulletinBoard/BulletinBoard.h>
-#import <UIKit/UITableViewCell+Private.h>
-#import <Preferences/Preferences.h>
-#import <Twitter/Twitter.h>
 #import <ToneLibrary/ToneLibrary.h>
+#import <PersistentConnection/PersistentConnection.h>
 
-#import <objc/runtime.h>
+#import <libactivator/libactivator.h>
 #import "substrate.h"
 
 #import "Communication/AFNetworking.h"

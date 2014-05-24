@@ -99,7 +99,7 @@ static NSString * orangeredPhrase() {
 /************************* Primary RedditKit Communications ***************************/
 /**************************************************************************************/
 
-static NSTimer *orangeredTimer;
+static PCPersistentTimer *orangeredTimer;
 
 %ctor {
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
@@ -118,9 +118,8 @@ static NSTimer *orangeredTimer;
 		NSString *refreshIntervalString = preferences[@"refreshInterval"];
 		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
-		// Might want to shift to PCPersistantTimer / PCSimpleTimer someday
-		orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredProvider sharedInstance] selector:@selector(fireAway:) userInfo:nil repeats:YES];
-		[[NSRunLoop mainRunLoop] addTimer:orangeredTimer forMode:NSDefaultRunLoopMode];
+		orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil];
+		[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
 
 		NSLog(@"[Orangered] Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
 

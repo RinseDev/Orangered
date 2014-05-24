@@ -1,4 +1,5 @@
 #import "../Orangered.h"
+#import <Preferences/Preferences.h>
 
 @interface ORListController: PSListController {
 	PSTableCell *soundCell;
@@ -35,10 +36,7 @@
 	self.view.tintColor = TINT_COLOR;
     self.navigationController.navigationBar.tintColor = TINT_COLOR;
 
-	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	NSString *alertToneName = [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:preferences[@"alertTone"]];
-	soundCell.valueLabel.text = alertToneName;
-
+    [self updateSoundCellValueLabel];
 	[super viewWillAppear:animated];
 }
 
@@ -49,10 +47,17 @@
     self.navigationController.navigationBar.tintColor = nil;
 }
 
+- (void)updateSoundCellValueLabel {
+	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	NSString *alertToneName = [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:preferences[@"alertTone"]];
+	soundCell.valueLabel.text = alertToneName;
+}
+
 - (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2 {
 	PSTableCell *cell = [super tableView:arg1 cellForRowAtIndexPath:arg2];
 	if ([cell.title isEqualToString:@"Sound"]) {
 		soundCell = cell;
+		[self updateSoundCellValueLabel];
 	}
 
 	else if ([cell.title isEqualToString:@"Apply Changes Now"]) {
@@ -158,6 +163,10 @@
 
 - (BOOL)textView:(UITextView *)textView shouldInteractWithURL:(NSURL *)URL inRange:(NSRange)characterRange {
 	return YES;
+}
+
+- (BOOL)canBeShownFromSuspendedState {
+	return NO;
 }
 
 - (void)dealloc {

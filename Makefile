@@ -7,7 +7,7 @@ include theos/makefiles/common.mk
 TWEAK_NAME = Orangered
 Orangered_FILES = $(wildcard *.xm) $(wildcard Communication/*.m)
 Orangered_FRAMEWORKS = AudioToolbox CFNetwork CoreLocation Security StoreKit UIKit QuartzCore CoreGraphics SystemConfiguration Security MobileCoreServices
-Orangered_PRIVATE_FRAMEWORKS = BulletinBoard ToneLibrary
+Orangered_PRIVATE_FRAMEWORKS = BulletinBoard ToneLibrary PersistentConnection
 Orangered_LIBRARIES += z
 Orangered_CFLAGS = -fobjc-arc
 

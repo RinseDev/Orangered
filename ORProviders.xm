@@ -72,7 +72,7 @@
 	// }
 }
 
-- (void)fireAway:(NSTimer *)sender {
+- (void)fireAway {
 	/*NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 	BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
 
