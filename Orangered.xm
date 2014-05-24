@@ -76,6 +76,11 @@ static BBServer *orangeredServer;
 	OrangeredProvider *sharedProvider = [OrangeredProvider sharedInstance];
 	[orangeredServer _addDataProvider:sharedProvider forFactory:sharedProvider.factory];
 
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		NSLog(@"[Orangered] Sending check message from BBServer...");
+		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
+	});
+
 	return orangeredServer;
 }
 
@@ -191,6 +196,13 @@ static NSTimer *orangeredTimer;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
 				bulletin.date = [NSDate date];
 
+				NSString *ringtoneIdentifier = preferences[@"alertTone"];
+				if (ringtoneIdentifier) {
+					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
+					NSLog(@"[Orangered] Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
+					bulletin.sound = savedSound;
+				}
+
 				RKMessage *message = messages[0];
     			bulletin.showsUnreadIndicator = message.unread;
 
@@ -262,7 +274,4 @@ static NSTimer *orangeredTimer;
 			[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:unreadCompletionBlock];
 		}
     }];
-
-	NSLog(@"[Orangered] Sending check message from SpringBoard...");
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }

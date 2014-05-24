@@ -1,13 +1,8 @@
-#import <UIKit/UITableViewCell+Private.h>
-#import <Preferences/Preferences.h>
-#import <Foundation/NSDistributedNotificationCenter.h>
-#import <Twitter/Twitter.h>
+#import "../Orangered.h"
 
-#define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
-#define TINT_COLOR [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
-
-
-@interface ORListController: PSListController
+@interface ORListController: PSListController {
+	PSTableCell *soundCell;
+}
 @end
 
 @implementation ORListController
@@ -28,7 +23,7 @@
 
 	self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(shareTapped:)] autorelease];
 
-	NSDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.insanj.orangered.plist"];
+	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 	if (![preferences objectForKey:@"intervalControl"]) {
 		PSSpecifier *refreshControlSpecifier = [self specifierForID:@"IntervalControl"];
 		[self setPreferenceValue:@(60.0) specifier:refreshControlSpecifier];
@@ -39,6 +34,10 @@
 - (void)viewWillAppear:(BOOL)animated {
 	self.view.tintColor = TINT_COLOR;
     self.navigationController.navigationBar.tintColor = TINT_COLOR;
+
+	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	NSString *alertToneName = [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:preferences[@"alertTone"]];
+	soundCell.valueLabel.text = alertToneName;
 
 	[super viewWillAppear:animated];
 }
@@ -52,7 +51,11 @@
 
 - (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2 {
 	PSTableCell *cell = [super tableView:arg1 cellForRowAtIndexPath:arg2];
-	if ([cell.title isEqualToString:@"Apply Changes Now"]) {
+	if ([cell.title isEqualToString:@"Sound"]) {
+		soundCell = cell;
+	}
+
+	else if ([cell.title isEqualToString:@"Apply Changes Now"]) {
 		cell.textLabel.textColor = TINT_COLOR;
 	}
 
@@ -62,7 +65,7 @@
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
 	[cell _setDrawsSeparatorAtBottomOfSection:NO];
 
-	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1) {
+	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1 && indexPath.row == 1) {
 	    cell.separatorInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, cell.bounds.size.width);
 	}
 }
