@@ -17,6 +17,8 @@
 
 #import "ORProviders.h"
 
+#define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
+
 #ifdef DEBUG
 	#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else

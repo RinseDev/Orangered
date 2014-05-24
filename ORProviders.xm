@@ -72,7 +72,29 @@
 	// }
 }
 
-- (void)fireAway {
+- (void)fireAway:(NSTimer *)sender {
+	/*NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
+
+	if (!enabled) {
+		[sender invalidate];
+	}
+
+	CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
+	NSString *refreshIntervalString = preferences[@"refreshInterval"];
+	CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
+
+
+	if (fabs(sender.timeInterval - refreshInterval) > 2.0) {
+		[sender invalidate];
+
+		NSTimer *orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:self selector:@selector(fireAway:) userInfo:nil repeats:YES];
+		[[NSRunLoop mainRunLoop] addTimer:orangeredTimer forMode:NSDefaultRunLoopMode];
+
+		NSLog(@"[Orangered] Re-wound timer (%@ -> %@) to ping Reddit every %f seconds.", sender, orangeredTimer, refreshInterval);
+	}
+*/
+	NSLog(@"[Orangered] Sending check message from Timer...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 

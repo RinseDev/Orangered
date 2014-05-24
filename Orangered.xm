@@ -1,7 +1,5 @@
 #import "Orangered.h"
 
-#define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
-
 /**************************************************************************************/
 /************************ CRAVDelegate (used from first run) ****************************/
 /***************************************************************************************/
@@ -96,10 +94,13 @@ static NSString * orangeredPhrase() {
 /************************* Primary RedditKit Communications ***************************/
 /**************************************************************************************/
 
-static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer someday
+static NSTimer *orangeredTimer;
 
 %ctor {
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+    	// Let's cancel our appointments...
+    	[orangeredTimer invalidate];
+
     	// Load some preferences...
 		NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 
@@ -107,6 +108,16 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 		if (!enabled) {
 			return;
 		}
+
+		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
+		NSString *refreshIntervalString = preferences[@"refreshInterval"];
+		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
+
+		// Might want to shift to PCPersistantTimer / PCSimpleTimer someday
+		orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredProvider sharedInstance] selector:@selector(fireAway:) userInfo:nil repeats:YES];
+		[[NSRunLoop mainRunLoop] addTimer:orangeredTimer forMode:NSDefaultRunLoopMode];
+
+		NSLog(@"[Orangered] Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
 
 		NSString *username = preferences[@"username"];
 		NSMutableString *passwordKey = [[NSMutableString alloc] initWithString:preferences[@"password"]];
@@ -124,13 +135,6 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 		BOOL alwaysNotify = !preferences[@"alwaysNotify"] || [preferences[@"alwaysNotify"] boolValue];
 		BOOL alwaysMarkRead = preferences[@"alwaysMarkRead"] && [preferences[@"alwaysMarkRead"] boolValue];
 		
-		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
-		NSString *refreshIntervalString = preferences[@"refreshInterval"];
-		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
-
-    	orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil repeats:NO];
-		NSLog(@"[Orangered] Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
-
 		// Let's get the real password, now that we've covered all the bases...
 		NSError *getItemForKeyError;
 		NSString *password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
@@ -258,4 +262,7 @@ static NSTimer *orangeredTimer; // Shift to PCPersistantTimer / PCSimpleTimer so
 			[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:unreadCompletionBlock];
 		}
     }];
+
+	NSLog(@"[Orangered] Sending check message from SpringBoard...");
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
