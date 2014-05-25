@@ -8,8 +8,8 @@
 #import <SpringBoard/SBApplicationController.h>
 #import <SpringBoard/SBBulletinBannerController.h>
 #import <BulletinBoard/BulletinBoard.h>
-#import <ToneLibrary/ToneLibrary.h>
 #import <PersistentConnection/PersistentConnection.h>
+#import <ToneLibrary/ToneLibrary.h>
 
 #import <libactivator/libactivator.h>
 #import "substrate.h"

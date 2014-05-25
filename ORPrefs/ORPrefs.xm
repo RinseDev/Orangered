@@ -177,3 +177,24 @@
 }
 
 @end
+
+@interface ORRingtoneController : RingtoneController
+@end
+
+%subclass ORRingtoneController : RingtoneController
+
+- (void)viewWillAppear:(BOOL)animated {
+	self.view.tintColor = TINT_COLOR;
+    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+
+	%orig();
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+	%orig();
+
+	self.view.tintColor = nil;
+    self.navigationController.navigationBar.tintColor = nil;
+}
+
+%end

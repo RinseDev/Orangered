@@ -168,7 +168,7 @@
 
         <dict>
             <key>cell</key>             	 <string>PSLinkListCell</string>
-            <key>detail</key> 				 <string>RingtoneController</string>
+            <key>detail</key> 				 <string>ORRingtoneController</string>
             <key>defaults</key>         	 <string>com.insanj.orangered</string>
             <key>defaultToneSelector</key>   <string>defaultReminderAlertToneIdentifier</string>
             <key>key</key> 					 <string>alertTone</string>

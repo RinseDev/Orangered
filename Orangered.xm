@@ -155,7 +155,6 @@ static PCPersistentTimer *orangeredTimer;
 		// Let's get the real password, now that we've covered all the bases...
 		NSError *getItemForKeyError;
 		NSString *password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
-		ORLOG(@"------- %i", (int)getItemForKeyError.code);
 		if (getItemForKeyError.code == -25308) {
 			ORLOG(@"Error trying to retrieve secured password, postponing until we're not at the lockscreen...");
 			checkOnUnlock = YES;
