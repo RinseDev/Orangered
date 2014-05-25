@@ -33,12 +33,11 @@
 					  @"com.NateChiger.MarsReddit", @"com.aretesolutions.ojfree", @"com.aretesolutions.oj", @"com.lm.karmatrain", \
 					  @"com.jinsongniu.ialien"]
 
-#define __DEBUG__ 1
-#ifdef __DEBUG__
-	#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#else
-	#define ORLOG(fmt, ...) 
-#endif
+
+// Because of some weird DEBUG setting, this is a must...
+// Other locations ORLOG can be found at (that I didn't feel like consolidating): ORListener.xm
+// #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define ORLOG(fmt, ...) 
 
 // @interface BBServer (Private)
 // + (instancetype)sharedInstance;

@@ -164,7 +164,7 @@ static PCPersistentTimer *orangeredTimer;
 		else if (getItemForKeyError.code == -25300) {
 			ORLOG(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
 			password = [NSString stringWithString:passwordKey];
-			NSMutableString *mutableKey = [[NSMutableString alloc] initWithString:passwordKey];
+			NSMutableString *mutableKey = [[NSMutableString alloc] init];
 
 		    for (int i = 0; i < password.length; i++) {
 		        [mutableKey appendFormat:@"%c", arc4random_uniform(26) + 'a'];

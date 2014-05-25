@@ -2,13 +2,16 @@
 #import <Foundation/NSDistributedNotificationCenter.h>
 #import <UIKit/UIKit.h>
 
+// #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define ORLOG(fmt, ...) 
+
 @interface ORListener : NSObject <LAListener>
 @end
 
 @implementation ORListener
 
 - (void)activator:(LAActivator *)activator receiveEvent:(LAEvent *)event{
-	NSLog(@"[Orangered] Sending check message from Activator...");
+	ORLOG(@"[Orangered] Sending check message from Activator...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 

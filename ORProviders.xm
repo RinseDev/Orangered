@@ -58,7 +58,7 @@
 
 
 - (void)fireAway {
-	NSLog(@"[Orangered] Sending check message from Timer...");
+	ORLOG(@"[Orangered] Sending check message from Timer...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 
