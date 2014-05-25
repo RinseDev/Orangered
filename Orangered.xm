@@ -6,6 +6,7 @@
 
 @interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex;
++ (NSURL *)sharedLaunchPreferencesURL;
 @end
 
 @implementation ORAlertViewDelegate
@@ -15,12 +16,17 @@
 		return;
 	}
 
+	// [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Preferences" object:nil userInfo:@{ @"url" : [ORAlertViewDelegate sharedLaunchPreferencesURL] }];
+	[[UIApplication sharedApplication] openURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]];
+}
+
++ (NSURL *)sharedLaunchPreferencesURL {
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/PreferenceOrganizer.dylib"]) {
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Cydia&path=Orangered"]];
+		return [NSURL URLWithString:@"prefs:root=Cydia&path=Orangered"];
 	}
 
 	else {
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Orangered"]];
+		return [NSURL URLWithString:@"prefs:root=Orangered"];
 	}
 }
 
@@ -31,6 +37,7 @@
 /***************************************************************************************/
 
 static ORAlertViewDelegate *orangeredAlertDelegate;
+static BOOL checkOnUnlock;
 
 %hook SBUIController
 
@@ -51,13 +58,33 @@ static ORAlertViewDelegate *orangeredAlertDelegate;
 	%orig();
 
 	NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	if (orangeredAlertDelegate && !settings[@"didRun"]) {
-		[settings setObject:@(YES) forKey:@"didRun"];
-		[settings writeToFile:PREFS_PATH atomically:YES];
+	if (orangeredAlertDelegate) {
+		if (!settings[@"didRun"]) {
+			[settings setObject:@(YES) forKey:@"didRun"];
+			[settings writeToFile:PREFS_PATH atomically:YES];
 
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Welcome to Orangered. You'll never miss a message again. Tap Begin to get started, or head to the settings anytime." delegate:orangeredAlertDelegate cancelButtonTitle:@"Later" otherButtonTitles:@"Begin", nil];
-		[alert show];
+			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Welcome to Orangered. You'll never miss a message again. Tap Begin to get started, or head to the settings anytime." delegate:orangeredAlertDelegate cancelButtonTitle:@"Later" otherButtonTitles:@"Begin", nil];
+			[alert show];
+		}
+
+		else if (checkOnUnlock) {
+			checkOnUnlock = NO;
+
+			ORLOG(@"Checking on unlock due to authentication issues...");
+			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
+		}
 	}
+}
+
+%end
+
+%hook SpringBoard
+
+- (void)applicationDidFinishLaunching:(UIApplication *)application {
+	%orig();
+
+	ORLOG(@"Sending check message from SpringBoard...");
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 
 %end
@@ -76,15 +103,11 @@ static BBServer *orangeredServer;
 	OrangeredProvider *sharedProvider = [OrangeredProvider sharedInstance];
 	[orangeredServer _addDataProvider:sharedProvider forFactory:sharedProvider.factory];
 
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		NSLog(@"[Orangered] Sending check message from BBServer...");
-		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
-	});
-
 	return orangeredServer;
 }
 
 %end
+
 
 /**************************************************************************************/
 /*************************** Static Convenience Functions *****************************/
@@ -102,6 +125,11 @@ static NSString * orangeredPhrase() {
 static PCPersistentTimer *orangeredTimer;
 
 %ctor {
+    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Preferences" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+    	ORLOG(@"Launching preferences based on: %@", notification);
+    	[[UIApplication sharedApplication] openURL:notification.userInfo[@"url"]];
+    }];
+
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	// Let's cancel our appointments...
     	[orangeredTimer invalidate];
@@ -121,7 +149,7 @@ static PCPersistentTimer *orangeredTimer;
 		orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil];
 		[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
 
-		NSLog(@"[Orangered] Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
+		ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
 
 		NSString *username = preferences[@"username"];
 		NSMutableString *passwordKey = [[NSMutableString alloc] initWithString:preferences[@"password"]];
@@ -142,8 +170,15 @@ static PCPersistentTimer *orangeredTimer;
 		// Let's get the real password, now that we've covered all the bases...
 		NSError *getItemForKeyError;
 		NSString *password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
+		ORLOG(@"------- %i", (int)getItemForKeyError.code);
+		if (getItemForKeyError.code == -25308) {
+			ORLOG(@"Error trying to retrieve secured password, postponing until we're not at the lockscreen...");
+			checkOnUnlock = YES;
+			return;
+		}
+
 		if (getItemForKeyError) {
-			NSLog(@"[Orangered] Error trying to retrieve secured password, must have to secure it...");
+			ORLOG(@"Error trying to retrieve secured password, must have to secure it...");
 			password = [NSString stringWithString:passwordKey];
 			passwordKey = [[NSMutableString alloc] init];
 
@@ -154,30 +189,30 @@ static PCPersistentTimer *orangeredTimer;
 			NSError *saveItemForKeyError;
 			[FDKeychain saveItem:password forKey:passwordKey forService:@"Orangered" error:&saveItemForKeyError];
 			if (saveItemForKeyError) {
-				NSLog(@"[Orangered] Encountered an unfortunate error trying to secure password. Well shit. Cover your eyes: %@", saveItemForKeyError);
+				ORLOG(@"Encountered an unfortunate error trying to secure password. Well shit. Cover your eyes: %@", saveItemForKeyError);
 			}
 
 			else {
-				NSLog(@"[Orangered] Secured password successfully! :)");
+				ORLOG(@"Secured password successfully! :)");
 				[preferences setObject:passwordKey forKey:@"password"];
 				[preferences writeToFile:PREFS_PATH atomically:YES];
 			}
 		}
 
 		else {
-			NSLog(@"[Orangered] Accessed secured password successfully!");
+			ORLOG(@"Accessed secured password successfully!");
 		}
 
 	    // Set-up some variables...
 		RKClient *client = [RKClient sharedClient];
 		RKListingCompletionBlock unreadCompletionBlock = ^(NSArray *messages, RKPagination *pagination, NSError *error) {
 			[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
-	    	NSLog(@"[Orangered] Received unreadMessages response from Reddit: %@", messages);
+	    	ORLOG(@"Received unreadMessages response from Reddit: %@", messages);
 
 			if (alwaysMarkRead) {
-				NSLog(@"[Orangered] Ensuring messages are all marked read...");
+				ORLOG(@"Ensuring messages are all marked read...");
 				[client markMessageArrayAsRead:messages completion:^(NSError *error) {
-					NSLog(@"[Orangered] %@ cleared out unread messages.", error ? [NSString stringWithFormat:@"Failed (%@). Wishing I", [error localizedDescription]] : @"Successfully");
+					ORLOG(@"%@ cleared out unread messages.", error ? [NSString stringWithFormat:@"Failed (%@). Wishing I", [error localizedDescription]] : @"Successfully");
 				}];
 			}
 
@@ -198,7 +233,7 @@ static PCPersistentTimer *orangeredTimer;
 				NSString *ringtoneIdentifier = preferences[@"alertTone"];
 				if (ringtoneIdentifier) {
 					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
-					NSLog(@"[Orangered] Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
+					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
 					bulletin.sound = savedSound;
 				}
 
@@ -216,7 +251,7 @@ static PCPersistentTimer *orangeredTimer;
 					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
 				}
 
-				NSLog(@"[Orangered] Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
+				ORLOG(@"Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
 				// [orangeredServer _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
 				// [orangeredServer publishBulletinRequest:bulletin destinations:2];
 
@@ -239,25 +274,41 @@ static PCPersistentTimer *orangeredTimer;
 
 		// Time to do some WERK
 		if ([client isSignedIn] && (![client.currentUser.username isEqualToString:username])) {
-			NSLog(@"[Orangered] Detected user changed, signing out...");
+			ORLOG(@"Detected user changed, signing out...");
 			[client signOut];
 		}
 
 		[[UIApplication sharedApplication] _beginShowingNetworkActivityIndicator];
 
 		if (![client isSignedIn]) {
-			NSLog(@"[Orangered] No existing user session detected, signing in...");
+			ORLOG(@"No existing user session detected, signing in...");
 
 			// Sign in using RedditKit and supplied login information, and ping for unread messages.
 	    	[client signInWithUsername:username password:password completion:^(NSError *error) {
 	    		if (error) {
-					NSLog(@"[Orangered] Error logging in: %@", [error localizedDescription]);
+	    			ORLOG(@"Encountered error (%@, %@), pushing bulletin request...", error, error.userInfo);
+		        	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+					bulletin.recordID = @"com.insanj.orangered.bulletin";
+					bulletin.title = @"Orangered";
 
-		        	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-					request.title = @"Orangered";
-					request.message = [NSString stringWithFormat:@"Oops! There was a problem logging you in. Check syslog for error (%i).", (int)[error code]];
-					request.sectionID = @"com.apple.Preferences";
-					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+					if (error.code == 204) {
+						bulletin.message = [NSString stringWithFormat:@"Reddit has rate limited your device. Wait before using Orangered again!"];
+					}
+
+					else {
+						bulletin.message = [NSString stringWithFormat:@"Oops! Check here to get more details about the error (%i).", (int)[error code]];
+					}
+
+					bulletin.sectionID = @"com.apple.Preferences";
+					bulletin.date = [NSDate date];
+
+					UIAlertView *errorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
+					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]  callblock:^{
+						ORLOG(@"Heard error tap...");
+						[errorAlert show];
+					}];
+
+					BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
 					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 					return;
 	    		}
@@ -268,7 +319,7 @@ static PCPersistentTimer *orangeredTimer;
 		}
 
 		else {
-			NSLog(@"[Orangered] Existing user session detected, pinging Reddit...");
+			ORLOG(@"Existing user session detected, pinging Reddit...");
 			// Check for unread messages...			
 			[client unreadMessagesWithPagination:[RKPagination paginationWithLimit:100] markRead:alwaysMarkRead completion:unreadCompletionBlock];
 		}

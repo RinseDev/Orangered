@@ -99,7 +99,7 @@
 - (void)check {	
 	[self.view endEditing:YES];
 
-	NSLog(@"[Orangered] Sending check message from Preferences...");
+	ORLOG(@"Sending check message from Preferences...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
 
