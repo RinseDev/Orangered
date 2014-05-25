@@ -110,13 +110,9 @@ static NSString * orangeredPhrase() {
 static PCPersistentTimer *orangeredTimer;
 
 %ctor {
-    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Preferences" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-    	ORLOG(@"Launching preferences based on: %@", notification);
-    	[[UIApplication sharedApplication] openURL:notification.userInfo[@"url"]];
-    }];
-
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	// Let's cancel our appointments...
+    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:[[OrangeredProvider sharedInstance] sectionIdentifier]];
     	[orangeredTimer invalidate];
 
     	// Load some preferences...
@@ -141,11 +137,15 @@ static PCPersistentTimer *orangeredTimer;
 
 	    // Apparently RedditKit crashes out if either are nil? Bizarre.
 	    if (!username || !passwordKey) {
-	    	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-			request.title = @"Orangered";
-			request.message = @"Uh-oh! Please check your username and password in the settings.";
-			request.sectionID = @"com.apple.Preferences";
-			[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+			bulletin.recordID = @"com.insanj.orangered.bulletin";
+			bulletin.title = @"Orangered";
+			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
+			bulletin.sectionID = @"com.apple.Preferences";
+			bulletin.date = [NSDate date];
+
+			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
+			BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
 			return;
 	    }
 
@@ -161,8 +161,8 @@ static PCPersistentTimer *orangeredTimer;
 			return;
 		}
 
-		if (getItemForKeyError) {
-			ORLOG(@"Error trying to retrieve secured password, must have to secure it...");
+		else if (getItemForKeyError.code == -25300) {
+			ORLOG(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
 			password = [NSString stringWithString:passwordKey];
 			NSMutableString *mutableKey = [[NSMutableString alloc] initWithString:passwordKey];
 
@@ -173,7 +173,8 @@ static PCPersistentTimer *orangeredTimer;
 			NSError *saveItemForKeyError;
 			[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
 			if (saveItemForKeyError) {
-				ORLOG(@"Encountered an unfortunate error trying to secure password. Well shit. Cover your eyes: %@", saveItemForKeyError);
+				ORLOG(@"Error trying to secure password: %@", saveItemForKeyError);
+				return;
 			}
 
 			else {
@@ -181,6 +182,21 @@ static PCPersistentTimer *orangeredTimer;
 				[preferences setObject:mutableKey forKey:@"password"];
 				[preferences writeToFile:PREFS_PATH atomically:YES];
 			}
+		}
+
+		else if (getItemForKeyError) {
+			ORLOG(@"Fatal error trying to retrieve secure password: %@", getItemForKeyError);
+
+			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+			bulletin.recordID = @"com.insanj.orangered.bulletin";
+			bulletin.title = @"Orangered";
+			bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
+			bulletin.sectionID = @"com.apple.Preferences";
+			bulletin.date = [NSDate date];
+
+			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
+			BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
+			return;
 		}
 
 		else {
@@ -203,8 +219,7 @@ static PCPersistentTimer *orangeredTimer;
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
 	    	NSString *sectionID = [provider sectionIdentifier];
 
-	    	// [orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
-    		BBDataProviderWithdrawBulletinsWithRecordID(provider, sectionID);
+    		// BBDataProviderWithdrawBulletinsWithRecordID(provider, sectionID);
 			// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
 
 			if (messages && messages.count > 0) {
@@ -278,10 +293,11 @@ static PCPersistentTimer *orangeredTimer;
 					NSString *relevantMessage;
 					switch ((int)error.code) {
 						default:
-							relevantMessage = [NSString stringWithFormat:@"Oops! Check here to get more details about the error (%i).", (int)[error code]];
+							relevantMessage = [NSString stringWithFormat:@"Error! Open Notification Center to get more information: %@", error];
 							break;
 						case 203:
 							 relevantMessage = [NSString stringWithFormat:@"Invalid credentials. Reddit can't log you in with that username or password."];
+							 break;
 						case 204:
 							 relevantMessage = [NSString stringWithFormat:@"Reddit has rate limited your device. Wait before using Orangered again!"];
 							 break;
@@ -291,11 +307,7 @@ static PCPersistentTimer *orangeredTimer;
 					bulletin.sectionID = @"com.apple.Preferences";
 					bulletin.date = [NSDate date];
 
-					UIAlertView __block *errorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
-					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]  callblock:^{
-						[errorAlert show];
-					}];
-
+					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
 					BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
 					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 					return;

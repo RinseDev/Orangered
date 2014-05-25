@@ -48,9 +48,6 @@
 	return self.customSectionID;
 }
 
-// -(id)sectionIcon;
-// -(id)sectionIconData;
-
 - (NSArray *)bulletinsFilteredBy:(NSUInteger)filter count:(NSUInteger)count lastCleared:(NSDate *)lastCleared {
 	return nil;
 }
@@ -59,41 +56,8 @@
 	return [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
 }
 
-- (void)pushBulletin:(BBBulletinRequest *)bulletin intoServer:(BBServer *)server {
-	//if (!loaded) {
-	//	[server _addDataProvider:self forFactory:self.factory];
-	//	loaded = YES;
-	//}
-
-	// BBDataProviderWithdrawBulletinsWithRecordID(self, @"com.insanj.orangered.bulletin");
-
-	// for (BBBulletinRequest *bulletin in bulletins) {
-		BBDataProviderAddBulletin(self, bulletin);
-	// }
-}
 
 - (void)fireAway {
-	/*NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
-
-	if (!enabled) {
-		[sender invalidate];
-	}
-
-	CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
-	NSString *refreshIntervalString = preferences[@"refreshInterval"];
-	CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
-
-
-	if (fabs(sender.timeInterval - refreshInterval) > 2.0) {
-		[sender invalidate];
-
-		NSTimer *orangeredTimer = [NSTimer scheduledTimerWithTimeInterval:refreshInterval target:self selector:@selector(fireAway:) userInfo:nil repeats:YES];
-		[[NSRunLoop mainRunLoop] addTimer:orangeredTimer forMode:NSDefaultRunLoopMode];
-
-		NSLog(@"[Orangered] Re-wound timer (%@ -> %@) to ping Reddit every %f seconds.", sender, orangeredTimer, refreshInterval);
-	}
-*/
 	NSLog(@"[Orangered] Sending check message from Timer...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 }
