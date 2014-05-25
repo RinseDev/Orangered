@@ -39,40 +39,25 @@
 static ORAlertViewDelegate *orangeredAlertDelegate;
 static BOOL checkOnUnlock;
 
-%hook SBUIController
+%hook SBLockScreenManager
 
-- (void)_deviceLockStateChanged:(NSNotification *)changed {
-	%orig();
+- (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(NSDictionary *)options {
+	%orig;
 
-	NSNumber *state = changed.userInfo[@"kSBNotificationKeyState"];
-	if (!state.boolValue) {
+	if (![NSDictionary dictionaryWithContentsOfFile:PREFS_PATH]) {
+		ORLOG(@"First run, prompting...");
+		[@{} writeToFile:PREFS_PATH atomically:YES];
+
 		orangeredAlertDelegate = [[ORAlertViewDelegate alloc] init];
+		UIAlertView *orangeredAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Welcome to Orangered. You'll never miss a message again. Tap Begin to get started, or head to the settings anytime." delegate:orangeredAlertDelegate cancelButtonTitle:@"Later" otherButtonTitles:@"Begin", nil];
+		[orangeredAlert show];
 	}
-}
 
-%end
+	else if (checkOnUnlock) {
+		checkOnUnlock = NO;
 
-%hook SBUIAnimationController
-
-- (void)endAnimation {
-	%orig();
-
-	NSMutableDictionary *settings = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	if (orangeredAlertDelegate) {
-		if (!settings[@"didRun"]) {
-			[settings setObject:@(YES) forKey:@"didRun"];
-			[settings writeToFile:PREFS_PATH atomically:YES];
-
-			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Welcome to Orangered. You'll never miss a message again. Tap Begin to get started, or head to the settings anytime." delegate:orangeredAlertDelegate cancelButtonTitle:@"Later" otherButtonTitles:@"Begin", nil];
-			[alert show];
-		}
-
-		else if (checkOnUnlock) {
-			checkOnUnlock = NO;
-
-			ORLOG(@"Checking on unlock due to authentication issues...");
-			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
-		}
+		ORLOG(@"Checking on unlock due to authentication issues...");
+		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
 	}
 }
 
@@ -152,7 +137,7 @@ static PCPersistentTimer *orangeredTimer;
 		ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
 
 		NSString *username = preferences[@"username"];
-		NSMutableString *passwordKey = [[NSMutableString alloc] initWithString:preferences[@"password"]];
+		NSString *passwordKey = preferences[@"password"];
 
 	    // Apparently RedditKit crashes out if either are nil? Bizarre.
 	    if (!username || !passwordKey) {
@@ -180,21 +165,21 @@ static PCPersistentTimer *orangeredTimer;
 		if (getItemForKeyError) {
 			ORLOG(@"Error trying to retrieve secured password, must have to secure it...");
 			password = [NSString stringWithString:passwordKey];
-			passwordKey = [[NSMutableString alloc] init];
+			NSMutableString *mutableKey = [[NSMutableString alloc] initWithString:passwordKey];
 
 		    for (int i = 0; i < password.length; i++) {
-		        [passwordKey appendFormat:@"%c", arc4random_uniform(26) + 'a'];
+		        [mutableKey appendFormat:@"%c", arc4random_uniform(26) + 'a'];
 		    }
 
 			NSError *saveItemForKeyError;
-			[FDKeychain saveItem:password forKey:passwordKey forService:@"Orangered" error:&saveItemForKeyError];
+			[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
 			if (saveItemForKeyError) {
 				ORLOG(@"Encountered an unfortunate error trying to secure password. Well shit. Cover your eyes: %@", saveItemForKeyError);
 			}
 
 			else {
 				ORLOG(@"Secured password successfully! :)");
-				[preferences setObject:passwordKey forKey:@"password"];
+				[preferences setObject:mutableKey forKey:@"password"];
 				[preferences writeToFile:PREFS_PATH atomically:YES];
 			}
 		}
@@ -291,20 +276,24 @@ static PCPersistentTimer *orangeredTimer;
 					bulletin.recordID = @"com.insanj.orangered.bulletin";
 					bulletin.title = @"Orangered";
 
-					if (error.code == 204) {
-						bulletin.message = [NSString stringWithFormat:@"Reddit has rate limited your device. Wait before using Orangered again!"];
+					NSString *relevantMessage;
+					switch ((int)error.code) {
+						default:
+							relevantMessage = [NSString stringWithFormat:@"Oops! Check here to get more details about the error (%i).", (int)[error code]];
+							break;
+						case 203:
+							 relevantMessage = [NSString stringWithFormat:@"Invalid credentials. Reddit can't log you in with that username or password."];
+						case 204:
+							 relevantMessage = [NSString stringWithFormat:@"Reddit has rate limited your device. Wait before using Orangered again!"];
+							 break;
 					}
 
-					else {
-						bulletin.message = [NSString stringWithFormat:@"Oops! Check here to get more details about the error (%i).", (int)[error code]];
-					}
-
+					bulletin.message = relevantMessage;
 					bulletin.sectionID = @"com.apple.Preferences";
 					bulletin.date = [NSDate date];
 
-					UIAlertView *errorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
+					UIAlertView __block *errorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]  callblock:^{
-						ORLOG(@"Heard error tap...");
 						[errorAlert show];
 					}];
 

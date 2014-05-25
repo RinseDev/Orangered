@@ -33,7 +33,8 @@
 					  @"com.NateChiger.MarsReddit", @"com.aretesolutions.ojfree", @"com.aretesolutions.oj", @"com.lm.karmatrain", \
 					  @"com.jinsongniu.ialien"]
 
-#ifdef DEBUG
+#define __DEBUG__ 1
+#ifdef __DEBUG__
 	#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 	#define ORLOG(fmt, ...) 
