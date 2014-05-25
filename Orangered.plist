@@ -1,5 +1,5 @@
 { 
 	Filter = { 
-		Bundles = ( "com.apple.springboard" );
+		Bundles = ( "com.apple.springboard", "com.apple.Preferences");
 	};
 }

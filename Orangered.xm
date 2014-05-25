@@ -32,12 +32,25 @@
 
 @end
 
+/**************************************************************************************/
+/*********************** Static Convenience C-Funcs/Variables **************************/
+/**************************************************************************************/
+
+static ORAlertViewDelegate *orangeredAlertDelegate;
+static PCPersistentTimer *orangeredTimer;
+static NSError *orangeredError;
+static BOOL checkOnUnlock;
+
+static NSString * orangeredPhrase() {
+	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
+	return [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
+}
+
 /***************************************************************************************/
 /********************************* First Run Prompts  **********************************/
 /***************************************************************************************/
 
-static ORAlertViewDelegate *orangeredAlertDelegate;
-static BOOL checkOnUnlock;
+%group SpringBoard
 
 %hook SBLockScreenManager
 
@@ -93,23 +106,59 @@ static BBServer *orangeredServer;
 
 %end
 
+%end // %group SpringBoard
 
 /**************************************************************************************/
-/*************************** Static Convenience Functions *****************************/
+/******************** Preferences Injections For Error Handling ***********************/
 /**************************************************************************************/
 
-static NSString * orangeredPhrase() {
-	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
-	return [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
+%group Preferences
+
+%hook PreferencesAppController
+
+-(void)applicationOpenURL:(NSURL *)arg1 {
+	ORLOG(@"Heard openURL: %@", arg1);
+	if ([arg1 isEqual:[ORAlertViewDelegate sharedLaunchPreferencesURL]]) {
+		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Error" object:nil];
+	}
+
+	return %orig();
 }
 
-/**************************************************************************************/
-/************************* Primary RedditKit Communications ***************************/
-/**************************************************************************************/
+%end
 
-static PCPersistentTimer *orangeredTimer;
+%end // %group Preferences
+
+/**************************************************************************************/
+/******************** All Orangered->Reddit(Kit) Communications ***********************/
+/**************************************************************************************/
 
 %ctor {
+	// Because screw stupid class comparisons, they suck.
+	NSString *bundleIdentifier = [NSBundle mainBundle].bundleIdentifier; // NSStringFromClass([UIApplication sharedApplication].class);
+	ORLOG(@"Comparing %@ to detect proper injections...", bundleIdentifier);
+
+	if ([bundleIdentifier isEqualToString:@"com.apple.Preferences"]) {
+		ORLOG(@"Injecting Preferences hooks...");
+		%init(Preferences);
+		return;
+	}
+
+	else {
+		ORLOG(@"Injecting SpringBoard hooks and registering listeners...");
+		%init(SpringBoard);
+	}
+
+	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Error" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+		ORLOG(@"Responding to error: %@", orangeredError);
+		if (orangeredError) {
+			UIAlertView *orangeredErrorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"Sorry! Here's the full error log: %@", orangeredError] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
+			[orangeredErrorAlert show];
+
+			orangeredError = nil;
+		}
+	}];
+    	
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	// Let's cancel our appointments...
     	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:[[OrangeredProvider sharedInstance] sectionIdentifier]];
@@ -132,11 +181,14 @@ static PCPersistentTimer *orangeredTimer;
 
 		ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
 
-		NSString *username = preferences[@"username"];
-		NSString *passwordKey = preferences[@"password"];
+		NSString *username = preferences[@"username"] ?: @"";
+		NSString *passwordKey = preferences[@"password"] ?: @"";
+
+		username = [username stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		passwordKey = [passwordKey stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 
 	    // Apparently RedditKit crashes out if either are nil? Bizarre.
-	    if (!username || !passwordKey) {
+	    if ([username length] == 0 || [passwordKey length] == 0) {
 			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 			bulletin.recordID = @"com.insanj.orangered.bulletin";
 			bulletin.title = @"Orangered";
@@ -293,7 +345,7 @@ static PCPersistentTimer *orangeredTimer;
 					NSString *relevantMessage;
 					switch ((int)error.code) {
 						default:
-							relevantMessage = [NSString stringWithFormat:@"Error! Open Notification Center to get more information: %@", error];
+							relevantMessage = [NSString stringWithFormat:@"Uh-oh! Check here to get more information about: %@", [error localizedDescription]];
 							break;
 						case 203:
 							 relevantMessage = [NSString stringWithFormat:@"Invalid credentials. Reddit can't log you in with that username or password."];
@@ -308,6 +360,8 @@ static PCPersistentTimer *orangeredTimer;
 					bulletin.date = [NSDate date];
 
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
+
+					orangeredError = error;
 					BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
 					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 					return;
