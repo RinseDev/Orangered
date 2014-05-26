@@ -5,21 +5,16 @@
 	<key>items</key>
 	<array>
 		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
+			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>Orangered will begin checking your inbox after respringing, triggering via Activator, or Applying Changes, and after every following interval.</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<true/>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>key</key>
-			<string>enabled</string>
-			<key>label</key>
-			<string>Enabled</string>
+			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<true/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>enabled</string>
+			<key>label</key> 	<string>Enabled</string>
 		</dict>
 
 		<dict>
@@ -34,147 +29,102 @@
         </dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>label</key>
-			<string>Activation Methods</string>
-			<key>isController</key>
-			<true/>
-			<key>bundle</key>
-			<string>LibActivator</string>			
-			<key>activatorListener</key>
-			<string>com.insanj.orangered.listener</string>
+			<key>cell</key> 				<string>PSLinkCell</string>
+			<key>label</key> 				<string>Activation Methods</string>
+			<key>isController</key> 		<true/>
+			<key>bundle</key> 				<string>LibActivator</string>			
+			<key>activatorListener</key> 	<string>com.insanj.orangered.listener</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Options</string>
-			<key>footerText</key>
-			<string>Activate Orangered to secure your password.</string>
+			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>label</key> 		<string>Options</string>
+			<key>footerText</key> 	<string>Activate Orangered to secure your password.</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSEditTextCell</string>
-			<key>detail</key>
-			<string>PSDetailController</string>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>key</key>
-			<string>username</string>
-			<key>label</key>
-			<string>Username</string>
-			<key>placeholder</key>
-			<string>username</string>
+			<key>cell</key> 		<string>PSEditTextCell</string>
+			<key>detail</key> 		<string>PSDetailController</string>
+			<key>defaults</key> 	<string>com.insanj.orangered</string>
+			<key>key</key> 			<string>username</string>
+			<key>label</key> 		<string>Username</string>
+			<key>placeholder</key> 	<string>username</string>
 		</dict>
 		
 		<dict>
-			<key>cell</key>
-			<string>PSSecureEditTextCell</string>
-			<key>cellClass</key>
-			<string>OREditTextCell</string>
-			<key>detail</key>
-			<string>PSDetailController</string>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>key</key>
-			<string>password</string>
-			<key>label</key>
-			<string>Password</string>
-			<key>placeholder</key>
-			<string>hunter2</string>
+			<key>cell</key> 		<string>PSSecureEditTextCell</string>
+			<key>cellClass</key> 	<string>OREditTextCell</string>
+			<key>detail</key> 		<string>PSDetailController</string>
+			<key>defaults</key> 	<string>com.insanj.orangered</string>
+			<key>key</key> 			<string>password</string>
+			<key>label</key> 		<string>Password</string>
+			<key>placeholder</key> 	<string>hunter2</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>footerText</key>
-			<string>Always notify you when Orangered checks your inbox, even if you don't have mail.</string>
+			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>Always notify you when Orangered checks your inbox, even if you don't have mail.</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<true/>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>key</key>
-			<string>alwaysNotify</string>
-			<key>label</key>
-			<string>Always Notify</string>
+			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<true/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>alwaysNotify</string>
+			<key>label</key> 	<string>Always Notify</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>footerText</key>
-			<string>Mark messages as read after Orangered sends you a notification.</string>
+			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>Mark messages as read after Orangered sends you a notification.</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>key</key>
-			<string>alwaysMarkRead</string>
-			<key>label</key>
-			<string>Mark Read</string>
+			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<false/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>alwaysMarkRead</string>
+			<key>label</key> 	<string>Mark Read</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>footerText</key>
-			<string>Make sure to apply changes after altering the interval.</string>
+			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>Make sure to apply changes after altering the interval. Set "Never" to exclusively use Activator.</string>
 		</dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSEditTextCell</string>
-			<key>detail</key>
-			<string>PSDetailController</string>
-			<key>defaults</key>
-			<string>com.insanj.orangered</string>
-			<key>isNumeric</key>
-			<true/>
-			<key>key</key>
-			<string>refreshInterval</string>
-			<key>label</key>
-			<string>Refresh Interval</string>
-			<key>placeholder</key>
-			<string>3600, 60, 1</string>
+			<key>cell</key> 		<string>PSEditTextCell</string>
+			<key>detail</key> 		<string>PSDetailController</string>
+			<key>defaults</key> 	<string>com.insanj.orangered</string>
+			<key>isNumeric</key> 	<true/>
+			<key>id</key> 			<string>RefreshInterval</string>
+			<key>key</key> 			<string>refreshInterval</string>
+			<key>label</key> 		<string>Refresh Interval</string>
+			<key>placeholder</key> 	<string>3600, 60, 1</string>
 		</dict>
 
 		<dict>
-            <key>cell</key>        
-			<string>PSSegmentCell</string>
-            <key>defaults</key>    
-            <string>com.insanj.orangered</string>
-            <key>id</key>           
-            <string>IntervalControl</string>
-            <key>key</key>         
-            <string>intervalControl</string>
+            <key>cell</key> 		<string>PSSegmentCell</string>
+            <key>defaults</key> 	<string>com.insanj.orangered</string>
+            <key>id</key> 			<string>IntervalControl</string>
+            <key>key</key> 			<string>intervalControl</string>
             <key>validTitles</key> <array>
+            	<string>Never</string>
                 <string>Seconds</string>
                 <string>Minutes</string>
                 <string>Hours</string>
             </array>
             <key>validValues</key> <array>
+            	<real>-1.0</real>
                 <real>1.0</real>
                 <real>60.0</real>
                 <real>3600.0</real>
             </array>
+            <key>PostNotification</key> <string>com.insanj.orangered/Interval</string>
         </dict>
 
 		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
+			<key>cell</key> 	<string>PSGroupCell</string>
 		</dict>
 
         <dict>
@@ -201,7 +151,6 @@
 		</dict>
 
 	</array>
-	<key>title</key>
-	<string>Orangered</string>
+	<key>title</key> 	<string>Orangered</string>
 </dict>
 </plist>

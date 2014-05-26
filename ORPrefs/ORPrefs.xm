@@ -2,6 +2,10 @@
 #import <Preferences/Preferences.h>
 #import <MobileInstallation/MobileInstallation.h>
 
+void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Interval" object:nil];
+}
+
 @interface ORListController: PSListController {
 	PSTableCell *soundCell;
 	NSMutableArray *titles, *values;
@@ -20,6 +24,9 @@
 }
 
 - (void)loadView {
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(intervalDisable) name:@"Orangered.Interval" object:nil];
+
 	[super loadView];
 
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = TINT_COLOR;
@@ -30,7 +37,7 @@
 	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 	if (![preferences objectForKey:@"intervalControl"]) {
 		PSSpecifier *refreshControlSpecifier = [self specifierForID:@"IntervalControl"];
-		[self setPreferenceValue:@(60.0) specifier:refreshControlSpecifier];
+		[self setPreferenceValue:@(-1.0) specifier:refreshControlSpecifier];
 		[self reloadSpecifier:refreshControlSpecifier];
 	}
 }
@@ -57,6 +64,8 @@
 
     [self updateSoundCellValueLabel];
 	[super viewWillAppear:animated];
+
+	[self intervalDisable];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -119,7 +128,7 @@
 	[self.view endEditing:YES];
 
 	ORLOG(@"Sending check message from Preferences...");
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"Preferences" }];
 }
 
 - (NSArray *)clientTitles:(id)target {
@@ -134,7 +143,22 @@
 	return NO; 
 }
 
+- (void)intervalDisable {
+	ORLOG(@"Intelligently disabling interval field...");
+
+	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	NSNumber *intervalValue = preferences[@"intervalControl"];
+
+	PSSpecifier *refreshIntervalSpecifier = [self specifierForID:@"RefreshInterval"];
+	[refreshIntervalSpecifier setProperty:@(!intervalValue || [intervalValue floatValue] > 0.0) forKey:@"enabled"];
+	[self reloadSpecifier:refreshIntervalSpecifier];
+
+	[self.view endEditing:YES];
+}
+
 - (void)dealloc {
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:@"Orangered.Interval" object:nil];
+
 	titles = nil;
 	values = nil;
 

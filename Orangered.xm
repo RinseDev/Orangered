@@ -16,7 +16,6 @@
 		return;
 	}
 
-	// [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Preferences" object:nil userInfo:@{ @"url" : [ORAlertViewDelegate sharedLaunchPreferencesURL] }];
 	[[UIApplication sharedApplication] openURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]];
 }
 
@@ -70,7 +69,7 @@ static NSString * orangeredPhrase() {
 		checkOnUnlock = NO;
 
 		ORLOG(@"Checking on unlock due to authentication issues...");
-		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
+		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
 	}
 }
 
@@ -82,7 +81,7 @@ static NSString * orangeredPhrase() {
 	%orig();
 
 	ORLOG(@"Sending check message from SpringBoard...");
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
 }
 
 %end
@@ -199,13 +198,24 @@ static BBServer *orangeredServer;
 		}
 
 		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
-		NSString *refreshIntervalString = preferences[@"refreshInterval"];
-		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
+		if (intervalUnit > 0.0) {
+			NSString *refreshIntervalString = preferences[@"refreshInterval"];
+			CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
-		orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
-		[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
+			orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
+			[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
 
-		ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
+			ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
+		}
+
+		else if ([notification.userInfo[@"sender"] isEqualToString:@"SpringBoard"]) {
+			ORLOG(@"Appears our interval is set for Never, and pinging from Reddit. Killing time!");
+			return;
+		}
+
+		else {
+			ORLOG(@"Appears our interval is set for Never. Sulking time... :/");
+		}
 
 		NSString *username = preferences[@"username"] ?: @"";
 		NSString *passwordKey = preferences[@"password"] ?: @"";
