@@ -151,7 +151,7 @@ static BBServer *orangeredServer;
 	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Error" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 		ORLOG(@"Responding to error: %@", orangeredError);
 		if (orangeredError) {
-			UIAlertView *orangeredErrorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"Sorry! Here's the full error log: %@", orangeredError] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
+			UIAlertView *orangeredErrorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"%@", orangeredError] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
 			[orangeredErrorAlert show];
 
 			orangeredError = nil;
@@ -381,13 +381,16 @@ static BBServer *orangeredServer;
 					NSString *relevantMessage;
 					switch ((int)error.code) {
 						default:
-							relevantMessage = [NSString stringWithFormat:@"Uh-oh! Check here to get more information about: %@", [error localizedDescription]];
+							relevantMessage = [NSString stringWithFormat:@"Uh-oh! %@", [error localizedDescription]];
 							break;
 						case 203:
 							 relevantMessage = [NSString stringWithFormat:@"Invalid credentials. Reddit can't log you in with that username or password."];
 							 break;
 						case 204:
 							 relevantMessage = [NSString stringWithFormat:@"Reddit has rate limited your device. Wait before using Orangered again!"];
+							 break;
+						case -1009:
+							 relevantMessage = [NSString stringWithFormat:@"Rats! Please check your internet connection and try again."];
 							 break;
 					}
 

@@ -40,6 +40,12 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 		[self setPreferenceValue:@(-1.0) specifier:refreshControlSpecifier];
 		[self reloadSpecifier:refreshControlSpecifier];
 	}
+
+	PSSpecifier *activationSpecifier = [self specifierForID:@"ActivationMethods"];
+	[activationSpecifier setProperty:@(NSClassFromString(@"LAActivator") != nil) forKey:@"enabled"];
+	[self reloadSpecifier:activationSpecifier];
+
+	[self intervalDisable];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -64,8 +70,6 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 
     [self updateSoundCellValueLabel];
 	[super viewWillAppear:animated];
-
-	[self intervalDisable];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {

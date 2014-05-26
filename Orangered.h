@@ -39,8 +39,8 @@
 
 // Because of some weird DEBUG effects in Mantle, this is a must...
 // Other locations ORLOG can be found at (that I didn't feel like consolidating): ORListener.xm
-#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-// #define ORLOG(fmt, ...) 
+// #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define ORLOG(fmt, ...) 
 
 // @interface BBServer (Private)
 // + (instancetype)sharedInstance;
