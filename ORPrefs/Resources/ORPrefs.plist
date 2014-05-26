@@ -23,6 +23,17 @@
 		</dict>
 
 		<dict>
+		    <key>cell</key> 			 <string>PSLinkListCell</string>
+            <key>detail</key> 			 <string>ORClientListItemsController</string>
+		    <key>key</key> 				 <string>clientIdentifier</string>
+            <key>staticTextMessage</key> <string>If left empty, clients are dynamically read and one selected every activation.</string>
+            <key>defaults</key>    		 <string>com.insanj.orangered</string>
+            <key>label</key> 	    	 <string>Client</string>
+            <key>titlesDataSource</key>  <string>clientTitles:</string>
+            <key>valuesDataSource</key>  <string>clientValues:</string>
+        </dict>
+
+		<dict>
 			<key>cell</key>
 			<string>PSLinkCell</string>
 			<key>label</key>

@@ -27,15 +27,7 @@
 
 - (id)sectionIdentifier {
 	if (!self.customSectionID) {
-		if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alienblue://"]]) {
-			if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-				return ((self.customSectionID = @"com.designshed.alienbluehd"));
-			}
-
-			return ((self.customSectionID = @"com.designshed.alienblue"));
-		}
-
-		for (NSString *s in CLIENT_LIST) {
+		for (NSString *s in [CLIENT_LIST allKeys]) {
 			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
 			if ([controller applicationWithDisplayIdentifier:s]) {
 				return ((self.customSectionID = s));

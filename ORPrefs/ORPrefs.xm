@@ -1,9 +1,12 @@
 #import "../Orangered.h"
 #import <Preferences/Preferences.h>
+#import <MobileInstallation/MobileInstallation.h>
 
 @interface ORListController: PSListController {
 	PSTableCell *soundCell;
+	NSMutableArray *titles, *values;
 }
+
 @end
 
 @implementation ORListController
@@ -16,7 +19,7 @@
 	return _specifiers;
 }
 
-- (void)loadView {	
+- (void)loadView {
 	[super loadView];
 
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = TINT_COLOR;
@@ -33,6 +36,22 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+	titles = [[NSMutableArray alloc] init];
+	values = [[NSMutableArray alloc] init];
+
+	CFDictionaryRef bundles = MobileInstallationLookup((CFDictionaryRef) @{@"ReturnAttributes" : @"BundleIDs"});
+	NSDictionary *supportedClients = CLIENT_LIST;
+	
+	for (NSString *bundle in [supportedClients allKeys]) {
+		if (CFDictionaryGetValue(bundles, bundle)) {
+			[titles addObject:supportedClients[bundle]];
+			[values addObject:bundle];
+		}
+	}
+
+	[titles addObject:@"Safari"];
+	[values addObject:@"com.apple.mobilesafari"];
+
 	self.view.tintColor = TINT_COLOR;
     self.navigationController.navigationBar.tintColor = TINT_COLOR;
 
@@ -101,6 +120,27 @@
 
 	ORLOG(@"Sending check message from Preferences...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil];
+}
+
+- (NSArray *)clientTitles:(id)target {
+	return titles;
+}
+
+- (NSArray *)clientValues:(id)target {
+	return values;
+}
+
+- (BOOL)canBeShownFromSuspendedState {
+	return NO; 
+}
+
+- (void)dealloc {
+	titles = nil;
+	values = nil;
+
+	[titles release];
+	[values release];
+	[super dealloc];
 }
 
 @end
@@ -178,12 +218,34 @@
 
 @end
 
+@interface ORClientListItemsController : PSListItemsController
+@end
+
+@implementation ORClientListItemsController
+
+- (void)viewWillAppear:(BOOL)animated {
+	self.view.tintColor = TINT_COLOR;
+    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+
+    [super viewWillAppear:animated];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+
+	self.view.tintColor = nil;
+    self.navigationController.navigationBar.tintColor = nil;
+}
+
+@end
+
 @interface ORRingtoneController : RingtoneController
 @end
 
 %subclass ORRingtoneController : RingtoneController
 
 - (void)viewWillAppear:(BOOL)animated {
+
 	self.view.tintColor = TINT_COLOR;
     self.navigationController.navigationBar.tintColor = TINT_COLOR;
 

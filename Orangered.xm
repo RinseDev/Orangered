@@ -160,8 +160,11 @@ static BBServer *orangeredServer;
 	}];
     	
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+    	OrangeredProvider *notificationProvider = [OrangeredProvider sharedInstance];
+		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
+
     	// Let's cancel our appointments...
-    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:[[OrangeredProvider sharedInstance] sectionIdentifier]];
+    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
     	[orangeredTimer invalidate];
 
     	// Load some preferences...
@@ -172,11 +175,34 @@ static BBServer *orangeredServer;
 			return;
 		}
 
+		NSString *clientIdentifier = preferences[@"clientIdentifier"];
+		
+		// If there's a saved client identifier, which is different from the current identifier,
+		// and an app with that identifier is installed, then swap out the data provider so it
+		// uses the correct section identifier.
+		if (clientIdentifier && 
+				![clientIdentifier isEqualToString:sectionIdentifier] &&
+					 [(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:clientIdentifier]) {
+			ORLOG(@"Detected change in app, swapping around data providers...");
+			[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
+			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
+		    [orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+		}
+
+		// If the current clientIdentifier doesn't have an app associated with it, revert back
+		// to a random check.
+		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:sectionIdentifier]) {
+			ORLOG(@"Detected bonkers app, reassigning data providers...");
+			[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
+			notificationProvider.customSectionID = nil;
+		    [orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+		}
+
 		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
 		NSString *refreshIntervalString = preferences[@"refreshInterval"];
 		CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
-		orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:[OrangeredProvider sharedInstance] selector:@selector(fireAway) userInfo:nil];
+		orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
 		[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
 
 		ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
@@ -197,7 +223,7 @@ static BBServer *orangeredServer;
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
-			BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
+			BBDataProviderAddBulletin(notificationProvider, bulletin);
 			return;
 	    }
 
@@ -247,7 +273,7 @@ static BBServer *orangeredServer;
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
-			BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
+			BBDataProviderAddBulletin(notificationProvider, bulletin);
 			return;
 		}
 
@@ -362,7 +388,7 @@ static BBServer *orangeredServer;
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
 
 					orangeredError = error;
-					BBDataProviderAddBulletin([OrangeredProvider sharedInstance], bulletin);
+					BBDataProviderAddBulletin(notificationProvider, bulletin);
 					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 					return;
 	    		}

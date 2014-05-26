@@ -25,19 +25,22 @@
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 #define TINT_COLOR [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
-// Alien Blue, Alien Blue HD not included in list due to recognized URL-Scheme support
-// Narwhal, Cake, Reddme, Aliens, amrc, Redditor, BaconReader, Reddito, Karma, Redd, Upvote, Flippit, MyReddit, Mars, OJ Free, OJ, Karma Train, iAlien
-#define CLIENT_LIST @[@"com.rickharrison.narwhal", @"com.madeawkward.Cake", @"com.syntaxstudios.reddme", @"com.appseedinc.aliens", \
-					  @"com.amleszk.amrc", @"com.tyanya.reddit", @"com.onelouder.BaconReader", @"com.alexiscreuzot.reddito", \
-					  @"com.mediaspree.karma", @"com.craigmerchant.redd", @"com.nicholasleedesigns.upvote", @"F2", @"6Q4UNB2LAJ", \
-					  @"com.NateChiger.MarsReddit", @"com.aretesolutions.ojfree", @"com.aretesolutions.oj", @"com.lm.karmatrain", \
-					  @"com.jinsongniu.ialien"]
+#define CLIENT_LIST @{@"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
+					  @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
+					  @"com.syntaxstudios.reddme" : @"Reddme", @"com.appseedinc.aliens" : @"Aliens", \
+					  @"com.amleszk.amrc" : @"amrc", @"com.tyanya.reddit" : @"Redditor", \
+					  @"com.onelouder.BaconReader" : @"BaconReader", @"com.alexiscreuzot.reddito" : @"Reddito", \
+					  @"com.mediaspree.karma" : @"Karma", @"com.craigmerchant.redd" : @"Redd", \
+					  @"com.nicholasleedesigns.upvote" : @"Upvote", @"F2" : @"Flippit", \
+					  @"6Q4UNB2LAJ" : @"MyReddit", @"com.NateChiger.MarsReddit" : @"Mars", \
+					  @"com.aretesolutions.ojfree" : @"OJ Free", @"com.aretesolutions.oj" : @"OJ", \
+					  @"com.lm.karmatrain" : @"Karma Train", @"com.jinsongniu.ialien" : @"iAlien"}
 
 
 // Because of some weird DEBUG setting, this is a must...
 // Other locations ORLOG can be found at (that I didn't feel like consolidating): ORListener.xm
-// #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define ORLOG(fmt, ...) 
+#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+// #define ORLOG(fmt, ...) 
 
 // @interface BBServer (Private)
 // + (instancetype)sharedInstance;
