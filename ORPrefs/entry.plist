@@ -3,7 +3,7 @@
 		bundle = ORPrefs;
 		cell = PSLinkCell;
 		detail = ORListController;
-		icon = "icon.png";
+		icon = "modern.png";
 		isController = 1;
 		label = "Orangered";
     };
