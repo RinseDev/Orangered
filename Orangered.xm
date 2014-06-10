@@ -318,7 +318,7 @@ static BBServer *orangeredServer;
 				bulletin.date = [NSDate date];
 
 				NSString *ringtoneIdentifier = preferences[@"alertTone"];
-				if (ringtoneIdentifier) {
+				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
 					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
 					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
 					bulletin.sound = savedSound;
