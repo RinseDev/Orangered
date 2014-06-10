@@ -39,6 +39,7 @@ static ORAlertViewDelegate *orangeredAlertDelegate;
 static PCPersistentTimer *orangeredTimer;
 static NSError *orangeredError;
 static BOOL checkOnUnlock;
+static NSTimeInterval lastRequestInterval;
 
 static NSString * orangeredPhrase() {
 	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
@@ -198,6 +199,7 @@ static BBServer *orangeredServer;
 		}
 
 		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
+
 		if (intervalUnit > 0.0) {
 			NSString *refreshIntervalString = preferences[@"refreshInterval"];
 			CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
@@ -215,6 +217,36 @@ static BBServer *orangeredServer;
 
 		else {
 			ORLOG(@"Appears our interval is set for Never. Sulking time... :/");
+		}
+
+		NSNumber *rateGuard = preferences[@"rateGuard"];
+		if (!rateGuard || [rateGuard boolValue]) {
+			NSTimeInterval currentRequestInterval = [[NSDate date] timeIntervalSince1970];
+
+			if (lastRequestInterval <= 0.0) {
+				NSNumber *lastRequestStamp = preferences[@"lastRequestStamp"];
+				[preferences setObject:@(currentRequestInterval) forKey:@"lastRequestStamp"];
+				[preferences writeToFile:PREFS_PATH atomically:YES];
+
+				if (!lastRequestStamp) {
+					lastRequestInterval = currentRequestInterval;
+				}
+
+				else {
+					lastRequestInterval = [lastRequestStamp floatValue];
+				}
+			}
+
+			if (currentRequestInterval - lastRequestInterval < 3.0) { // "Make no more than thirty requests per minute." with a little bit of leeway 
+				ORLOG(@"Rate limit says YOU SHALL NOT PASS (last request interval: %f, current request interval: %f).", lastRequestInterval, currentRequestInterval);
+				return;		
+			}
+
+			else {
+				ORLOG(@"Rate limit is letting this one slide (last request interval: %f, current request interval: %f).", lastRequestInterval, currentRequestInterval);
+			}
+
+			lastRequestInterval = currentRequestInterval;
 		}
 
 		NSString *username = preferences[@"username"] ?: @"";

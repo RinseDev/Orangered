@@ -90,6 +90,19 @@
 
 		<dict>
 			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>footerText</key> 	<string>Device-side Reddit API request guard to prevent Reddit-side rate limiting.</string>
+		</dict>
+
+		<dict>
+			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<true/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>rateGuard</string>
+			<key>label</key> 	<string>Rate Guard</string>
+		</dict>
+
+		<dict>
+			<key>cell</key> 		<string>PSGroupCell</string>
 			<key>footerText</key> 	<string>Make sure to apply changes after altering the interval. Set "Never" to exclusively use Activator.</string>
 		</dict>
 
