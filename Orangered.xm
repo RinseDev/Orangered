@@ -40,6 +40,7 @@ static PCPersistentTimer *orangeredTimer;
 static NSError *orangeredError;
 static BOOL checkOnUnlock;
 static NSTimeInterval lastRequestInterval;
+static BBBulletinRequest *lastBulletin;
 
 static NSString * orangeredPhrase() {
 	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
@@ -329,7 +330,7 @@ static BBServer *orangeredServer;
 			[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 	    	ORLOG(@"Received unreadMessages response from Reddit: %@", messages);
 
-			if (alwaysMarkRead) {
+			if (alwaysMarkRead && [messages count] > 0) {
 				ORLOG(@"Ensuring messages are all marked read...");
 				[client markMessageArrayAsRead:messages completion:^(NSError *error) {
 					ORLOG(@"%@ cleared out unread messages.", error ? [NSString stringWithFormat:@"Failed (%@). Wishing I", [error localizedDescription]] : @"Successfully");
@@ -370,11 +371,21 @@ static BBServer *orangeredServer;
 					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
 				}
 
-				ORLOG(@"Publishing bulletin request (%@) to provider (%@).", bulletin, provider);
+				// lastBulletin = (BBBulletin *)[(NSSet *)[orangeredServer _allBulletinsForSectionID] anyObject]
+
+				if (lastBulletin && [lastBulletin.message isEqualToString:bulletin.message]) {
+					ORLOG(@"Not publishing duplicate bulletin request (%@ equiv to %@).", bulletin, lastBulletin);
+				}
+
+				else {
+					ORLOG(@"Publishing bulletin request (%@) to provider (%@). (not equiv in %@).", bulletin, provider, lastBulletin);
+					BBDataProviderAddBulletin(provider, bulletin);
+					lastBulletin = bulletin;
+				}
+
 				// [orangeredServer _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
 				// [orangeredServer publishBulletinRequest:bulletin destinations:2];
 
-				BBDataProviderAddBulletin(provider, bulletin);
 				// [provider pushBulletin:bulletin intoServer:orangeredServer];
 				// BBDataProviderAddBulletin(provider, bulletin);
 				// [server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
