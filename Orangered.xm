@@ -165,7 +165,6 @@ static BBServer *orangeredServer;
 		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
 
     	// Let's cancel our appointments...
-    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
     	[orangeredTimer invalidate];
 
     	// Load some preferences...
@@ -258,6 +257,8 @@ static BBServer *orangeredServer;
 
 	    // Apparently RedditKit crashes out if either are nil? Bizarre.
 	    if ([username length] == 0 || [passwordKey length] == 0) {
+	    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+
 			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 			bulletin.recordID = @"com.insanj.orangered.bulletin";
 			bulletin.title = @"Orangered";
@@ -307,6 +308,7 @@ static BBServer *orangeredServer;
 
 		else if (getItemForKeyError) {
 			ORLOG(@"Fatal error trying to retrieve secure password: %@", getItemForKeyError);
+	    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 
 			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 			bulletin.recordID = @"com.insanj.orangered.bulletin";
@@ -343,7 +345,7 @@ static BBServer *orangeredServer;
     		// BBDataProviderWithdrawBulletinsWithRecordID(provider, sectionID);
 			// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
 
-			if (messages && messages.count > 0) {
+			if (messages && messages.count > 0) {	
             	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
 				bulletin.sectionID = sectionID;
@@ -378,6 +380,8 @@ static BBServer *orangeredServer;
 				}
 
 				else {
+			    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+
 					ORLOG(@"Publishing bulletin request (%@) to provider (%@). (not equiv in %@).", bulletin, provider, lastBulletin);
 					BBDataProviderAddBulletin(provider, bulletin);
 					lastBulletin = bulletin;
@@ -393,6 +397,8 @@ static BBServer *orangeredServer;
 			}
 
 			else if (alwaysNotify) {
+		    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+
             	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 				request.title = @"Orangered";
 				request.message = orangeredPhrase();
@@ -416,6 +422,8 @@ static BBServer *orangeredServer;
 			// Sign in using RedditKit and supplied login information, and ping for unread messages.
 	    	[client signInWithUsername:username password:password completion:^(NSError *error) {
 	    		if (error) {
+			    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+
 	    			ORLOG(@"Encountered error (%@, %@), pushing bulletin request...", error, error.userInfo);
 		        	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 					bulletin.recordID = @"com.insanj.orangered.bulletin";
