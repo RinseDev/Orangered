@@ -6,7 +6,7 @@
 	<array>
 		<dict>
 			<key>cell</key> 		<string>PSGroupCell</string>
-			<key>footerText</key> 	<string>Orangered will begin checking your inbox after respringing, triggering via Activator, or Applying Changes, and after every following interval.</string>
+			<key>footerText</key> 	<string>Your Reddit inbox is checked after respringing, triggering via Activator, or Applying Changes, and after every subsequent interval.</string>
 		</dict>
 
 		<dict>
@@ -16,17 +16,6 @@
 			<key>key</key> 		<string>enabled</string>
 			<key>label</key> 	<string>Enabled</string>
 		</dict>
-
-		<dict>
-		    <key>cell</key> 			 <string>PSLinkListCell</string>
-            <key>detail</key> 			 <string>ORClientListItemsController</string>
-		    <key>key</key> 				 <string>clientIdentifier</string>
-            <key>staticTextMessage</key> <string>If left empty, clients are dynamically read and one selected every activation.</string>
-            <key>defaults</key>    		 <string>com.insanj.orangered</string>
-            <key>label</key> 	    	 <string>Client</string>
-            <key>titlesDataSource</key>  <string>clientTitles:</string>
-            <key>valuesDataSource</key>  <string>clientValues:</string>
-        </dict>
 
 		<dict>
 			<key>cell</key> 				<string>PSLinkCell</string>
@@ -39,7 +28,7 @@
 
 		<dict>
 			<key>cell</key> 		<string>PSGroupCell</string>
-			<key>label</key> 		<string>Options</string>
+			<key>label</key> 		<string>Credentials</string>
 			<key>footerText</key> 	<string>Activate Orangered to secure your password.</string>
 		</dict>
 
@@ -75,6 +64,42 @@
 
 		<dict>
 			<key>cell</key> 		<string>PSGroupCell</string>
+            <key>label</key> 	   	<string>Activation</string>
+            <key>footerText</key> 	<string>Enable Badges and Sounds in Notification Center settings.</string>
+		</dict>
+
+		<dict>
+		    <key>cell</key> 			 <string>PSLinkListCell</string>
+            <key>detail</key> 			 <string>ORClientListItemsController</string>
+		    <key>key</key> 				 <string>clientIdentifier</string>
+            <key>staticTextMessage</key> <string>If left empty, clients are dynamically read and one selected every activation.</string>
+            <key>defaults</key>    		 <string>com.insanj.orangered</string>
+            <key>label</key> 	    	 <string>Client</string>
+            <key>titlesDataSource</key>  <string>clientTitles:</string>
+            <key>valuesDataSource</key>  <string>clientValues:</string>
+        </dict>
+
+        <dict>
+            <key>cell</key>             	 <string>PSLinkListCell</string>
+            <key>detail</key> 				 <string>ORRingtoneController</string>
+            <key>defaults</key>         	 <string>com.insanj.orangered</string>
+            <key>defaultToneSelector</key>   <string>defaultReminderAlertToneIdentifier</string>
+            <key>key</key> 					 <string>alertTone</string>
+            <key>label</key>             	 <string>Sound</string>
+            <key>pane</key> 				 <string>TonePane</string>
+            <key>id</key> 					 <string>SoundPicker</string>
+        </dict>
+
+        <dict>
+            <key>cell</key> 		<string>PSLinkCell</string>
+            <key>cellClass</key> 	<string>ORLinkCell</string>
+            <key>label</key> 		<string>Notification Center</string>
+            <key>action</key> 		<string>notificationCenter</string>
+        </dict>
+
+		<dict>
+			<key>cell</key> 		<string>PSGroupCell</string>
+			<key>label</key> 		<string>Options</string>
 			<key>footerText</key> 	<string>Always notify you when Orangered checks your inbox, even if you don't have mail.</string>
 		</dict>
 
@@ -114,7 +139,7 @@
 
 		<dict>
 			<key>cell</key> 		<string>PSGroupCell</string>
-			<key>footerText</key> 	<string>Make sure to apply changes after altering the interval. Set "Never" to exclusively use Activator.</string>
+			<key>footerText</key> 	<string>Make sure to apply changes after altering the interval. Set Never to exclusively use Activator.</string>
 		</dict>
 
 		<dict>
@@ -149,19 +174,8 @@
         </dict>
 
 		<dict>
-			<key>cell</key> 	<string>PSGroupCell</string>
+			<key>cell</key> 		<string>PSGroupCell</string>
 		</dict>
-
-        <dict>
-            <key>cell</key>             	 <string>PSLinkListCell</string>
-            <key>detail</key> 				 <string>ORRingtoneController</string>
-            <key>defaults</key>         	 <string>com.insanj.orangered</string>
-            <key>defaultToneSelector</key>   <string>defaultReminderAlertToneIdentifier</string>
-            <key>key</key> 					 <string>alertTone</string>
-            <key>label</key>             	 <string>Sound</string>
-            <key>pane</key> 				 <string>TonePane</string>
-            <key>id</key> 					 <string>SoundPicker</string>
-        </dict>
 
         <dict>
             <key>cell</key>         <string>PSButtonCell</string>

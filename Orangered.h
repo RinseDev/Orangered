@@ -1,25 +1,11 @@
 #import <UIKit/UIKit.h>
-#import <Foundation/NSDistributedNotificationCenter.h>
-#import <UIKit/UITableViewCell+Private.h>
-#import <Twitter/Twitter.h>
-#import <objc/runtime.h>
-
 #import <SpringBoard/SBApplication.h>
 #import <SpringBoard/SBApplicationController.h>
 #import <SpringBoard/SBBulletinBannerController.h>
+#import <Foundation/NSDistributedNotificationCenter.h>
 #import <BulletinBoard/BulletinBoard.h>
-#import <PersistentConnection/PersistentConnection.h>
-#import <ToneLibrary/ToneLibrary.h>
 
-#import <libactivator/libactivator.h>
 #import "substrate.h"
-
-#import "Communication/AFNetworking.h"
-#import "Communication/RedditKit.h"
-#import "Communication/Mantle.h"
-#import "Communication/FDKeychain.h"
-
-#import "ORProviders.h"
 
 #define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
@@ -55,7 +41,13 @@
 
 @end
 
-@interface SBApplicationIcon : NSObject 
+@interface SBIcon : NSObject
+
+- (void)noteBadgeDidChange;
+
+@end
+
+@interface SBApplicationIcon : SBIcon 
 
 - (void)setBadge:(NSString *)badge;
 - (NSString *)applicationBundleID;
@@ -77,3 +69,11 @@
 - (SBApplication *)applicationWithDisplayIdentifier:(NSString *)displayIdentifier;
 
 @end
+
+
+@interface PSNotificationSettingsDetail : NSObject
+
++ (NSURL *)preferencesURL;
+
+@end
+

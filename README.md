@@ -5,9 +5,9 @@ Native push notifications for Reddit. Orangered seamlessly connects your device 
 
 Built with love and care by Julian Weiss and Phillip Tennen. Supports all devices running iOS 7. Icon and website design by Kyle Paul.
 
-Currently supports:
+Currently supports (in order of precedence):
 
-	Alien Blue, Alien Blue HD, narwhal, Cake, Reddme, Aliens, amrc, Redditor, BaconReader, Reddito, Karma, Redd, Upvote, Flippit, MyReddit, Mars, OJ Free, OJ, Karma Train, iAlien
+	Alien Blue, Alien Blue HD, narwhal, Feedworthy, Biscuit, Cake, Reddme, Aliens, amrc, Redditor, BaconReader, Reddito, Karma, Redd, Upvote, Flippit, MyReddit, Mars, OJ Free, OJ, Karma Train, iAlien
 
 Commercial tweak, currently closed source. Available from BigBoss.
 

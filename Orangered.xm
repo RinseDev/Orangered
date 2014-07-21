@@ -1,4 +1,15 @@
 #import "Orangered.h"
+#import "ORProviders.h"
+
+#import <Preferences/Preferences.h>
+#import <PersistentConnection/PersistentConnection.h>
+
+#import "substrate.h"
+
+#import "Communication/AFNetworking.h"
+#import "Communication/RedditKit.h"
+#import "Communication/Mantle.h"
+#import "Communication/FDKeychain.h"
 
 /**************************************************************************************/
 /************************ CRAVDelegate (used from first run) ****************************/
@@ -56,7 +67,10 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 		stringBadgeValue = [formatter stringForObjectValue:@(badgeValue)];
 	}
 
-	[[iconModel applicationIconForDisplayIdentifier:displayIdentifier] setBadge:stringBadgeValue];
+	SBApplicationIcon *clientAppIcon = [iconModel applicationIconForDisplayIdentifier:displayIdentifier]; 
+	[clientAppIcon setBadge:stringBadgeValue];
+
+	ORLOG(@"set badge %@ to %@", stringBadgeValue, clientAppIcon);
 }
 
 /***************************************************************************************/
@@ -140,6 +154,33 @@ static BBServer *orangeredServer;
 
 %end
 
+// Snatch up that notification center icon.
+/*
+%hook PSSpecifier
+
+- (void)setProperty:(id)arg1 forKey:(NSString *)arg2 {
+	%log;
+	%orig();
+
+	if ([arg1 isKindOfClass:[UIImage class]] && [arg2 isEqualToString:@"iconImage"] && [self.identifier isEqualToString:@"NOTIFICATIONS_ID"]) {
+		UIImage *iconImage = (UIImage *)arg1; // 29x29
+		CGSize retinaSize = CGSizeMake(iconImage.size.width * 2.0, iconImage.size.height * 2.0);
+	    UIGraphicsBeginImageContextWithOptions(retinaSize, NO, iconImage.scale);
+	    [iconImage drawInRect:(CGRect){CGPointZero, retinaSize}];
+	    UIImage *retinaIconImage = UIGraphicsGetImageFromCurrentImageContext();    
+	    UIGraphicsEndImageContext();
+
+	    NSData *notificationCenterImageData = UIImagePNGRepresentation(retinaIconImage); 
+		NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+		[preferences setObject:notificationCenterImageData forKey:@"notificationCenterImageData"];
+		[preferences writeToFile:PREFS_PATH atomically:YES];
+
+		//  orangeredSavedNotificationCenterIconImage = [notificationCenterImageData writeToFile:@"/Library/PreferenceBundles/ORPrefs.bundle/notificationcenter@2x.png" atomically:YES];
+	}
+}
+
+%end*/
+
 %end // %group Preferences
 
 /**************************************************************************************/
@@ -160,10 +201,26 @@ static BBServer *orangeredServer;
 	else {
 		ORLOG(@"Injecting SpringBoard hooks and registering listeners...");
 		%init(SpringBoard);
+
+		[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.NotificationCenter" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+			NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+			NSString *clientIdentifier = preferences[@"clientIdentifier"];
+			NSURL *notificationCenterURL;
+			if (clientIdentifier) {
+				notificationCenterURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@&path=%@", [%c(PSNotificationSettingsDetail) preferencesURL].absoluteString, clientIdentifier]];
+			}
+
+			else {
+				notificationCenterURL = [%c(PSNotificationSettingsDetail) preferencesURL];
+			}
+
+			ORLOG(@"lol2 opening notificationCenterURL: %@", notificationCenterURL);
+			[[UIApplication sharedApplication] openURL:notificationCenterURL];
+		}];
 	}
 
 	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Error" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-		ORLOG(@"Responding to error: %@", orangeredError);
+		NSLog(@"Responding to error: %@", orangeredError);
 		if (orangeredError) {
 			UIAlertView *orangeredErrorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"%@", orangeredError] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
 			[orangeredErrorAlert show];
@@ -295,13 +352,13 @@ static BBServer *orangeredServer;
 			NSError *getItemForKeyError;
 			password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
 			if (getItemForKeyError.code == -25308) {
-				ORLOG(@"Error trying to retrieve secured password, postponing until we're not at the lockscreen...");
+				NSLog(@"Error trying to retrieve secured password, postponing until we're not at the lockscreen...");
 				checkOnUnlock = YES;
 				return;
 			}
 
 			else if (getItemForKeyError.code == -25300) {
-				ORLOG(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
+				NSLog(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
 				password = [NSString stringWithString:passwordKey];
 				NSMutableString *mutableKey = [[NSMutableString alloc] init];
 
@@ -312,7 +369,7 @@ static BBServer *orangeredServer;
 				NSError *saveItemForKeyError;
 				[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
 				if (saveItemForKeyError) {
-					ORLOG(@"Error trying to secure password: %@", saveItemForKeyError);
+					NSLog(@"Error trying to secure password: %@", saveItemForKeyError);
 					return;
 				}
 
@@ -324,7 +381,7 @@ static BBServer *orangeredServer;
 			}
 
 			else if (getItemForKeyError) {
-				ORLOG(@"Fatal error trying to retrieve secure password: %@", getItemForKeyError);
+				NSLog(@"Fatal error trying to retrieve secure password: %@", getItemForKeyError);
 		    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 
 				BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];

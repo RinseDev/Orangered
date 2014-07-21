@@ -1,7 +1,11 @@
 #import "../Orangered.h"
-#import <Preferences/Preferences.h>
-#import <MobileInstallation/MobileInstallation.h>
+#import <UIKit/UITableViewCell+Private.h>
+#import <UIKit/UIImage+Private.h>
+#import <Twitter/Twitter.h>
 
+#import <MobileInstallation/MobileInstallation.h>
+#import <Preferences/Preferences.h>
+#import <ToneLibrary/ToneLibrary.h>
 
 @interface ORListController: PSListController {
 	PSTableCell *soundCell;
@@ -34,4 +38,7 @@
 
 @interface ORRingtoneController : RingtoneController
 
+@end
+
+@interface ORLinkCell : PSTableCell
 @end

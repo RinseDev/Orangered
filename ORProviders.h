@@ -1,4 +1,6 @@
-#import "Orangered.h"
+#import <UIKit/UIKit.h>
+#import <BulletinBoard/BulletinBoard.h>
+#import <objc/runtime.h>
 
 @interface OrangeredProviderFactory : NSObject <BBDataProviderFactory>
 @end
@@ -12,4 +14,5 @@
 
 + (instancetype)sharedInstance;
 - (void)fireAway;
+
 @end

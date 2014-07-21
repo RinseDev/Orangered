@@ -109,11 +109,11 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
 	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1) {
-		if (indexPath.row == 1) {	// Apply Changes Now
+		if (indexPath.row == 0) {	// Apply Changes Now
 		    cell.separatorInset = UIEdgeInsetsMake(0.0, -15.0, 0.0, 0.0);
 		}
 
-		else if (indexPath.row == 2) {	// Credits cell
+		else if (indexPath.row == 1) {	// Credits cell
 			[cell _setDrawsSeparatorAtBottomOfSection:NO];
 		}
 	}
@@ -145,6 +145,13 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 	ORLOG(@"Sending check message from Preferences...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"Preferences" }];
+}
+
+- (void)notificationCenter {
+	self.view.tintColor = nil;
+    self.navigationController.navigationBar.tintColor = nil;
+
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.NotificationCenter" object:nil];
 }
 
 - (NSArray *)clientTitles:(id)target {
@@ -232,9 +239,9 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		_plainTextView.editable = NO;
 		_plainTextView.delegate = self;
 	
-		UIFont *vanillaFont = [UIFont fontWithName:@".HelveticaNeueInterface-M3" size:13.5];
+		UIFont *vanillaFont = [UIFont fontWithName:@".HelveticaNeueInterface-Regular" size:13.5];
 		UIFont *darkFont = [UIFont fontWithName:@".HelveticaNeueInterface-MediumP4" size:13.5];
-		UIColor *vanillaColor = [UIColor colorWithWhite:0.43 alpha:1];
+		UIColor *vanillaColor = [UIColor colorWithRed:0.427451 green:0.427451 blue:0.447059 alpha:1.0];
 		UIColor *darkColor = [UIColor grayColor];
 
 		NSMutableAttributedString *clickable = [[[NSMutableAttributedString alloc] initWithString:@"© 2013-2014 Julian Weiss, Phillip Tennen. Asset design © 2014 Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }] autorelease];
@@ -312,3 +319,28 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 %end
+
+@implementation ORLinkCell
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
+	// UIImage *notificationCenterIconImage = [UIImage imageNamed:@"notificationcenter.png" inBundle:[NSBundle bundleForClass:self.class]];
+	/*NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	NSData *notificationCenterImageData = (NSData *)preferences[@"notificationCenterImageData"];
+	UIImage *notificationCenterIconImage = [UIImage imageWithData:notificationCenterImageData];
+
+	UIImageView *croppedNotificationCenterImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30.0, 30.0)];
+	croppedNotificationCenterImageView.image = notificationCenterIconImage;
+	croppedNotificationCenterImageView.layer.masksToBounds = YES;
+	croppedNotificationCenterImageView.layer.cornerRadius = 7.0;
+
+	UIGraphicsBeginImageContextWithOptions(croppedNotificationCenterImageView.bounds.size, NO, notificationCenterIconImage.scale);
+	[croppedNotificationCenterImageView.layer renderInContext:UIGraphicsGetCurrentContext()];
+	UIImage *croppedNotificationCenterImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+
+	[specifier setProperty:croppedNotificationCenterImage forKey:@"iconImage"];*/
+
+	return [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
+}
+
+@end
