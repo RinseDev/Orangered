@@ -47,6 +47,18 @@ static NSString * orangeredPhrase() {
 	return [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
 }
 
+static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSInteger badgeValue) {
+	SBIconModel *iconModel = MSHookIvar<SBIconModel *>([%c(SBIconController) sharedInstance], "_iconModel");
+	NSString *stringBadgeValue;
+	if (badgeValue > 0)  {
+		NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+		[formatter setNumberStyle:NSNumberFormatterDecimalStyle];
+		stringBadgeValue = [formatter stringForObjectValue:@(badgeValue)];
+	}
+
+	[[iconModel applicationIconForDisplayIdentifier:displayIdentifier] setBadge:stringBadgeValue];
+}
+
 /***************************************************************************************/
 /********************************* First Run Prompts  **********************************/
 /***************************************************************************************/
@@ -166,6 +178,7 @@ static BBServer *orangeredServer;
 
     	// Let's cancel our appointments...
     	[orangeredTimer invalidate];
+		orangeredSetDisplayIdentifierBadge(sectionIdentifier, 0);
 
     	// Load some preferences...
 		NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
@@ -274,56 +287,65 @@ static BBServer *orangeredServer;
 		BOOL alwaysNotify = !preferences[@"alwaysNotify"] || [preferences[@"alwaysNotify"] boolValue];
 		BOOL alwaysMarkRead = preferences[@"alwaysMarkRead"] && [preferences[@"alwaysMarkRead"] boolValue];
 		
-		// Let's get the real password, now that we've covered all the bases...
-		NSError *getItemForKeyError;
-		NSString *password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
-		if (getItemForKeyError.code == -25308) {
-			ORLOG(@"Error trying to retrieve secured password, postponing until we're not at the lockscreen...");
-			checkOnUnlock = YES;
-			return;
-		}
+		BOOL securePassword = !preferences[@"secure"] || [preferences[@"secure"] boolValue];
+		NSString *password;
 
-		else if (getItemForKeyError.code == -25300) {
-			ORLOG(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
-			password = [NSString stringWithString:passwordKey];
-			NSMutableString *mutableKey = [[NSMutableString alloc] init];
+		if (securePassword) {
+			// Let's get the real password, now that we've covered all the bases...
+			NSError *getItemForKeyError;
+			password = [FDKeychain itemForKey:passwordKey forService:@"Orangered" error:&getItemForKeyError];
+			if (getItemForKeyError.code == -25308) {
+				ORLOG(@"Error trying to retrieve secured password, postponing until we're not at the lockscreen...");
+				checkOnUnlock = YES;
+				return;
+			}
 
-		    for (int i = 0; i < password.length; i++) {
-		        [mutableKey appendFormat:@"%c", arc4random_uniform(26) + 'a'];
-		    }
+			else if (getItemForKeyError.code == -25300) {
+				ORLOG(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
+				password = [NSString stringWithString:passwordKey];
+				NSMutableString *mutableKey = [[NSMutableString alloc] init];
 
-			NSError *saveItemForKeyError;
-			[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
-			if (saveItemForKeyError) {
-				ORLOG(@"Error trying to secure password: %@", saveItemForKeyError);
+			    for (int i = 0; i < password.length; i++) {
+			        [mutableKey appendFormat:@"%c", arc4random_uniform(26) + 'a'];
+			    }
+
+				NSError *saveItemForKeyError;
+				[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
+				if (saveItemForKeyError) {
+					ORLOG(@"Error trying to secure password: %@", saveItemForKeyError);
+					return;
+				}
+
+				else {
+					ORLOG(@"Secured password successfully! :)");
+					[preferences setObject:mutableKey forKey:@"password"];
+					[preferences writeToFile:PREFS_PATH atomically:YES];
+				}
+			}
+
+			else if (getItemForKeyError) {
+				ORLOG(@"Fatal error trying to retrieve secure password: %@", getItemForKeyError);
+		    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+
+				BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				bulletin.title = @"Orangered";
+				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
+				bulletin.sectionID = @"com.apple.Preferences";
+				bulletin.date = [NSDate date];
+
+				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
+				BBDataProviderAddBulletin(notificationProvider, bulletin);
 				return;
 			}
 
 			else {
-				ORLOG(@"Secured password successfully! :)");
-				[preferences setObject:mutableKey forKey:@"password"];
-				[preferences writeToFile:PREFS_PATH atomically:YES];
+				ORLOG(@"Accessed secured password successfully!");
 			}
 		}
 
-		else if (getItemForKeyError) {
-			ORLOG(@"Fatal error trying to retrieve secure password: %@", getItemForKeyError);
-	    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
-
-			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
-			bulletin.recordID = @"com.insanj.orangered.bulletin";
-			bulletin.title = @"Orangered";
-			bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
-			bulletin.sectionID = @"com.apple.Preferences";
-			bulletin.date = [NSDate date];
-
-			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
-			BBDataProviderAddBulletin(notificationProvider, bulletin);
-			return;
-		}
-
 		else {
-			ORLOG(@"Accessed secured password successfully!");
+			password = passwordKey;
 		}
 
 	    // Set-up some variables...
@@ -342,6 +364,7 @@ static BBServer *orangeredServer;
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
 	    	NSString *sectionID = [provider sectionIdentifier];
 
+	    	orangeredSetDisplayIdentifierBadge(sectionID, messages.count);
     		// BBDataProviderWithdrawBulletinsWithRecordID(provider, sectionID);
 			// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
 
@@ -384,6 +407,7 @@ static BBServer *orangeredServer;
 
 					ORLOG(@"Publishing bulletin request (%@) to provider (%@). (not equiv in %@).", bulletin, provider, lastBulletin);
 					BBDataProviderAddBulletin(provider, bulletin);
+
 					lastBulletin = bulletin;
 				}
 

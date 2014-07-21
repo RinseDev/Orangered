@@ -27,6 +27,7 @@
 
 #define CLIENT_LIST @{@"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
 					  @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
+					  @"com.yapstudios.appstore.feedworthy" : @"Feedworthy", @"com.biscuitapp.biscuit" : @"Biscuit", \
 					  @"com.syntaxstudios.reddme" : @"Reddme", @"com.appseedinc.aliens" : @"Aliens", \
 					  @"com.amleszk.amrc" : @"amrc", @"com.tyanya.reddit" : @"Redditor", \
 					  @"com.onelouder.BaconReader" : @"BaconReader", @"com.alexiscreuzot.reddito" : @"Reddito", \
@@ -47,7 +48,32 @@
 // @end
 
 @interface UIApplication (Private)
+
 - (void)_beginShowingNetworkActivityIndicator;
 - (void)_hideNetworkActivityIndicator;
 - (void)_endShowingNetworkActivityIndicator;
+
+@end
+
+@interface SBApplicationIcon : NSObject 
+
+- (void)setBadge:(NSString *)badge;
+- (NSString *)applicationBundleID;
+
+@end
+
+@interface SBIconModel : NSObject
+
+- (SBApplicationIcon *)applicationIconForDisplayIdentifier:(NSString *)displayIdentifier;
+
+@end
+
+@interface SBIconController : NSObject {
+	SBIconModel* _iconModel;
+}
+
++ (SBIconController *)sharedInstance;
+- (SBIconModel *)model;
+- (SBApplication *)applicationWithDisplayIdentifier:(NSString *)displayIdentifier;
+
 @end

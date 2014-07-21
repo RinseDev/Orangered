@@ -45,6 +45,7 @@
 
 		<dict>
 			<key>cell</key> 		<string>PSEditTextCell</string>
+			<key>cellClass</key> 	<string>OREditTextCell</string>
 			<key>detail</key> 		<string>PSDetailController</string>
 			<key>defaults</key> 	<string>com.insanj.orangered</string>
 			<key>key</key> 			<string>username</string>
@@ -54,12 +55,22 @@
 		
 		<dict>
 			<key>cell</key> 		<string>PSSecureEditTextCell</string>
-			<key>cellClass</key> 	<string>OREditTextCell</string>
+			<key>cellClass</key> 	<string>OREditDoneTextCell</string>
 			<key>detail</key> 		<string>PSDetailController</string>
 			<key>defaults</key> 	<string>com.insanj.orangered</string>
 			<key>key</key> 			<string>password</string>
 			<key>label</key> 		<string>Password</string>
 			<key>placeholder</key> 	<string>hunter2</string>
+			<key>id</key> 			<string>PasswordField</string>
+		</dict>
+
+		<dict>
+			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<true/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>secure</string>
+			<key>label</key> 	<string>Secure</string>
+            <key>PostNotification</key> <string>com.insanj.orangered/Secure</string>
 		</dict>
 
 		<dict>

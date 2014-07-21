@@ -1,17 +1,12 @@
-#import "../Orangered.h"
-#import <Preferences/Preferences.h>
-#import <MobileInstallation/MobileInstallation.h>
+#import "ORPrefs.h"
 
 void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Interval" object:nil];
 }
 
-@interface ORListController: PSListController {
-	PSTableCell *soundCell;
-	NSMutableArray *titles, *values;
+void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Secure" object:nil];
 }
-
-@end
 
 @implementation ORListController
 
@@ -26,8 +21,13 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 - (void)loadView {
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(intervalDisable) name:@"Orangered.Interval" object:nil];
+	
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredSecure, CFSTR("com.insanj.orangered/Secure"), NULL, 0);
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(secureTapped) name:@"Orangered.Secure" object:nil];
 
 	[super loadView];
+
+	[self table].keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
 
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = TINT_COLOR;
 	[UISegmentedControl appearanceWhenContainedIn:self.class, nil].tintColor = TINT_COLOR;
@@ -46,25 +46,33 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 	[self reloadSpecifier:activationSpecifier];
 
 	[self intervalDisable];
+	[self reloadClientTitlesAndValues];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-	titles = [[NSMutableArray alloc] init];
-	values = [[NSMutableArray alloc] init];
+- (void)reloadClientTitlesAndValues {
+	if (_savedClientTitles) {
+		[_savedClientTitles release];
+		[_savedClientValues release];
+	}
+
+	_savedClientTitles = [[NSMutableArray alloc] init];
+	_savedClientValues = [[NSMutableArray alloc] init];
 
 	CFDictionaryRef bundles = MobileInstallationLookup((CFDictionaryRef) @{@"ReturnAttributes" : @"BundleIDs"});
 	NSDictionary *supportedClients = CLIENT_LIST;
 	
 	for (NSString *bundle in [supportedClients allKeys]) {
 		if (CFDictionaryGetValue(bundles, bundle)) {
-			[titles addObject:supportedClients[bundle]];
-			[values addObject:bundle];
+			[_savedClientTitles addObject:supportedClients[bundle]];
+			[_savedClientValues addObject:bundle];
 		}
 	}
 
-	[titles addObject:@"Safari"];
-	[values addObject:@"com.apple.mobilesafari"];
+	[_savedClientTitles addObject:@"Safari"];
+	[_savedClientValues addObject:@"com.apple.mobilesafari"];
+}
 
+- (void)viewWillAppear:(BOOL)animated {
 	self.view.tintColor = TINT_COLOR;
     self.navigationController.navigationBar.tintColor = TINT_COLOR;
 
@@ -100,10 +108,14 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-	[cell _setDrawsSeparatorAtBottomOfSection:NO];
+	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1) {
+		if (indexPath.row == 1) {	// Apply Changes Now
+		    cell.separatorInset = UIEdgeInsetsMake(0.0, -15.0, 0.0, 0.0);
+		}
 
-	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1 && indexPath.row == 1) {
-	    cell.separatorInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, cell.bounds.size.width);
+		else if (indexPath.row == 2) {	// Credits cell
+			[cell _setDrawsSeparatorAtBottomOfSection:NO];
+		}
 	}
 }
 
@@ -136,11 +148,11 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 }
 
 - (NSArray *)clientTitles:(id)target {
-	return titles;
+	return _savedClientTitles;
 }
 
 - (NSArray *)clientValues:(id)target {
-	return values;
+	return _savedClientValues;
 }
 
 - (BOOL)canBeShownFromSuspendedState {
@@ -160,33 +172,47 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 	[self.view endEditing:YES];
 }
 
+- (void)secureTapped {
+	PSSpecifier *passwordSpecifier = [self specifierForID:@"PasswordField"];
+	[self setPreferenceValue:@"" specifier:passwordSpecifier];
+	[self reloadSpecifier:passwordSpecifier];
+}
+
 - (void)dealloc {
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:@"Orangered.Interval" object:nil];
 
-	titles = nil;
-	values = nil;
+	_savedClientTitles = nil;
+	_savedClientValues = nil;
 
-	[titles release];
-	[values release];
+	[_savedClientTitles release];
+	[_savedClientValues release];
 	[super dealloc];
 }
 
 @end
 
-@interface OREditTextCell : PSEditableTableCell
+@implementation OREditTextCell
+
+- (id)initWithStyle:(UITableViewCellStyle)arg1 reuseIdentifier:(id)arg2 specifier:(id)arg3 {
+	OREditTextCell *editTextCell = [super initWithStyle:arg1 reuseIdentifier:arg2 specifier:arg3];
+	((UITextField *)[editTextCell textField]).returnKeyType = UIReturnKeyNext;
+	return editTextCell;
+}
+
 @end
 
-@implementation OREditTextCell
+@implementation OREditDoneTextCell
+
+- (id)initWithStyle:(UITableViewCellStyle)arg1 reuseIdentifier:(id)arg2 specifier:(id)arg3 {
+	OREditDoneTextCell *editTextCell = [super initWithStyle:arg1 reuseIdentifier:arg2 specifier:arg3];
+	((UITextField *)[editTextCell textField]).returnKeyType = UIReturnKeyDone;
+	return editTextCell;
+}
 
 - (BOOL)textFieldShouldReturn:(id)arg1 {
 	return YES;
 }
 
-@end
-
-@interface ORCreditsCell : PSTableCell <UITextViewDelegate> {
-	UITextView *_plainTextView;
-}
 @end
 
 @implementation ORCreditsCell
@@ -246,9 +272,6 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
 
 @end
 
-@interface ORClientListItemsController : PSListItemsController
-@end
-
 @implementation ORClientListItemsController
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -258,6 +281,10 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
     [super viewWillAppear:animated];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+	[super viewDidAppear:animated];
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
 
@@ -265,9 +292,6 @@ void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFSt
     self.navigationController.navigationBar.tintColor = nil;
 }
 
-@end
-
-@interface ORRingtoneController : RingtoneController
 @end
 
 %subclass ORRingtoneController : RingtoneController
