@@ -13,6 +13,7 @@
 - (void)activator:(LAActivator *)activator receiveEvent:(LAEvent *)event{
 	ORLOG(@"[Orangered] Sending check message from Activator...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"Activator" }];
+	[event setHandled:YES];
 }
 
 - (void)activator:(LAActivator *)activator abortEvent:(LAEvent *)event{
