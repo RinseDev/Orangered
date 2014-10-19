@@ -1,15 +1,10 @@
 #import "Orangered.h"
 #import "ORProviders.h"
 
-#import <Preferences/Preferences.h>
-#import <PersistentConnection/PersistentConnection.h>
-
-#import "substrate.h"
-
-#import "Communication/AFNetworking.h"
-#import "Communication/RedditKit.h"
-#import "Communication/Mantle.h"
-#import "Communication/FDKeychain.h"
+#import "External/AFNetworking.h"
+#import "External/RedditKit.h"
+#import "External/Mantle.h"
+#import "External/FDKeychain.h"
 
 /**************************************************************************************/
 /************************ CRAVDelegate (used from first run) ****************************/

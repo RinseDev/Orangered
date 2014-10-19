@@ -1,4 +1,4 @@
-TARGET= :clang
+TARGET= :clang:latest
 ARCHS = armv7 armv7s arm64
 
 include theos/makefiles/common.mk
@@ -6,8 +6,8 @@ include theos/makefiles/common.mk
 BUNDLE_NAME = ORPrefs
 ORPrefs_FILES = ORPrefs.xm
 ORPrefs_INSTALL_PATH = /Library/PreferenceBundles
-ORPrefs_FRAMEWORKS = UIKit Twitter
-ORPrefs_PRIVATE_FRAMEWORKS = Preferences MobileInstallation
+ORPrefs_FRAMEWORKS = Foundation UIKit Twitter
+ORPrefs_PRIVATE_FRAMEWORKS = Preferences MobileCoreServices MobileInstallation
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

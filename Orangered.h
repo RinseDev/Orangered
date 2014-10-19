@@ -4,14 +4,16 @@
 #import <SpringBoard/SBBulletinBannerController.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
 #import <BulletinBoard/BulletinBoard.h>
-
+#import <PersistentConnection/PersistentConnection.h>
+#import <objc/runtime.h>
+#import <Preferences/Preferences.h>
 #import "substrate.h"
 
 #define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 #define TINT_COLOR [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
-#define CLIENT_LIST @{@"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
+#define CLIENT_LIST @{@"com.reddit.alienblue" : @"Alien Blue", @"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
 					  @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
 					  @"com.yapstudios.appstore.feedworthy" : @"Feedworthy", @"com.biscuitapp.biscuit" : @"Biscuit", \
 					  @"com.syntaxstudios.reddme" : @"Reddme", @"com.appseedinc.aliens" : @"Aliens", \

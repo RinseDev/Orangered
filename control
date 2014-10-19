@@ -2,7 +2,7 @@ Package: com.insanj.orangered7
 Name: Orangered for iOS 7
 Pre-Depends: firmware (>= 7.0)
 Depends: mobilesubstrate
-Version: 1.2
+Version: 1.2.1
 Architecture: iphoneos-arm
 Description: Reddit push notifications.
 Homepage: http://insanj.com/orangered

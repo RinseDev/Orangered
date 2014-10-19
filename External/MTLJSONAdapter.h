@@ -1,0 +1,1 @@
+/Users/Weiss/Dropbox/jailbreak/orangered/RedditKit/External/Mantle/Mantle/MTLJSONAdapter.h

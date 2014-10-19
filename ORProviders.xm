@@ -1,5 +1,4 @@
 #import "ORProviders.h"
-#import "Orangered.h"
 
 @implementation OrangeredProvider
 

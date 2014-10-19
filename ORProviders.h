@@ -1,6 +1,4 @@
-#import <UIKit/UIKit.h>
-#import <BulletinBoard/BulletinBoard.h>
-#import <objc/runtime.h>
+#import "Orangered.h"
 
 @interface OrangeredProviderFactory : NSObject <BBDataProviderFactory>
 @end
