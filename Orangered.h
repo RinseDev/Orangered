@@ -1,20 +1,20 @@
 #import <UIKit/UIKit.h>
-#import <SpringBoard/SBApplication.h>
-#import <SpringBoard/SBApplicationController.h>
-#import <SpringBoard/SBBulletinBannerController.h>
+#import <SpringBoard/SpringBoard.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
 #import <BulletinBoard/BulletinBoard.h>
 #import <PersistentConnection/PersistentConnection.h>
 #import <objc/runtime.h>
-#import <Preferences/Preferences.h>
 #import "substrate.h"
+#import <UIKit/UIApplication+Private.h>
+
+#define IOS_8 ([UIDevice currentDevice].systemVersion.floatValue >= 8.0)
 
 #define PREFS_PATH @"/var/mobile/Library/Preferences/com.insanj.orangered.plist"
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 #define TINT_COLOR [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
 #define CLIENT_LIST @{@"com.reddit.alienblue" : @"Alien Blue", @"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
-					  @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
+					  @"com.madeawkward.beam" : @"beam", @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
 					  @"com.yapstudios.appstore.feedworthy" : @"Feedworthy", @"com.biscuitapp.biscuit" : @"Biscuit", \
 					  @"com.syntaxstudios.reddme" : @"Reddme", @"com.appseedinc.aliens" : @"Aliens", \
 					  @"com.amleszk.amrc" : @"amrc", @"com.tyanya.reddit" : @"Redditor", \
@@ -28,54 +28,11 @@
 
 // Because of some weird DEBUG effects in Mantle, this is a must...
 // Other locations ORLOG can be found at (that I didn't feel like consolidating): ORListener.xm
-// #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define ORLOG(fmt, ...) 
-
-// @interface BBServer (Private)
-// + (instancetype)sharedInstance;
-// @end
-
-@interface UIApplication (Private)
-
-- (void)_beginShowingNetworkActivityIndicator;
-- (void)_hideNetworkActivityIndicator;
-- (void)_endShowingNetworkActivityIndicator;
-
-@end
-
-@interface SBIcon : NSObject
-
-- (void)noteBadgeDidChange;
-
-@end
-
-@interface SBApplicationIcon : SBIcon 
-
-- (void)setBadge:(NSString *)badge;
-- (NSString *)applicationBundleID;
-
-@end
-
-@interface SBIconModel : NSObject
-
-- (SBApplicationIcon *)applicationIconForDisplayIdentifier:(NSString *)displayIdentifier;
-
-@end
-
-@interface SBIconController : NSObject {
-	SBIconModel* _iconModel;
-}
-
-+ (SBIconController *)sharedInstance;
-- (SBIconModel *)model;
-- (SBApplication *)applicationWithDisplayIdentifier:(NSString *)displayIdentifier;
-
-@end
-
+#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+// #define ORLOG(fmt, ...) 
 
 @interface PSNotificationSettingsDetail : NSObject
 
 + (NSURL *)preferencesURL;
 
 @end
-

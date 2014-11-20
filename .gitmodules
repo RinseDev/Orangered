@@ -1,6 +1,6 @@
-[submodule "RedditKit"]
-	path = RedditKit
-	url = https://github.com/samsymons/RedditKit
 [submodule "FDKeychain"]
 	path = FDKeychain
 	url = https://github.com/reidmain/FDKeychain
+[submodule "RedditKit"]
+	path = RedditKit
+	url = https://github.com/samsymons/RedditKit

@@ -5,6 +5,8 @@
 #import <Twitter/Twitter.h>
 #import <ToneLibrary/ToneLibrary.h>
 #import <MobileInstallation/MobileInstallation.h>
+#import <Preferences/Preferences.h>
+#import <AppList/AppList.h>
 
 @interface ORListController: PSListController {
 	PSTableCell *soundCell;

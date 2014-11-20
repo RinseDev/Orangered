@@ -1,14 +1,21 @@
 #import "Orangered.h"
 #import "ORProviders.h"
-
 #import "External/AFNetworking.h"
 #import "External/RedditKit.h"
 #import "External/Mantle.h"
 #import "External/FDKeychain.h"
 
-/**************************************************************************************/
-/************************ CRAVDelegate (used from first run) ****************************/
-/***************************************************************************************/
+/*                                                                                                                                                  
+           /$$                       /$$             /$$                        
+          | $$                      | $$            |__/                        
+  /$$$$$$ | $$  /$$$$$$   /$$$$$$  /$$$$$$ /$$    /$$/$$  /$$$$$$  /$$  /$$  /$$
+ |____  $$| $$ /$$__  $$ /$$__  $$|_  $$_/|  $$  /$$/ $$ /$$__  $$| $$ | $$ | $$
+  /$$$$$$$| $$| $$$$$$$$| $$  \__/  | $$   \  $$/$$/| $$| $$$$$$$$| $$ | $$ | $$
+ /$$__  $$| $$| $$_____/| $$        | $$ /$$\  $$$/ | $$| $$_____/| $$ | $$ | $$
+|  $$$$$$$| $$|  $$$$$$$| $$        |  $$$$/ \  $/  | $$|  $$$$$$$|  $$$$$/$$$$/
+ \_______/|__/ \_______/|__/         \___/    \_/   |__/ \_______/ \_____/\___/ 
+                                                                                
+*/
 
 @interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex;
@@ -37,9 +44,18 @@
 
 @end
 
-/**************************************************************************************/
-/*********************** Static Convenience C-Funcs/Variables **************************/
-/**************************************************************************************/
+/*
+                                                                                      
+  /$$$$$$                               /$$     /$$                              
+ /$$__  $$                             | $$    |__/                              
+| $$  \__/$$   /$$ /$$$$$$$   /$$$$$$$/$$$$$$   /$$  /$$$$$$  /$$$$$$$   /$$$$$$$
+| $$$$  | $$  | $$| $$__  $$ /$$_____/_  $$_/  | $$ /$$__  $$| $$__  $$ /$$_____/
+| $$_/  | $$  | $$| $$  \ $$| $$       | $$    | $$| $$  \ $$| $$  \ $$|  $$$$$$ 
+| $$    | $$  | $$| $$  | $$| $$       | $$ /$$| $$| $$  | $$| $$  | $$ \____  $$
+| $$    |  $$$$$$/| $$  | $$|  $$$$$$$ |  $$$$/| $$|  $$$$$$/| $$  | $$ /$$$$$$$/
+|__/     \______/ |__/  |__/ \_______/  \___/  |__/ \______/ |__/  |__/|_______/ 
+                                                                                                                                                               
+*/
 
 static ORAlertViewDelegate *orangeredAlertDelegate;
 static PCPersistentTimer *orangeredTimer;
@@ -62,15 +78,37 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 		stringBadgeValue = [formatter stringForObjectValue:@(badgeValue)];
 	}
 
-	SBApplicationIcon *clientAppIcon = [iconModel applicationIconForDisplayIdentifier:displayIdentifier]; 
+	SBApplicationIcon *clientAppIcon = IOS_8 ? [iconModel applicationIconForBundleIdentifier:displayIdentifier] : [iconModel applicationIconForDisplayIdentifier:displayIdentifier]; 
 	[clientAppIcon setBadge:stringBadgeValue];
 
 	ORLOG(@"set badge %@ to %@", stringBadgeValue, clientAppIcon);
 }
 
-/***************************************************************************************/
-/********************************* First Run Prompts  **********************************/
-/***************************************************************************************/
+static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
+	if (IOS_8) {
+		[server _addBulletin:bulletin];
+	}
+
+	else {
+		BBDataProviderAddBulletin(provider, bulletin);
+	}
+}
+
+/*
+
+                               /$$                     /$$                                         /$$
+                              |__/                    | $$                                        | $$
+  /$$$$$$$  /$$$$$$   /$$$$$$  /$$ /$$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$  /$$$$$$   /$$$$$$  /$$$$$$$
+ /$$_____/ /$$__  $$ /$$__  $$| $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$|____  $$ /$$__  $$/$$__  $$
+|  $$$$$$ | $$  \ $$| $$  \__/| $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$ /$$$$$$$| $$  \__/ $$  | $$
+ \____  $$| $$  | $$| $$      | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$/$$__  $$| $$     | $$  | $$
+ /$$$$$$$/| $$$$$$$/| $$      | $$| $$  | $$|  $$$$$$$| $$$$$$$/|  $$$$$$/  $$$$$$$| $$     |  $$$$$$$
+|_______/ | $$____/ |__/      |__/|__/  |__/ \____  $$|_______/  \______/ \_______/|__/      \_______/
+          | $$                               /$$  \ $$                                                
+          | $$                              |  $$$$$$/                                                
+          |__/                               \______/                                                 
+
+*/
 
 %group SpringBoard
 
@@ -109,9 +147,18 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 
 %end
 
-/***************************************************************************************/
-/**************************** Super-Import Server Saving  ******************************/
-/***************************************************************************************/
+/*
+
+ /$$       /$$                                                                 
+| $$      | $$                                                                 
+| $$$$$$$ | $$$$$$$   /$$$$$$$  /$$$$$$   /$$$$$$  /$$    /$$/$$$$$$   /$$$$$$ 
+| $$__  $$| $$__  $$ /$$_____/ /$$__  $$ /$$__  $$|  $$  /$$/$$__  $$ /$$__  $$
+| $$  \ $$| $$  \ $$|  $$$$$$ | $$$$$$$$| $$  \__/ \  $$/$$/ $$$$$$$$| $$  \__/
+| $$  | $$| $$  | $$ \____  $$| $$_____/| $$        \  $$$/| $$_____/| $$      
+| $$$$$$$/| $$$$$$$/ /$$$$$$$/|  $$$$$$$| $$         \  $/ |  $$$$$$$| $$      
+|_______/ |_______/ |_______/  \_______/|__/          \_/   \_______/|__/      
+                                                                               
+*/
 
 static BBServer *orangeredServer;
 
@@ -119,9 +166,15 @@ static BBServer *orangeredServer;
 
 - (id)init {
 	orangeredServer = %orig();
-
 	OrangeredProvider *sharedProvider = [OrangeredProvider sharedInstance];
-	[orangeredServer _addDataProvider:sharedProvider forFactory:sharedProvider.factory];
+
+	if (IOS_8) {
+		[orangeredServer _addActiveSectionID:[sharedProvider sectionIdentifier]];
+	}
+
+	else {
+		[orangeredServer _addDataProvider:sharedProvider forFactory:sharedProvider.factory];
+	}
 
 	return orangeredServer;
 }
@@ -130,9 +183,20 @@ static BBServer *orangeredServer;
 
 %end // %group SpringBoard
 
-/**************************************************************************************/
-/******************** Preferences Injections For Error Handling ***********************/
-/**************************************************************************************/
+/*
+                               /$$$$$$        
+                              /$$__  $$       
+  /$$$$$$   /$$$$$$  /$$$$$$ | $$  \__/$$$$$$$
+ /$$__  $$ /$$__  $$/$$__  $$| $$$$  /$$_____/
+| $$  \ $$| $$  \__/ $$$$$$$$| $$_/ |  $$$$$$ 
+| $$  | $$| $$     | $$_____/| $$    \____  $$
+| $$$$$$$/| $$     |  $$$$$$$| $$    /$$$$$$$/
+| $$____/ |__/      \_______/|__/   |_______/ 
+| $$                                          
+| $$                                          
+|__/  
+
+*/
 
 %group Preferences
 
@@ -178,9 +242,17 @@ static BBServer *orangeredServer;
 
 %end // %group Preferences
 
-/**************************************************************************************/
-/******************** All Orangered->Reddit(Kit) Communications ***********************/
-/**************************************************************************************/
+/*
+            /$$                        
+           | $$                        
+  /$$$$$$$/$$$$$$    /$$$$$$   /$$$$$$ 
+ /$$_____/_  $$_/   /$$__  $$ /$$__  $$
+| $$       | $$    | $$  \ $$| $$  \__/
+| $$       | $$ /$$| $$  | $$| $$      
+|  $$$$$$$ |  $$$$/|  $$$$$$/| $$      
+ \_______/  \___/   \______/ |__/      
+
+*/
 
 %ctor {
 	// Because screw stupid class comparisons, they suck.
@@ -249,18 +321,36 @@ static BBServer *orangeredServer;
 				![clientIdentifier isEqualToString:sectionIdentifier] &&
 					 [(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:clientIdentifier]) {
 			ORLOG(@"Detected change in app, swapping around data providers...");
-			[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
-			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-		    [orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+			
+		    if (IOS_8) {
+				[orangeredServer _removeActiveSectionID:sectionIdentifier];
+				notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
+			    [orangeredServer _addActiveSectionID:clientIdentifier];
+		    }
+
+		   	else {
+				[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
+				notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
+				[orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+		   }
 		}
 
 		// If the current clientIdentifier doesn't have an app associated with it, revert back
 		// to a random check.
 		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:sectionIdentifier]) {
 			ORLOG(@"Detected bonkers app, reassigning data providers...");
-			[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
-			notificationProvider.customSectionID = nil;
-		    [orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+			
+		    if (IOS_8) {
+				[orangeredServer _removeActiveSectionID:sectionIdentifier];
+				notificationProvider.customSectionID = nil;
+			    [orangeredServer _addActiveSectionID:[notificationProvider sectionIdentifier]];
+		    }
+
+		    else {
+				[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
+				notificationProvider.customSectionID = nil;
+			    [orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+		   }
 		}
 
 		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
@@ -332,7 +422,7 @@ static BBServer *orangeredServer;
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
-			BBDataProviderAddBulletin(notificationProvider, bulletin);
+			orangeredAddBulletin(orangeredServer, notificationProvider, bulletin);
 			return;
 	    }
 
@@ -387,7 +477,7 @@ static BBServer *orangeredServer;
 				bulletin.date = [NSDate date];
 
 				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
-				BBDataProviderAddBulletin(notificationProvider, bulletin);
+				orangeredAddBulletin(orangeredServer, notificationProvider, bulletin);
 				return;
 			}
 
@@ -458,7 +548,7 @@ static BBServer *orangeredServer;
 			    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 
 					ORLOG(@"Publishing bulletin request (%@) to provider (%@). (not equiv in %@).", bulletin, provider, lastBulletin);
-					BBDataProviderAddBulletin(provider, bulletin);
+					orangeredAddBulletin(orangeredServer, provider, bulletin);
 
 					lastBulletin = bulletin;
 				}
@@ -528,7 +618,7 @@ static BBServer *orangeredServer;
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
 
 					orangeredError = error;
-					BBDataProviderAddBulletin(notificationProvider, bulletin);
+					orangeredAddBulletin(orangeredServer, notificationProvider, bulletin);
 					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
 					return;
 	    		}

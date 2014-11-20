@@ -58,11 +58,11 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	_savedClientTitles = [[NSMutableArray alloc] init];
 	_savedClientValues = [[NSMutableArray alloc] init];
 
-	CFDictionaryRef bundles = MobileInstallationLookup((CFDictionaryRef) @{@"ReturnAttributes" : @"BundleIDs"});
+	NSDictionary *installedApplicatons = [[ALApplicationList sharedApplicationList] applications]; // identifier : display name
 	NSDictionary *supportedClients = CLIENT_LIST;
 	
 	for (NSString *bundle in [supportedClients allKeys]) {
-		if (CFDictionaryGetValue(bundles, bundle)) {
+		if (installedApplicatons[bundle]) {
 			[_savedClientTitles addObject:supportedClients[bundle]];
 			[_savedClientValues addObject:bundle];
 		}
@@ -74,7 +74,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (void)viewWillAppear:(BOOL)animated {
 	self.view.tintColor = TINT_COLOR;
-    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+    
+    if (IOS_8) {
+	    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+   	}
+
+   	else {
+   	    self.navigationController.navigationController.navigationBar.tintColor = TINT_COLOR;	
+   	}
 
     [self updateSoundCellValueLabel];
 	[super viewWillAppear:animated];
@@ -84,12 +91,19 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[super viewWillDisappear:animated];
 
 	self.view.tintColor = nil;
-    self.navigationController.navigationBar.tintColor = nil;
-}
+
+	if (IOS_8) {
+	    self.navigationController.navigationController.navigationBar.tintColor = nil;
+	}
+
+	else {
+	    self.navigationController.navigationBar.tintColor = nil;
+	}}
 
 - (void)updateSoundCellValueLabel {
 	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	NSString *alertToneName = [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:preferences[@"alertTone"]];
+	NSString *alertToneIdentifier = preferences[@"alertTone"];
+	NSString *alertToneName = IOS_8 ? [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier] : [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:alertToneIdentifier];
 	soundCell.valueLabel.text = alertToneName;
 }
 
@@ -149,7 +163,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (void)notificationCenter {
 	self.view.tintColor = nil;
-    self.navigationController.navigationBar.tintColor = nil;
+
+	if (IOS_8) {
+	    self.navigationController.navigationController.navigationBar.tintColor = nil;
+	}
+
+	else {
+	    self.navigationController.navigationBar.tintColor = nil;
+	}
 
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.NotificationCenter" object:nil];
 }
@@ -283,7 +304,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (void)viewWillAppear:(BOOL)animated {
 	self.view.tintColor = TINT_COLOR;
-    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+
+	if (IOS_8) {
+	    self.navigationController.navigationController.navigationBar.tintColor = TINT_COLOR;
+	}
+
+	else {
+	    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+	}
 
     [super viewWillAppear:animated];
 }
@@ -296,7 +324,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
     [super viewWillDisappear:animated];
 
 	self.view.tintColor = nil;
-    self.navigationController.navigationBar.tintColor = nil;
+
+	if (IOS_8) {
+	    self.navigationController.navigationController.navigationBar.tintColor = nil;
+	}
+
+	else {
+	    self.navigationController.navigationBar.tintColor = nil;
+	}
 }
 
 @end
@@ -306,7 +341,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)viewWillAppear:(BOOL)animated {
 
 	self.view.tintColor = TINT_COLOR;
-    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+
+	if (IOS_8) {
+	    self.navigationController.navigationController.navigationBar.tintColor = TINT_COLOR;
+	}
+
+	else {
+	    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+	}
 
 	%orig();
 }
@@ -315,7 +357,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	%orig();
 
 	self.view.tintColor = nil;
-    self.navigationController.navigationBar.tintColor = nil;
+
+	if (IOS_8) {
+	    self.navigationController.navigationController.navigationBar.tintColor = nil;
+	}
+
+	else {
+	    self.navigationController.navigationBar.tintColor = nil;
+	}
 }
 
 %end
@@ -323,8 +372,9 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 @implementation ORLinkCell
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
-	// UIImage *notificationCenterIconImage = [UIImage imageNamed:@"notificationcenter.png" inBundle:[NSBundle bundleForClass:self.class]];
-	/*NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	/*
+	UIImage *notificationCenterIconImage = [UIImage imageNamed:@"notificationcenter.png" inBundle:[NSBundle bundleForClass:self.class]];
+	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 	NSData *notificationCenterImageData = (NSData *)preferences[@"notificationCenterImageData"];
 	UIImage *notificationCenterIconImage = [UIImage imageWithData:notificationCenterImageData];
 
@@ -338,7 +388,9 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	UIImage *croppedNotificationCenterImage = UIGraphicsGetImageFromCurrentImageContext();
 	UIGraphicsEndImageContext();
 
-	[specifier setProperty:croppedNotificationCenterImage forKey:@"iconImage"];*/
+	[[ALApplicationList sharedApplicationList] iconOfSize:CGRectMake(0, 0, 30.0, 30.0) forDisplayIdentifier:]
+	[specifier setProperty:croppedNotificationCenterImage forKey:@"iconImage"];
+	*/
 
 	return [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
 }
