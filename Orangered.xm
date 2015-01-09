@@ -441,6 +441,10 @@ static BBServer *orangeredServer;
 
 			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 			bulletin.recordID = @"com.insanj.orangered.bulletin";
+			CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+			CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+			CFRelease(uuidRef);
+			bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 			bulletin.title = @"Orangered";
 			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
 			bulletin.sectionID = @"com.apple.Preferences";
@@ -496,6 +500,10 @@ static BBServer *orangeredServer;
 
 				BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+				CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+				CFRelease(uuidRef);
+				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
 				bulletin.sectionID = @"com.apple.Preferences";
@@ -538,6 +546,10 @@ static BBServer *orangeredServer;
 			if (messages && messages.count > 0) {	
             	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+				CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+				CFRelease(uuidRef);
+				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.sectionID = sectionID;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
 				bulletin.date = [NSDate date];
@@ -618,6 +630,10 @@ static BBServer *orangeredServer;
 	    			ORLOG(@"Encountered error (%@, %@), pushing bulletin request...", error, error.userInfo);
 		        	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 					bulletin.recordID = @"com.insanj.orangered.bulletin";
+					CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+					CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+					CFRelease(uuidRef);
+					bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 					bulletin.title = @"Orangered";
 
 					NSString *relevantMessage;
