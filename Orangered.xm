@@ -477,7 +477,7 @@ static BBServer *orangeredServer;
 			    }
 
 				NSError *saveItemForKeyError;
-				[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
+				[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" inAccessGroup:nil withAccessibility:FDKeychainAccessibleAfterFirstUnlock error:&saveItemForKeyError];
 				if (saveItemForKeyError) {
 					NSLog(@"Error trying to secure password: %@", saveItemForKeyError);
 					return;
