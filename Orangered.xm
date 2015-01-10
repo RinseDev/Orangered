@@ -97,13 +97,7 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 }
 
 static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
-	if (IOS_8) {
-		[server _addBulletin:bulletin];
-	}
-
-	else {
-		BBDataProviderAddBulletin(provider, bulletin);
-	}
+	BBDataProviderAddBulletin(provider, bulletin); //This works in iOS 8.1.2
 }
 
 /*
