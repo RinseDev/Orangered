@@ -1,10 +1,10 @@
-TARGET = :clang
-ARCHS = armv7 armv7s arm64
+TARGET = iphone:clang:latest:7.0
+ARCHS = armv7 arm64
 
 include theos/makefiles/common.mk
 
 TWEAK_NAME = ORListener
-ORListener_FILES = ORListener.xm
+ORListener_OBJC_FILES = ORListener.xm
 ORListener_FRAMEWORKS = Foundation UIKit
 ORListener_LDFLAGS = -lactivator -L../theos/lib
 

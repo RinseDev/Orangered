@@ -1,10 +1,10 @@
-TARGET= :clang:latest
-ARCHS = armv7 armv7s arm64
+TARGET = iphone:clang:latest:7.0
+ARCHS = armv7 arm64
 
 include theos/makefiles/common.mk
 
 BUNDLE_NAME = ORPrefs
-ORPrefs_FILES = ORPrefs.xm
+ORPrefs_OBJC_FILES = ORPrefs.xm
 ORPrefs_INSTALL_PATH = /Library/PreferenceBundles
 ORPrefs_FRAMEWORKS = Foundation UIKit Twitter
 ORPrefs_PRIVATE_FRAMEWORKS = Preferences MobileCoreServices MobileInstallation
