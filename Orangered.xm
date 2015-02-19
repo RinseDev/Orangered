@@ -5,6 +5,18 @@
 #import "External/Mantle.h"
 #import "External/FDKeychain.h"
 
+@interface SBIconModel (Orangered7)
+- (id)applicationIconForDisplayIdentifier:(id)arg1;
+@end
+
+@interface SBIconModel (Orangered8)
+- (id)applicationIconForBundleIdentifier:(id)arg1;
+@end
+
+@interface SBApplicationController (Orangered8)
+- (id)applicationWithBundleIdentifier:(id)arg1;
+@end
+
 /*                                                                                                                                                  
            /$$                       /$$             /$$                        
           | $$                      | $$            |__/                        
@@ -85,13 +97,7 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 }
 
 static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
-	if (IOS_8) {
-		[server _addBulletin:bulletin];
-	}
-
-	else {
-		BBDataProviderAddBulletin(provider, bulletin);
-	}
+	BBDataProviderAddBulletin(provider, bulletin); //This works in iOS 8.1.2
 }
 
 /*
@@ -313,44 +319,57 @@ static BBServer *orangeredServer;
 		}
 
 		NSString *clientIdentifier = preferences[@"clientIdentifier"];
-		
-		// If there's a saved client identifier, which is different from the current identifier,
-		// and an app with that identifier is installed, then swap out the data provider so it
-		// uses the correct section identifier.
-		if (clientIdentifier && 
+
+		if (IOS_8) {
+			// If there's a saved client identifier, which is different from the current identifier,
+			// and an app with that identifier is installed, then swap out the data provider so it
+			// uses the correct section identifier.
+			if (clientIdentifier &&
 				![clientIdentifier isEqualToString:sectionIdentifier] &&
-					 [(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:clientIdentifier]) {
-			ORLOG(@"Detected change in app, swapping around data providers...");
-			
-		    if (IOS_8) {
+				[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
+				ORLOG(@"Detected change in app, swapping around data providers...");
+
 				[orangeredServer _removeActiveSectionID:sectionIdentifier];
 				notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-			    [orangeredServer _addActiveSectionID:clientIdentifier];
-		    }
+				[orangeredServer _addActiveSectionID:clientIdentifier];
 
-		   	else {
+			}
+
+			// If the current clientIdentifier doesn't have an app associated with it, revert back
+			// to a random check.
+			if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
+				ORLOG(@"Detected bonkers app, reassigning data providers...");
+
+				[orangeredServer _removeActiveSectionID:sectionIdentifier];
+				notificationProvider.customSectionID = nil;
+				[orangeredServer _addActiveSectionID:[notificationProvider sectionIdentifier]];
+
+			}
+		}
+
+		else {
+			// If there's a saved client identifier, which is different from the current identifier,
+			// and an app with that identifier is installed, then swap out the data provider so it
+			// uses the correct section identifier.
+			if (clientIdentifier &&
+				![clientIdentifier isEqualToString:sectionIdentifier] &&
+				[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:clientIdentifier]) {
+				ORLOG(@"Detected change in app, swapping around data providers...");
+
 				[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
 				notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
 				[orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
-		   }
-		}
+			}
 
-		// If the current clientIdentifier doesn't have an app associated with it, revert back
-		// to a random check.
-		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:sectionIdentifier]) {
-			ORLOG(@"Detected bonkers app, reassigning data providers...");
-			
-		    if (IOS_8) {
-				[orangeredServer _removeActiveSectionID:sectionIdentifier];
-				notificationProvider.customSectionID = nil;
-			    [orangeredServer _addActiveSectionID:[notificationProvider sectionIdentifier]];
-		    }
+			// If the current clientIdentifier doesn't have an app associated with it, revert back
+			// to a random check.
+			if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:sectionIdentifier]) {
+				ORLOG(@"Detected bonkers app, reassigning data providers...");
 
-		    else {
 				[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
 				notificationProvider.customSectionID = nil;
-			    [orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
-		   }
+				[orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
+			}
 		}
 
 		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
@@ -416,6 +435,10 @@ static BBServer *orangeredServer;
 
 			BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 			bulletin.recordID = @"com.insanj.orangered.bulletin";
+			CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+			CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+			CFRelease(uuidRef);
+			bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 			bulletin.title = @"Orangered";
 			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
 			bulletin.sectionID = @"com.apple.Preferences";
@@ -452,7 +475,7 @@ static BBServer *orangeredServer;
 			    }
 
 				NSError *saveItemForKeyError;
-				[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" error:&saveItemForKeyError];
+				[FDKeychain saveItem:password forKey:mutableKey forService:@"Orangered" inAccessGroup:nil withAccessibility:FDKeychainAccessibleAfterFirstUnlock error:&saveItemForKeyError];
 				if (saveItemForKeyError) {
 					NSLog(@"Error trying to secure password: %@", saveItemForKeyError);
 					return;
@@ -471,6 +494,10 @@ static BBServer *orangeredServer;
 
 				BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+				CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+				CFRelease(uuidRef);
+				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
 				bulletin.sectionID = @"com.apple.Preferences";
@@ -513,6 +540,10 @@ static BBServer *orangeredServer;
 			if (messages && messages.count > 0) {	
             	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+				CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+				CFRelease(uuidRef);
+				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.sectionID = sectionID;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
 				bulletin.date = [NSDate date];
@@ -593,6 +624,10 @@ static BBServer *orangeredServer;
 	    			ORLOG(@"Encountered error (%@, %@), pushing bulletin request...", error, error.userInfo);
 		        	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
 					bulletin.recordID = @"com.insanj.orangered.bulletin";
+					CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+					CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+					CFRelease(uuidRef);
+					bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 					bulletin.title = @"Orangered";
 
 					NSString *relevantMessage;
