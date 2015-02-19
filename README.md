@@ -1,6 +1,5 @@
 # [Orangered](http://insanj.com/orangered)
 
-
 Native push notifications for Reddit. Orangered seamlessly connects your device to Reddit, as quickly and flexibly as possible. With an impressive list of supported clients, and simple, configurable options, you'll never feel closer to your inbox. Set up recurring inbox checks, or simply trigger Orangered with built-in Activator support (or even manually in the Settings).
 
 Built with love and care by Julian Weiss and Phillip Tennen. Supports all devices running iOS 7-8. Icon and website design by Kyle Paul.
@@ -24,7 +23,7 @@ In addition to the core functionality of Reddit communications and notifications
 ##  [License](LICENSE.md)
 
    	Orangered: Native push notifications for Reddit
-   	Copyright (C) 2013-2014  Julian (insanj) Weiss
+   	Copyright (C) 2013-2015  Julian (insanj) Weiss
    	Copyright (C) 2014  Phillip Tennen 
 
     This program is free software: you can redistribute it and/or modify

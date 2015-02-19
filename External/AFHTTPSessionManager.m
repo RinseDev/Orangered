@@ -1,1 +1,0 @@
-/Users/Weiss/Dropbox/jailbreak/orangered/RedditKit/External/AFNetworking/AFNetworking/AFHTTPSessionManager.m
