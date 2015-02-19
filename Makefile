@@ -12,8 +12,8 @@ Orangered_FILES = Orangered.xm ORProviders.xm External/FDKeychain/FDKeychain.m $
 Orangered_FRAMEWORKS = AudioToolbox CFNetwork CoreLocation Security StoreKit UIKit QuartzCore CoreGraphics SystemConfiguration Security MobileCoreServices
 Orangered_PRIVATE_FRAMEWORKS = BulletinBoard ToneLibrary PersistentConnection Preferences
 Orangered_LIBRARIES += z
-Orangered_CFLAGS = -fobjc-arc
-Orangered_LDFLAGS = -I External/FDKeychain External/RedditKit/Classes External/RedditKit/External/AFNetworking
+Orangered_CFLAGS = -fobjc-arc 
+Orangered_CFLAGS += -I External/FDKeychain External/RedditKit/Classes External/RedditKit/Classes/Categories External/RedditKit/Classes/Model External/RedditKit/Classes/Networking External/RedditKit/External/AFNetworking
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 SUBPROJECTS += ORPrefs ORListener
