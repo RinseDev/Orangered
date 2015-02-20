@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #import "Mantle.h"
+#import <UIKit/UIKit.h>
 
 @interface RKThing : MTLModel <MTLJSONSerializing>
 

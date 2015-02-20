@@ -22,12 +22,6 @@
 
 #import "RKVotable.h"
 
-@interface RKVotable ()
-
-@property (nonatomic, assign) NSInteger score;
-
-@end
-
 @implementation RKVotable
 
 + (NSDictionary *)JSONKeyPathsByPropertyKey

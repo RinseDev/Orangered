@@ -7,6 +7,7 @@
 //
 
 #import "Mantle.h"
+#import <UIKit/UIKit.h>
 
 @interface RKLinkEmbeddedMedia : MTLModel <MTLJSONSerializing>
 

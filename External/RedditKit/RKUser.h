@@ -62,7 +62,7 @@
 /**
  Whether the user is a friend of the current user.
  */
-@property (nonatomic, assign, readonly, getter = isFriend) BOOL friend;
+@property (nonatomic, assign, readonly) BOOL isFriend;
 
 /**
  Whether the user is a moderator of a subreddit.

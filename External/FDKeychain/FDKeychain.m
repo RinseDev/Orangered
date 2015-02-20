@@ -1,5 +1,5 @@
 #import "FDKeychain.h"
-@import Security;
+#import <Security/Security.h>
 
 
 #pragma mark Constants
