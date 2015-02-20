@@ -11,7 +11,7 @@
 #define IOS_8 ([UIDevice currentDevice].systemVersion.floatValue >= 8.0)
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 
-static UIColor *kOrangeredTintColor = [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
+#define PREFS [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"]
 #define CLIENTS @{@"com.reddit.alienblue" : @"Alien Blue", @"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
 				@"com.madeawkward.beam" : @"beam", @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
 				@"com.yapstudios.appstore.feedworthy" : @"Feedworthy", @"com.biscuitapp.biscuit" : @"Biscuit", \
@@ -29,6 +29,8 @@ static UIColor *kOrangeredTintColor = [UIColor colorWithRed:232.0/255.0 green:98
 // Other locations ORLOG can be found at (that I didn't feel like consolidating): ORListener.xm
 #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
 // #define ORLOG(fmt, ...) 
+
+static UIColor *kOrangeredTintColor = [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
 @interface PSNotificationSettingsDetail : NSObject
 

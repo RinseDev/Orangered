@@ -1,7 +1,5 @@
 #import "ORPrefs.h"
 
-static HBPreferences *orangeredPreferences = [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"];
-
 void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Interval" object:nil];
 }
@@ -20,6 +18,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	return kOrangeredTintColor;
 }
 
++ (NSString *)hb_shareText {
+	return @"I love having Reddit in my pocket, thanks to #Orangered by @insanj and @phillipten.";
+}
+
++ (NSURL *)hb_shareURL {
+	return [NSURL URLWithString:@"http://insanj.com/orangered"];
+}
+
 - (void)loadView {
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(intervalDisable) name:@"Orangered.Interval" object:nil];
@@ -34,9 +40,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = kOrangeredTintColor;
 	[UISegmentedControl appearanceWhenContainedIn:self.class, nil].tintColor = kOrangeredTintColor;
 
-	self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(shareTapped:)] autorelease];
-
-	if (![orangeredPreferences floatForKey:@"intervalControl" default:0]) {
+	if (![PREFS floatForKey:@"intervalControl" default:0]) {
 		PSSpecifier *refreshControlSpecifier = [self specifierForID:@"IntervalControl"];
 		[self setPreferenceValue:@(-1.0) specifier:refreshControlSpecifier];
 		[self reloadSpecifier:refreshControlSpecifier];
@@ -74,7 +78,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 - (void)updateSoundCellValueLabel {
-	NSString *alertToneIdentifier = [orangeredPreferences objectForKey:@"alertTone"];
+	NSString *alertToneIdentifier = [PREFS objectForKey:@"alertTone"];
 	NSString *alertToneName = IOS_8 ? [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier] : [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:alertToneIdentifier];
 	soundCell.valueLabel.text = alertToneName;
 }
@@ -105,27 +109,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	}
 }
 
-- (void)shareTapped:(UIBarButtonItem *)sender {
-	NSString *text = @"I love having Reddit in my pocket, thanks to #Orangered by @insanj and @phillipten.";
-	NSURL *url = [NSURL URLWithString:@"http://insanj.com/orangered"];
-
-	if (%c(UIActivityViewController)) {
-		UIActivityViewController *viewController = [[[%c(UIActivityViewController) alloc] initWithActivityItems:[NSArray arrayWithObjects:text, url, nil] applicationActivities:nil] autorelease];
-		[self.navigationController presentViewController:viewController animated:YES completion:NULL];
-	}
-
-	else if (%c(TWTweetComposeViewController) && [TWTweetComposeViewController canSendTweet]) {
-		TWTweetComposeViewController *viewController = [[[TWTweetComposeViewController alloc] init] autorelease];
-		viewController.initialText = text;
-		[viewController addURL:url];
-		[self.navigationController presentViewController:viewController animated:YES completion:NULL];
-	}
-
-	else {
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"https://twitter.com/intent/tweet?text=%@%%20%@", URL_ENCODE(text), URL_ENCODE(url.absoluteString)]]];
-	}
-}
-
 - (void)check {	
 	[self.view endEditing:YES];
 
@@ -152,7 +135,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)intervalDisable {
 	ORLOG(@"Intelligently disabling interval field...");
 
-	CGFloat intervalValue = [orangeredPreferences floatForKey:@"intervalControl" default:0];
+	CGFloat intervalValue = [PREFS floatForKey:@"intervalControl" default:0];
 
 	PSSpecifier *refreshIntervalSpecifier = [self specifierForID:@"RefreshInterval"];
 	[refreshIntervalSpecifier setProperty:@(intervalValue > 0.0) forKey:@"enabled"];

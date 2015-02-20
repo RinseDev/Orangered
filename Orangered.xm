@@ -4,8 +4,6 @@
 #import "External/RedditKit/RedditKit.h"
 #import "External/RedditKit/AFNetworking/AFNetworking.h"
 
-static HBPreferences *orangeredPreferences = [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"];
-
 @interface SBIconModel (Orangered7)
 - (id)applicationIconForDisplayIdentifier:(id)arg1;
 @end
@@ -123,8 +121,7 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 
 - (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(NSDictionary *)options {
 	%orig;
-
-	if (![orangeredPreferences boolForKey:@"Ran Before" default:NO]) {
+	if (![PREFS boolForKey:@"Ran Before" default:NO]) {
 		ORLOG(@"First run, prompting...");
 
 		orangeredAlertDelegate = [[ORAlertViewDelegate alloc] init];
@@ -236,6 +233,8 @@ static BBServer *orangeredServer;
 	// Because screw stupid class comparisons, they suck.
 	NSString *bundleIdentifier = [NSBundle mainBundle].bundleIdentifier; // NSStringFromClass([UIApplication sharedApplication].class);
 	ORLOG(@"Comparing %@ to detect proper injections...", bundleIdentifier);
+
+	HBPreferences *orangeredPreferences = PREFS;
 
 	if ([bundleIdentifier isEqualToString:@"com.apple.Preferences"]) {
 		ORLOG(@"Injecting Preferences hooks...");

@@ -7,10 +7,11 @@
 #import <Preferences/Preferences.h>
 #import <AppList/AppList.h>
 #import <Cephei/HBPreferences.h>
+#import <Cephei/prefs/HBRootListController.h>
 #import <Cephei/prefs/HBListController.h>
 #import <Cephei/prefs/HBListItemsController.h>
 
-@interface ORListController : HBListController {
+@interface ORListController : HBRootListController {
 	PSTableCell *soundCell;
 }
 
