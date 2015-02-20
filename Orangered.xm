@@ -1,8 +1,8 @@
 #import "Orangered.h"
 #import "ORProviders.h"
 #import "External/FDKeychain/FDKeychain.h" 
-#import "External/RedditKit/Classes/RedditKit.h"
-#import "External/RedditKit/External/AFNetworking/AFNetworking.h"
+#import "External/RedditKit/RedditKit.h"
+#import "External/RedditKit/AFNetworking/AFNetworking.h"
 
 @interface SBIconModel (Orangered7)
 - (id)applicationIconForDisplayIdentifier:(id)arg1;
