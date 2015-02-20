@@ -28,7 +28,7 @@
 
 - (id)sectionIdentifier {
 	if (!self.customSectionID) {
-		for (NSString *s in [kOrangeredClients allKeys]) {
+		for (NSString *s in [CLIENTS allKeys]) {
 			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
 			if ([controller applicationWithDisplayIdentifier:s]) {
 				return ((self.customSectionID = s));

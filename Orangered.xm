@@ -4,6 +4,8 @@
 #import "External/RedditKit/RedditKit.h"
 #import "External/RedditKit/AFNetworking/AFNetworking.h"
 
+static HBPreferences *orangeredPreferences = [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"];
+
 @interface SBIconModel (Orangered7)
 - (id)applicationIconForDisplayIdentifier:(id)arg1;
 @end

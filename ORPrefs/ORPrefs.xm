@@ -1,5 +1,7 @@
 #import "ORPrefs.h"
 
+static HBPreferences *orangeredPreferences = [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"];
+
 void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Interval" object:nil];
 }
@@ -49,16 +51,11 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 - (void)reloadClientTitlesAndValues {
-	if (_savedClientTitles) {
-		[_savedClientTitles release];
-		[_savedClientValues release];
-	}
-
-	_savedClientTitles = [[NSMutableArray alloc] init];
-	_savedClientValues = [[NSMutableArray alloc] init];
+	_savedClientTitles = [NSMutableArray array];
+	_savedClientValues = [NSMutableArray array];
 
 	NSDictionary *installedApplicatons = [[ALApplicationList sharedApplicationList] applications]; // identifier : display name
-	NSDictionary *supportedClients = kOrangeredClients;
+	NSDictionary *supportedClients = CLIENTS;
 	
 	for (NSString *bundle in [supportedClients allKeys]) {
 		if (installedApplicatons[bundle]) {
@@ -75,19 +72,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
     [self updateSoundCellValueLabel];
 	[super viewWillAppear:animated];
 }
-
-- (void)viewWillDisappear:(BOOL)animated {
-	[super viewWillDisappear:animated];
-
-	self.view.tintColor = nil;
-
-	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = nil;
-	}
-
-	else {
-	    self.navigationController.navigationBar.tintColor = nil;
-	}}
 
 - (void)updateSoundCellValueLabel {
 	NSString *alertToneIdentifier = [orangeredPreferences objectForKey:@"alertTone"];
@@ -185,12 +169,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (void)dealloc {
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:@"Orangered.Interval" object:nil];
-
-	_savedClientTitles = nil;
-	_savedClientValues = nil;
-
-	[_savedClientTitles release];
-	[_savedClientValues release];
 	[super dealloc];
 }
 
