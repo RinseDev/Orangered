@@ -1,5 +1,4 @@
 #import "../Orangered.h"
-
 #import <UIKit/UITableViewCell+Private.h>
 #import <UIKit/UIImage+Private.h>
 #import <Twitter/Twitter.h>
@@ -7,8 +6,11 @@
 #import <MobileInstallation/MobileInstallation.h>
 #import <Preferences/Preferences.h>
 #import <AppList/AppList.h>
+#import <Cephei/HBPreferences.h>
+#import <Cephei/prefs/HBListController.h>
+#import <Cephei/prefs/HBListItemsController.h>
 
-@interface ORListController: PSListController {
+@interface ORListController : HBListController {
 	PSTableCell *soundCell;
 }
 
@@ -33,7 +35,7 @@
 
 @end
 
-@interface ORClientListItemsController : PSListItemsController
+@interface ORClientListItemsController : HBListItemsController
 
 @end
 
@@ -42,4 +44,5 @@
 @end
 
 @interface ORLinkCell : PSTableCell
+
 @end

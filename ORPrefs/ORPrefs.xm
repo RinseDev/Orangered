@@ -10,12 +10,12 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 @implementation ORListController
 
-- (id)specifiers {
-	if (!_specifiers) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"ORPrefs" target:self] retain];
-	}
++ (NSString *)hb_specifierPlist {
+	return @"ORPrefs";
+}
 
-	return _specifiers;
++ (UIColor *)hb_tintColor {
+	return kOrangeredTintColor;
 }
 
 - (void)loadView {
@@ -29,13 +29,12 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 	[self table].keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
 
-	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = TINT_COLOR;
-	[UISegmentedControl appearanceWhenContainedIn:self.class, nil].tintColor = TINT_COLOR;
+	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = kOrangeredTintColor;
+	[UISegmentedControl appearanceWhenContainedIn:self.class, nil].tintColor = kOrangeredTintColor;
 
 	self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(shareTapped:)] autorelease];
 
-	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	if (![preferences objectForKey:@"intervalControl"]) {
+	if (![orangeredPreferences floatForKey:@"intervalControl" default:0]) {
 		PSSpecifier *refreshControlSpecifier = [self specifierForID:@"IntervalControl"];
 		[self setPreferenceValue:@(-1.0) specifier:refreshControlSpecifier];
 		[self reloadSpecifier:refreshControlSpecifier];
@@ -59,7 +58,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	_savedClientValues = [[NSMutableArray alloc] init];
 
 	NSDictionary *installedApplicatons = [[ALApplicationList sharedApplicationList] applications]; // identifier : display name
-	NSDictionary *supportedClients = CLIENT_LIST;
+	NSDictionary *supportedClients = kOrangeredClients;
 	
 	for (NSString *bundle in [supportedClients allKeys]) {
 		if (installedApplicatons[bundle]) {
@@ -72,17 +71,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[_savedClientValues addObject:@"com.apple.mobilesafari"];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-	self.view.tintColor = TINT_COLOR;
-    
-    if (IOS_8) {
-	    self.navigationController.navigationBar.tintColor = TINT_COLOR;
-   	}
-
-   	else {
-   	    self.navigationController.navigationController.navigationBar.tintColor = TINT_COLOR;	
-   	}
-
+- (void)viewWillAppear:(BOOL)animated {    
     [self updateSoundCellValueLabel];
 	[super viewWillAppear:animated];
 }
@@ -101,8 +90,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	}}
 
 - (void)updateSoundCellValueLabel {
-	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	NSString *alertToneIdentifier = preferences[@"alertTone"];
+	NSString *alertToneIdentifier = [orangeredPreferences objectForKey:@"alertTone"];
 	NSString *alertToneName = IOS_8 ? [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier] : [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:alertToneIdentifier];
 	soundCell.valueLabel.text = alertToneName;
 }
@@ -115,7 +103,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	}
 
 	else if ([cell.title isEqualToString:@"Apply Changes Now"]) {
-		cell.textLabel.textColor = TINT_COLOR;
+		cell.textLabel.textColor = kOrangeredTintColor;
 	}
 
 	return cell;
@@ -162,16 +150,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 - (void)notificationCenter {
-	self.view.tintColor = nil;
-
-	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = nil;
-	}
-
-	else {
-	    self.navigationController.navigationBar.tintColor = nil;
-	}
-
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.NotificationCenter" object:nil];
 }
 
@@ -190,11 +168,10 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)intervalDisable {
 	ORLOG(@"Intelligently disabling interval field...");
 
-	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	NSNumber *intervalValue = preferences[@"intervalControl"];
+	CGFloat intervalValue = [orangeredPreferences floatForKey:@"intervalControl" default:0];
 
 	PSSpecifier *refreshIntervalSpecifier = [self specifierForID:@"RefreshInterval"];
-	[refreshIntervalSpecifier setProperty:@(!intervalValue || [intervalValue floatValue] > 0.0) forKey:@"enabled"];
+	[refreshIntervalSpecifier setProperty:@(intervalValue > 0.0) forKey:@"enabled"];
 	[self reloadSpecifier:refreshIntervalSpecifier];
 
 	[self.view endEditing:YES];
@@ -265,14 +242,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		UIColor *vanillaColor = [UIColor colorWithRed:0.427451 green:0.427451 blue:0.447059 alpha:1.0];
 		UIColor *darkColor = [UIColor grayColor];
 
-		NSMutableAttributedString *clickable = [[[NSMutableAttributedString alloc] initWithString:@"© 2013-2014 Julian Weiss, Phillip Tennen. Asset design © 2014 Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }] autorelease];
+		NSMutableAttributedString *clickable = [[[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian Weiss, Phillip Tennen. Asset design © 2014 Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }] autorelease];
 
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"Julian Weiss"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/phillipten"]} range:[clickable.string rangeOfString:@"Phillip Tennen"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://www.twitter.com/"]} range:[clickable.string rangeOfString:@"Kyle Paul"]];
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont,NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"on Twitter"]];
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont,NSLinkAttributeName : [NSURL URLWithString:@"https://github.com/samsymons/RedditKit"]} range:[clickable.string rangeOfString:@"RedditKit"]];
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont,NSLinkAttributeName : [NSURL URLWithString:@"https://github.com/reidmain/FDKeychain"]} range:[clickable.string rangeOfString:@"FDKeychain"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"on Twitter"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"https://github.com/samsymons/RedditKit"]} range:[clickable.string rangeOfString:@"RedditKit"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"https://github.com/reidmain/FDKeychain"]} range:[clickable.string rangeOfString:@"FDKeychain"]];
 
 		_plainTextView.linkTextAttributes = @{ NSForegroundColorAttributeName : darkColor, NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle), NSKernAttributeName : @(0.5) };
 
@@ -302,36 +279,8 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 @implementation ORClientListItemsController
 
-- (void)viewWillAppear:(BOOL)animated {
-	self.view.tintColor = TINT_COLOR;
-
-	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = TINT_COLOR;
-	}
-
-	else {
-	    self.navigationController.navigationBar.tintColor = TINT_COLOR;
-	}
-
-    [super viewWillAppear:animated];
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-	[super viewDidAppear:animated];
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-
-	self.view.tintColor = nil;
-
-	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = nil;
-	}
-
-	else {
-	    self.navigationController.navigationBar.tintColor = nil;
-	}
++ (UIColor *)hb_tintColor {
+	return kOrangeredTintColor;
 }
 
 @end
@@ -339,15 +288,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 %subclass ORRingtoneController : RingtoneController
 
 - (void)viewWillAppear:(BOOL)animated {
-
-	self.view.tintColor = TINT_COLOR;
+	self.view.tintColor = kOrangeredTintColor;
 
 	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = TINT_COLOR;
+	    self.navigationController.navigationController.navigationBar.tintColor = kOrangeredTintColor;
 	}
 
 	else {
-	    self.navigationController.navigationBar.tintColor = TINT_COLOR;
+	    self.navigationController.navigationBar.tintColor = kOrangeredTintColor;
 	}
 
 	%orig();
@@ -368,31 +316,3 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 %end
-
-@implementation ORLinkCell
-
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier {
-	/*
-	UIImage *notificationCenterIconImage = [UIImage imageNamed:@"notificationcenter.png" inBundle:[NSBundle bundleForClass:self.class]];
-	NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-	NSData *notificationCenterImageData = (NSData *)preferences[@"notificationCenterImageData"];
-	UIImage *notificationCenterIconImage = [UIImage imageWithData:notificationCenterImageData];
-
-	UIImageView *croppedNotificationCenterImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30.0, 30.0)];
-	croppedNotificationCenterImageView.image = notificationCenterIconImage;
-	croppedNotificationCenterImageView.layer.masksToBounds = YES;
-	croppedNotificationCenterImageView.layer.cornerRadius = 7.0;
-
-	UIGraphicsBeginImageContextWithOptions(croppedNotificationCenterImageView.bounds.size, NO, notificationCenterIconImage.scale);
-	[croppedNotificationCenterImageView.layer renderInContext:UIGraphicsGetCurrentContext()];
-	UIImage *croppedNotificationCenterImage = UIGraphicsGetImageFromCurrentImageContext();
-	UIGraphicsEndImageContext();
-
-	[[ALApplicationList sharedApplicationList] iconOfSize:CGRectMake(0, 0, 30.0, 30.0) forDisplayIdentifier:]
-	[specifier setProperty:croppedNotificationCenterImage forKey:@"iconImage"];
-	*/
-
-	return [super initWithStyle:style reuseIdentifier:reuseIdentifier specifier:specifier];
-}
-
-@end

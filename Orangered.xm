@@ -122,9 +122,8 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 - (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(NSDictionary *)options {
 	%orig;
 
-	if (![NSDictionary dictionaryWithContentsOfFile:PREFS_PATH]) {
+	if (![orangeredPreferences boolForKey:@"Ran Before" default:NO]) {
 		ORLOG(@"First run, prompting...");
-		[@{} writeToFile:PREFS_PATH atomically:YES];
 
 		orangeredAlertDelegate = [[ORAlertViewDelegate alloc] init];
 		UIAlertView *orangeredAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:@"Welcome to Orangered. You'll never miss a message again. Tap Begin to get started, or head to the settings anytime." delegate:orangeredAlertDelegate cancelButtonTitle:@"Later" otherButtonTitles:@"Begin", nil];
@@ -202,7 +201,6 @@ static BBServer *orangeredServer;
 |__/  
 
 */
-
 %group Preferences
 
 %hook PreferencesAppController
@@ -217,33 +215,6 @@ static BBServer *orangeredServer;
 }
 
 %end
-
-// Snatch up that notification center icon.
-/*
-%hook PSSpecifier
-
-- (void)setProperty:(id)arg1 forKey:(NSString *)arg2 {
-	%log;
-	%orig();
-
-	if ([arg1 isKindOfClass:[UIImage class]] && [arg2 isEqualToString:@"iconImage"] && [self.identifier isEqualToString:@"NOTIFICATIONS_ID"]) {
-		UIImage *iconImage = (UIImage *)arg1; // 29x29
-		CGSize retinaSize = CGSizeMake(iconImage.size.width * 2.0, iconImage.size.height * 2.0);
-	    UIGraphicsBeginImageContextWithOptions(retinaSize, NO, iconImage.scale);
-	    [iconImage drawInRect:(CGRect){CGPointZero, retinaSize}];
-	    UIImage *retinaIconImage = UIGraphicsGetImageFromCurrentImageContext();    
-	    UIGraphicsEndImageContext();
-
-	    NSData *notificationCenterImageData = UIImagePNGRepresentation(retinaIconImage); 
-		NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-		[preferences setObject:notificationCenterImageData forKey:@"notificationCenterImageData"];
-		[preferences writeToFile:PREFS_PATH atomically:YES];
-
-		//  orangeredSavedNotificationCenterIconImage = [notificationCenterImageData writeToFile:@"/Library/PreferenceBundles/ORPrefs.bundle/notificationcenter@2x.png" atomically:YES];
-	}
-}
-
-%end*/
 
 %end // %group Preferences
 
@@ -275,8 +246,7 @@ static BBServer *orangeredServer;
 		%init(SpringBoard);
 
 		[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.NotificationCenter" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-			NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
-			NSString *clientIdentifier = preferences[@"clientIdentifier"];
+			NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier"];
 			NSURL *notificationCenterURL;
 			if (clientIdentifier) {
 				notificationCenterURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@&path=%@", [%c(PSNotificationSettingsDetail) preferencesURL].absoluteString, clientIdentifier]];
@@ -310,14 +280,13 @@ static BBServer *orangeredServer;
 		orangeredSetDisplayIdentifierBadge(sectionIdentifier, 0);
 
     	// Load some preferences...
-		NSMutableDictionary *preferences = [NSMutableDictionary dictionaryWithContentsOfFile:PREFS_PATH];
 
-		BOOL enabled = !preferences[@"enabled"] || [preferences[@"enabled"] boolValue];
+		BOOL enabled = [orangeredPreferences boolForKey:@"enabled" default:NO];
 		if (!enabled) {
 			return;
 		}
 
-		NSString *clientIdentifier = preferences[@"clientIdentifier"];
+		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier"];
 
 		if (IOS_8) {
 			// If there's a saved client identifier, which is different from the current identifier,
@@ -371,11 +340,10 @@ static BBServer *orangeredServer;
 			}
 		}
 
-		CGFloat intervalUnit = preferences[@"intervalControl"] ? [preferences[@"intervalControl"] floatValue] : 60.0;
+		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
 
 		if (intervalUnit > 0.0) {
-			NSString *refreshIntervalString = preferences[@"refreshInterval"];
-			CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
+			CGFloat refreshInterval = [orangeredPreferences floatForKey:@"refreshInterval" default:60.0];
 
 			orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
 			[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
@@ -392,22 +360,13 @@ static BBServer *orangeredServer;
 			ORLOG(@"Appears our interval is set for Never. Sulking time... :/");
 		}
 
-		NSNumber *rateGuard = preferences[@"rateGuard"];
-		if (!rateGuard || [rateGuard boolValue]) {
+		CGFloat rateGuard = [orangeredPreferences floatForKey:@"rateGuard" default:0];
+		if (rateGuard) {
 			NSTimeInterval currentRequestInterval = [[NSDate date] timeIntervalSince1970];
 
 			if (lastRequestInterval <= 0.0) {
-				NSNumber *lastRequestStamp = preferences[@"lastRequestStamp"];
-				[preferences setObject:@(currentRequestInterval) forKey:@"lastRequestStamp"];
-				[preferences writeToFile:PREFS_PATH atomically:YES];
-
-				if (!lastRequestStamp) {
-					lastRequestInterval = currentRequestInterval;
-				}
-
-				else {
-					lastRequestInterval = [lastRequestStamp floatValue];
-				}
+				[orangeredPreferences setFloat:currentRequestInterval forKey:@"lastRequestStamp"];
+				lastRequestInterval = [orangeredPreferences floatForKey:@"lastRequestStamp" default:currentRequestInterval];
 			}
 
 			if (currentRequestInterval - lastRequestInterval < 3.0) { // "Make no more than thirty requests per minute." with a little bit of leeway 
@@ -422,8 +381,8 @@ static BBServer *orangeredServer;
 			lastRequestInterval = currentRequestInterval;
 		}
 
-		NSString *username = preferences[@"username"] ?: @"";
-		NSString *passwordKey = preferences[@"password"] ?: @"";
+		NSString *username = [orangeredPreferences objectForKey:@"username" default:@""];
+		NSString *passwordKey = [orangeredPreferences objectForKey:@"password" default:@""];
 
 		username = [username stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 		passwordKey = [passwordKey stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -448,12 +407,11 @@ static BBServer *orangeredServer;
 			return;
 	    }
 
-		BOOL alwaysNotify = !preferences[@"alwaysNotify"] || [preferences[@"alwaysNotify"] boolValue];
-		BOOL alwaysMarkRead = preferences[@"alwaysMarkRead"] && [preferences[@"alwaysMarkRead"] boolValue];
-		
-		BOOL securePassword = !preferences[@"secure"] || [preferences[@"secure"] boolValue];
-		NSString *password;
+		BOOL alwaysNotify = [orangeredPreferences boolForKey:@"alwaysNotify" default:YES];
+		BOOL alwaysMarkRead = [orangeredPreferences boolForKey:@"alwaysMarkRead" default:NO];
+		BOOL securePassword = [orangeredPreferences boolForKey:@"secure" default:YES];
 
+		NSString *password;
 		if (securePassword) {
 			// Let's get the real password, now that we've covered all the bases...
 			NSError *getItemForKeyError;
@@ -482,8 +440,7 @@ static BBServer *orangeredServer;
 
 				else {
 					ORLOG(@"Secured password successfully! :)");
-					[preferences setObject:mutableKey forKey:@"password"];
-					[preferences writeToFile:PREFS_PATH atomically:YES];
+					[orangeredPreferences setObject:mutableKey forKey:@"password"];
 				}
 			}
 
@@ -547,7 +504,7 @@ static BBServer *orangeredServer;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
 				bulletin.date = [NSDate date];
 
-				NSString *ringtoneIdentifier = preferences[@"alertTone"];
+				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone"];
 				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
 					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
 					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
