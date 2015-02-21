@@ -16,7 +16,9 @@
 
 @property (strong, nonatomic) HBPreferences *preferences;
 
-@property (strong, nonatomic) NSMutableArray *savedClientTitles, *savedClientValues;
+@property (strong, nonatomic) NSArray *savedClientTitles, *savedClientValues;
+
+@property (strong, nonatomic) NSArray *savedToneTitles, *savedToneValues;
 
 @property (strong, nonatomic) PSTableCell *soundCell;
 
@@ -43,7 +45,7 @@
 
 @end
 
-@interface ORRingtoneController : ToneController // TKTonePickerViewController
+@interface ORRingtoneController : HBListItemsController // TKTonePickerViewController
 
 @end
 

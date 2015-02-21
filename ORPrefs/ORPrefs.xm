@@ -29,8 +29,10 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)loadView {
 	[super loadView];
 
-	self.savedClientTitles = [NSMutableArray array];
-	self.savedClientValues = [NSMutableArray array];
+	self.savedClientTitles = [NSArray array];
+	self.savedClientValues = [NSArray array];
+	self.savedToneTitles = [NSArray array];
+	self.savedToneValues = [NSArray array];
 
 	[self table].keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
 
@@ -54,13 +56,15 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[self reloadSpecifier:activationSpecifier];
 
 	[self intervalDisable];
-    [self updateSoundCellValueLabel];
+	[self updateSoundCellValueLabel];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
 	[super viewDidAppear:animated];
 
 	[self reloadClientTitlesAndValues];
+	[self reloadToneTitlesAndValues];
+	[self reloadSpecifiers];
 
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredSecure, CFSTR("com.insanj.orangered/Secure"), NULL, 0);
@@ -92,7 +96,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
 	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1) {
 		if (indexPath.row == 0) {	// Apply Changes Now
-		    cell.separatorInset = UIEdgeInsetsMake(0.0, -15.0, 0.0, 0.0);
+			cell.separatorInset = UIEdgeInsetsMake(0.0, -15.0, 0.0, 0.0);
 		}
 
 		else if (indexPath.row == 1) {	// Credits cell
@@ -109,8 +113,48 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	return self.savedClientValues;
 }
 
+- (NSArray *)toneTitles:(id)target {
+	return self.savedToneTitles;
+}
+
+- (NSArray *)toneValues:(id)target {
+	return self.savedToneValues;
+}
+
 - (BOOL)canBeShownFromSuspendedState {
 	return NO; 
+}
+
+- (void)reloadToneTitlesAndValues {
+	/* Thanks, https://github.com/TUNER88/iOSSystemSoundsLibrary/blob/master/SystemSoundLibrary/SoundListViewController.m
+	NSMutableArray *audioFileList = [NSMutableArray array];
+	
+	NSFileManager *fileManager = [[NSFileManager alloc] init];
+	NSURL *directoryURL = [NSURL URLWithString:@"/System/Library/Audio/UISounds"];
+	NSArray *keys = [NSArray arrayWithObject:NSURLIsDirectoryKey];
+	
+	NSDirectoryEnumerator *enumerator = [fileManager enumeratorAtURL:directoryURL includingPropertiesForKeys:keys options:0 errorHandler:^(NSURL *url, NSError *error) {
+		 return YES;
+	 }];
+	
+	for (NSURL *url in enumerator) {
+		NSError *error;
+		NSNumber *isDirectory = nil;
+		if ([url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:&error] && ![isDirectory boolValue]) {
+			[audioFileList addObject:[url lastPathComponent]];
+		}
+	}*/
+
+	TLToneManager *toneManager = [%c(TLToneManager) sharedToneManager];
+	NSDictionary *savedTones = MSHookIvar<NSDictionary *>(toneManager, "_alertTonesByIdentifier");
+	self.savedToneValues = [savedTones allKeys];
+
+	NSMutableArray *localizedTitles = [NSMutableArray arrayWithCapacity:self.savedToneValues.count];
+	for (int i = 0; i < self.savedToneValues.count; i++) {
+		localizedTitles[i] = [toneManager _localizedNameOfToneWithIdentifier:self.savedToneValues[i]];
+	}
+
+	self.savedToneTitles = localizedTitles;
 }
 
 - (void)reloadClientTitlesAndValues {
@@ -133,7 +177,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	if (![self.savedClientTitles isEqualToArray:reloadingClientTitles]) {
 		self.savedClientTitles = reloadingClientTitles;
 		self.savedClientValues = reloadingClientValues;
-		[self reloadSpecifiers];
 	}
 }
 
@@ -258,11 +301,11 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 @end
 
-%subclass ORRingtoneController : ToneController // SoundsPrefController
+%subclass ORRingtoneController : HBListItemsController // RingtonePane, SoundsPrefController
 
 - (void)viewWillAppear:(BOOL)animated {
 	self.view.tintColor = kOrangeredTintColor;
-    self.navigationController.navigationController.navigationBar.tintColor = kOrangeredTintColor;
+	self.navigationController.navigationController.navigationBar.tintColor = kOrangeredTintColor;
 
 	%orig();
 }
@@ -271,7 +314,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	%orig();
 
 	self.view.tintColor = nil;
-    self.navigationController.navigationController.navigationBar.tintColor = nil;
+	self.navigationController.navigationController.navigationBar.tintColor = nil;
 }
 
 %end

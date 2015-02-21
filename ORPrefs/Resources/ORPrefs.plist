@@ -85,6 +85,8 @@
             <key>defaults</key>         	 <string>com.insanj.orangered</string>
             <key>key</key> 					 <string>alertTone</string>
             <key>label</key>             	 <string>Sound</string>
+            <key>titlesDataSource</key> 		 <string>toneTitles:</string>
+            <key>valuesDataSource</key> 	 <string>toneValues:</string>
         </dict>
 
         <dict>
