@@ -5,6 +5,7 @@
 #import <ToneLibrary/ToneLibrary.h>
 #import <MobileInstallation/MobileInstallation.h>
 #import <Preferences/Preferences.h>
+// #import <ToneKit/ToneKit.h>
 #import <AppList/AppList.h>
 #import <Cephei/HBPreferences.h>
 #import <Cephei/prefs/HBRootListController.h>
@@ -42,7 +43,7 @@
 
 @end
 
-@interface ORRingtoneController : RingtoneController
+@interface ORRingtoneController : ToneController // TKTonePickerViewController
 
 @end
 

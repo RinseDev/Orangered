@@ -14,7 +14,7 @@ Orangered_CFLAGS += -I External/FDKeychain
 Orangered_CFLAGS += -I External/RedditKit
 Orangered_CFLAGS += -I External/RedditKit/AFNetworking
 Orangered_CFLAGS += -I External/RedditKit/Mantle
-Orangered_LIBRARIES = cephei
+Orangered_LIBRARIES += cephei
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 SUBPROJECTS += ORPrefs ORListener

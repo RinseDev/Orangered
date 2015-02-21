@@ -29,6 +29,9 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)loadView {
 	[super loadView];
 
+	self.savedClientTitles = [NSMutableArray array];
+	self.savedClientValues = [NSMutableArray array];
+
 	[self table].keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
 
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = kOrangeredTintColor;
@@ -111,27 +114,33 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 - (void)reloadClientTitlesAndValues {
-	self.savedClientTitles = [NSMutableArray array];
-	self.savedClientValues = [NSMutableArray array];
+	NSMutableArray *reloadingClientTitles = [NSMutableArray array];
+	NSMutableArray *reloadingClientValues = [NSMutableArray array];
 
 	NSDictionary *installedApplicatons = [[ALApplicationList sharedApplicationList] applications]; // identifier : display name
 	NSDictionary *supportedClients = CLIENTS;
 	
 	for (NSString *bundle in [supportedClients allKeys]) {
 		if (installedApplicatons[bundle]) {
-			[self.savedClientTitles addObject:supportedClients[bundle]];
-			[self.savedClientValues addObject:bundle];
+			[reloadingClientTitles addObject:supportedClients[bundle]];
+			[reloadingClientValues addObject:bundle];
 		}
 	}
 
-	[self.savedClientTitles addObject:@"Safari"];
-	[self.savedClientValues addObject:@"com.apple.mobilesafari"];
+	[reloadingClientTitles addObject:@"Safari"];
+	[reloadingClientValues addObject:@"com.apple.mobilesafari"];
+
+	if (![self.savedClientTitles isEqualToArray:reloadingClientTitles]) {
+		self.savedClientTitles = reloadingClientTitles;
+		self.savedClientValues = reloadingClientValues;
+		[self reloadSpecifiers];
+	}
 }
 
 - (void)updateSoundCellValueLabel {
 	if (self.soundCell) {
 		NSString *alertToneIdentifier = [self.preferences objectForKey:@"alertTone"];
-		NSString *alertToneName = IOS_8 ? [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier] : [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:alertToneIdentifier];
+		NSString *alertToneName = [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier];
 		self.soundCell.valueLabel.text = alertToneName;
 	}
 }
@@ -213,9 +222,9 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		UIColor *vanillaColor = [UIColor colorWithRed:0.427451 green:0.427451 blue:0.447059 alpha:1.0];
 		UIColor *darkColor = [UIColor grayColor];
 
-		NSMutableAttributedString *clickable = [[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian Weiss, Phillip Tennen. Asset design © 2014 Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }];
+		NSMutableAttributedString *clickable = [[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian (insanj) Weiss. © 2014 Phillip Tennen, Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }];
 
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"Julian Weiss"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"Julian (insanj) Weiss"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/phillipten"]} range:[clickable.string rangeOfString:@"Phillip Tennen"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://www.twitter.com/"]} range:[clickable.string rangeOfString:@"Kyle Paul"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"on Twitter"]];
@@ -249,18 +258,11 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 @end
 
-%subclass ORRingtoneController : RingtoneController
+%subclass ORRingtoneController : ToneController // SoundsPrefController
 
 - (void)viewWillAppear:(BOOL)animated {
 	self.view.tintColor = kOrangeredTintColor;
-
-	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = kOrangeredTintColor;
-	}
-
-	else {
-	    self.navigationController.navigationBar.tintColor = kOrangeredTintColor;
-	}
+    self.navigationController.navigationController.navigationBar.tintColor = kOrangeredTintColor;
 
 	%orig();
 }
@@ -269,14 +271,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	%orig();
 
 	self.view.tintColor = nil;
-
-	if (IOS_8) {
-	    self.navigationController.navigationController.navigationBar.tintColor = nil;
-	}
-
-	else {
-	    self.navigationController.navigationBar.tintColor = nil;
-	}
+    self.navigationController.navigationController.navigationBar.tintColor = nil;
 }
 
 %end

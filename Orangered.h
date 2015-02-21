@@ -8,7 +8,6 @@
 #import <UIKit/UIApplication+Private.h>
 #import <Cephei/HBPreferences.h>
 
-#define IOS_8 ([UIDevice currentDevice].systemVersion.floatValue >= 8.0)
 #define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 
 #define PREFS [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"]

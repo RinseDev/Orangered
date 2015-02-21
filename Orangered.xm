@@ -37,6 +37,9 @@
 @implementation ORAlertViewDelegate
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+	HBPreferences *preferences = PREFS;
+	[preferences setBool:YES forKey:@"Ran Before"];
+
 	if (buttonIndex == [alertView cancelButtonIndex]) {
 		return;
 	}
@@ -90,7 +93,7 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 		stringBadgeValue = [formatter stringForObjectValue:@(badgeValue)];
 	}
 
-	SBApplicationIcon *clientAppIcon = IOS_8 ? [iconModel applicationIconForBundleIdentifier:displayIdentifier] : [iconModel applicationIconForDisplayIdentifier:displayIdentifier]; 
+	SBApplicationIcon *clientAppIcon = [iconModel applicationIconForBundleIdentifier:displayIdentifier]; 
 	[clientAppIcon setBadge:stringBadgeValue];
 
 	ORLOG(@"set badge %@ to %@", stringBadgeValue, clientAppIcon);
@@ -122,7 +125,9 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 
 - (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(NSDictionary *)options {
 	%orig;
-	if (![PREFS boolForKey:@"Ran Before" default:NO]) {
+
+	HBPreferences *preferences = PREFS;
+	if (![preferences boolForKey:@"Ran Before" default:NO]) {
 		ORLOG(@"First run, prompting...");
 
 		orangeredAlertDelegate = [[ORAlertViewDelegate alloc] init];
@@ -171,14 +176,7 @@ static BBServer *orangeredServer;
 - (id)init {
 	orangeredServer = %orig();
 	OrangeredProvider *sharedProvider = [OrangeredProvider sharedInstance];
-
-	if (IOS_8) {
-		[orangeredServer _addActiveSectionID:[sharedProvider sectionIdentifier]];
-	}
-
-	else {
-		[orangeredServer _addDataProvider:sharedProvider forFactory:sharedProvider.factory];
-	}
+	[orangeredServer _addActiveSectionID:[sharedProvider sectionIdentifier]];
 
 	return orangeredServer;
 }
@@ -247,7 +245,7 @@ static BBServer *orangeredServer;
 		%init(SpringBoard);
 
 		[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredOpenNCNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-			NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier"];
+			NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
 			NSURL *notificationCenterURL;
 			if (clientIdentifier) {
 				notificationCenterURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@&path=%@", [%c(PSNotificationSettingsDetail) preferencesURL].absoluteString, clientIdentifier]];
@@ -290,60 +288,31 @@ static BBServer *orangeredServer;
 			return;
 		}
 
-		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier"];
+		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
 
-		if (IOS_8) {
-			// If there's a saved client identifier, which is different from the current identifier,
-			// and an app with that identifier is installed, then swap out the data provider so it
-			// uses the correct section identifier.
-			if (clientIdentifier &&
-				![clientIdentifier isEqualToString:sectionIdentifier] &&
-				[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
-				ORLOG(@"Detected change in app, swapping around data providers...");
+		// If there's a saved client identifier, which is different from the current identifier,
+		// and an app with that identifier is installed, then swap out the data provider so it
+		// uses the correct section identifier.
+		if (clientIdentifier &&
+			![clientIdentifier isEqualToString:sectionIdentifier] &&
+			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
+			ORLOG(@"Detected change in app, swapping around data providers...");
 
-				[orangeredServer _removeActiveSectionID:sectionIdentifier];
-				notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-				[orangeredServer _addActiveSectionID:clientIdentifier];
-
-			}
-
-			// If the current clientIdentifier doesn't have an app associated with it, revert back
-			// to a random check.
-			if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
-				ORLOG(@"Detected bonkers app, reassigning data providers...");
-
-				[orangeredServer _removeActiveSectionID:sectionIdentifier];
-				notificationProvider.customSectionID = nil;
-				[orangeredServer _addActiveSectionID:[notificationProvider sectionIdentifier]];
-
-			}
+			[orangeredServer _removeActiveSectionID:sectionIdentifier];
+			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
+			[orangeredServer _addActiveSectionID:clientIdentifier];
 		}
 
-		else {
-			// If there's a saved client identifier, which is different from the current identifier,
-			// and an app with that identifier is installed, then swap out the data provider so it
-			// uses the correct section identifier.
-			if (clientIdentifier &&
-				![clientIdentifier isEqualToString:sectionIdentifier] &&
-				[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:clientIdentifier]) {
-				ORLOG(@"Detected change in app, swapping around data providers...");
+		// If the current clientIdentifier doesn't have an app associated with it, revert back
+		// to a random check.
+		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
+			ORLOG(@"Detected bonkers app, reassigning data providers...");
 
-				[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
-				notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-				[orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
-			}
-
-			// If the current clientIdentifier doesn't have an app associated with it, revert back
-			// to a random check.
-			if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithDisplayIdentifier:sectionIdentifier]) {
-				ORLOG(@"Detected bonkers app, reassigning data providers...");
-
-				[orangeredServer _removeDataProvider:notificationProvider forFactory:notificationProvider.factory];
-				notificationProvider.customSectionID = nil;
-				[orangeredServer _addDataProvider:notificationProvider forFactory:notificationProvider.factory];
-			}
+			[orangeredServer _removeActiveSectionID:sectionIdentifier];
+			notificationProvider.customSectionID = nil;
+			[orangeredServer _addActiveSectionID:[notificationProvider sectionIdentifier]];
 		}
-
+		
 		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
 
 		if (intervalUnit > 0.0) {
@@ -508,7 +477,7 @@ static BBServer *orangeredServer;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
 				bulletin.date = [NSDate date];
 
-				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone"];
+				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
 				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
 					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
 					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
