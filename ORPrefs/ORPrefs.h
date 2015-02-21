@@ -11,11 +11,13 @@
 #import <Cephei/prefs/HBListController.h>
 #import <Cephei/prefs/HBListItemsController.h>
 
-@interface ORListController : HBRootListController {
-	PSTableCell *soundCell;
-}
+@interface ORListController : HBRootListController
 
-@property(nonatomic, retain) NSMutableArray *savedClientTitles, *savedClientValues;
+@property (strong, nonatomic) HBPreferences *preferences;
+
+@property (strong, nonatomic) NSMutableArray *savedClientTitles, *savedClientValues;
+
+@property (strong, nonatomic) PSTableCell *soundCell;
 
 - (void)reloadClientTitlesAndValues;
 

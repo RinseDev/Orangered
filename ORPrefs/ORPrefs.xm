@@ -1,11 +1,11 @@
 #import "ORPrefs.h"
 
 void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Interval" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredIntervalNotificationName object:nil];
 }
 
 void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Secure" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredSecureNotificationName object:nil];
 }
 
 @implementation ORListController
@@ -27,20 +27,20 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 - (void)loadView {
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
-	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(intervalDisable) name:@"Orangered.Interval" object:nil];
-	
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredSecure, CFSTR("com.insanj.orangered/Secure"), NULL, 0);
-	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(secureTapped) name:@"Orangered.Secure" object:nil];
-
 	[super loadView];
 
 	[self table].keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
 
 	[UISwitch appearanceWhenContainedIn:self.class, nil].onTintColor = kOrangeredTintColor;
 	[UISegmentedControl appearanceWhenContainedIn:self.class, nil].tintColor = kOrangeredTintColor;
+}
 
-	if (![PREFS floatForKey:@"intervalControl" default:0]) {
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+
+	self.preferences = PREFS;
+
+	if (![self.preferences floatForKey:@"intervalControl" default:0]) {
 		PSSpecifier *refreshControlSpecifier = [self specifierForID:@"IntervalControl"];
 		[self setPreferenceValue:@(-1.0) specifier:refreshControlSpecifier];
 		[self reloadSpecifier:refreshControlSpecifier];
@@ -51,42 +51,31 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[self reloadSpecifier:activationSpecifier];
 
 	[self intervalDisable];
-	[self reloadClientTitlesAndValues];
-}
-
-- (void)reloadClientTitlesAndValues {
-	_savedClientTitles = [NSMutableArray array];
-	_savedClientValues = [NSMutableArray array];
-
-	NSDictionary *installedApplicatons = [[ALApplicationList sharedApplicationList] applications]; // identifier : display name
-	NSDictionary *supportedClients = CLIENTS;
-	
-	for (NSString *bundle in [supportedClients allKeys]) {
-		if (installedApplicatons[bundle]) {
-			[_savedClientTitles addObject:supportedClients[bundle]];
-			[_savedClientValues addObject:bundle];
-		}
-	}
-
-	[_savedClientTitles addObject:@"Safari"];
-	[_savedClientValues addObject:@"com.apple.mobilesafari"];
-}
-
-- (void)viewWillAppear:(BOOL)animated {    
     [self updateSoundCellValueLabel];
-	[super viewWillAppear:animated];
 }
 
-- (void)updateSoundCellValueLabel {
-	NSString *alertToneIdentifier = [PREFS objectForKey:@"alertTone"];
-	NSString *alertToneName = IOS_8 ? [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier] : [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:alertToneIdentifier];
-	soundCell.valueLabel.text = alertToneName;
+- (void)viewDidAppear:(BOOL)animated {
+	[super viewDidAppear:animated];
+
+	[self reloadClientTitlesAndValues];
+
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredSecure, CFSTR("com.insanj.orangered/Secure"), NULL, 0);
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(intervalDisable) name:kOrangeredIntervalNotificationName object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(secureTapped) name:kOrangeredSecureNotificationName object:nil];
 }
 
-- (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2 {
+- (void)viewWillDisappear:(BOOL)animated {
+	[super viewWillDisappear:animated];
+
+	CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, NULL, NULL);
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:nil object:nil];
+}
+
+- (PSTableCell *)tableView:(UITableView *)arg1 cellForRowAtIndexPath:(NSIndexPath *)arg2 {
 	PSTableCell *cell = [super tableView:arg1 cellForRowAtIndexPath:arg2];
 	if ([cell.title isEqualToString:@"Sound"]) {
-		soundCell = cell;
+		self.soundCell = cell;
 		[self updateSoundCellValueLabel];
 	}
 
@@ -109,39 +98,54 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	}
 }
 
-- (void)check {	
-	[self.view endEditing:YES];
-
-	ORLOG(@"Sending check message from Preferences...");
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"Preferences" }];
-}
-
-- (void)notificationCenter {
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.NotificationCenter" object:nil];
-}
-
 - (NSArray *)clientTitles:(id)target {
-	return _savedClientTitles;
+	return self.savedClientTitles;
 }
 
 - (NSArray *)clientValues:(id)target {
-	return _savedClientValues;
+	return self.savedClientValues;
 }
 
 - (BOOL)canBeShownFromSuspendedState {
 	return NO; 
 }
 
+- (void)reloadClientTitlesAndValues {
+	self.savedClientTitles = [NSMutableArray array];
+	self.savedClientValues = [NSMutableArray array];
+
+	NSDictionary *installedApplicatons = [[ALApplicationList sharedApplicationList] applications]; // identifier : display name
+	NSDictionary *supportedClients = CLIENTS;
+	
+	for (NSString *bundle in [supportedClients allKeys]) {
+		if (installedApplicatons[bundle]) {
+			[self.savedClientTitles addObject:supportedClients[bundle]];
+			[self.savedClientValues addObject:bundle];
+		}
+	}
+
+	[self.savedClientTitles addObject:@"Safari"];
+	[self.savedClientValues addObject:@"com.apple.mobilesafari"];
+}
+
+- (void)updateSoundCellValueLabel {
+	if (self.soundCell) {
+		NSString *alertToneIdentifier = [self.preferences objectForKey:@"alertTone"];
+		NSString *alertToneName = IOS_8 ? [[%c(TLToneManager) sharedToneManager] _localizedNameOfToneWithIdentifier:alertToneIdentifier] : [[%c(TLToneManager) sharedRingtoneManager] localizedNameWithIdentifier:alertToneIdentifier];
+		self.soundCell.valueLabel.text = alertToneName;
+	}
+}
+
 - (void)intervalDisable {
 	ORLOG(@"Intelligently disabling interval field...");
 
-	CGFloat intervalValue = [PREFS floatForKey:@"intervalControl" default:0];
+	CGFloat intervalValue = [self.preferences floatForKey:@"intervalControl" default:0];
 
 	PSSpecifier *refreshIntervalSpecifier = [self specifierForID:@"RefreshInterval"];
 	[refreshIntervalSpecifier setProperty:@(intervalValue > 0.0) forKey:@"enabled"];
 	[self reloadSpecifier:refreshIntervalSpecifier];
 
-	[self.view endEditing:YES];
+	[[self table] endEditing:YES];
 }
 
 - (void)secureTapped {
@@ -150,9 +154,15 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[self reloadSpecifier:passwordSpecifier];
 }
 
-- (void)dealloc {
-	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:@"Orangered.Interval" object:nil];
-	[super dealloc];
+- (void)check {	
+	[[self table] endEditing:YES];
+
+	ORLOG(@"Sending check message from Preferences...");
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredCheckNotificationName object:nil userInfo:@{ @"sender" : @"Preferences" }];
+}
+
+- (void)notificationCenter {
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredOpenNCNotificationName object:nil];
 }
 
 @end
@@ -203,7 +213,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		UIColor *vanillaColor = [UIColor colorWithRed:0.427451 green:0.427451 blue:0.447059 alpha:1.0];
 		UIColor *darkColor = [UIColor grayColor];
 
-		NSMutableAttributedString *clickable = [[[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian Weiss, Phillip Tennen. Asset design © 2014 Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }] autorelease];
+		NSMutableAttributedString *clickable = [[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian Weiss, Phillip Tennen. Asset design © 2014 Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }];
 
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"Julian Weiss"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/phillipten"]} range:[clickable.string rangeOfString:@"Phillip Tennen"]];
@@ -227,13 +237,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (BOOL)canBeShownFromSuspendedState {
 	return NO;
-}
-
-- (void)dealloc {
-	_plainTextView = nil;
-	[_plainTextView release];
-
-	[super dealloc];
 }
 
 @end

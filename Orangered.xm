@@ -4,6 +4,7 @@
 #import "External/RedditKit/RedditKit.h"
 #import "External/RedditKit/AFNetworking/AFNetworking.h"
 
+
 @interface SBIconModel (Orangered7)
 - (id)applicationIconForDisplayIdentifier:(id)arg1;
 @end
@@ -133,7 +134,7 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 		checkOnUnlock = NO;
 
 		ORLOG(@"Checking on unlock due to authentication issues...");
-		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
+		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredCheckNotificationName object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
 	}
 }
 
@@ -145,7 +146,7 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 	%orig();
 
 	ORLOG(@"Sending check message from SpringBoard...");
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Check" object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredCheckNotificationName object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
 }
 
 %end
@@ -204,11 +205,10 @@ static BBServer *orangeredServer;
 
 %hook PreferencesAppController
 
--(void)applicationOpenURL:(NSURL *)arg1 {
-	ORLOG(@"Heard openURL: %@", arg1);
-	if ([arg1 isEqual:[ORAlertViewDelegate sharedLaunchPreferencesURL]]) {
-		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"Orangered.Error" object:nil];
-	}
+- (void)applicationOpenURL:(NSURL *)arg1 {
+	// if ([arg1 isEqual:[ORAlertViewDelegate sharedLaunchPreferencesURL]]) {
+		// [[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredOpenPrefsNotificationName object:nil];
+	// }
 
 	return %orig();
 }
@@ -246,7 +246,7 @@ static BBServer *orangeredServer;
 		ORLOG(@"Injecting SpringBoard hooks and registering listeners...");
 		%init(SpringBoard);
 
-		[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.NotificationCenter" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+		[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredOpenNCNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 			NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier"];
 			NSURL *notificationCenterURL;
 			if (clientIdentifier) {
@@ -257,22 +257,25 @@ static BBServer *orangeredServer;
 				notificationCenterURL = [%c(PSNotificationSettingsDetail) preferencesURL];
 			}
 
-			ORLOG(@"lol2 opening notificationCenterURL: %@", notificationCenterURL);
 			[[UIApplication sharedApplication] openURL:notificationCenterURL];
 		}];
 	}
 
-	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Error" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredErrorNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 		NSLog(@"Responding to error: %@", orangeredError);
 		if (orangeredError) {
-			UIAlertView *orangeredErrorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"%@", orangeredError] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
+			UIAlertView *orangeredErrorAlert = [[UIAlertView alloc] initWithTitle:@"Orangered" message:[NSString stringWithFormat:@"%@", [orangeredError localizedDescription]] delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
 			[orangeredErrorAlert show];
 
 			orangeredError = nil;
 		}
 	}];
     	
-    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:@"Orangered.Check" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredOpenPrefsNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+		[[UIApplication sharedApplication] openURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]];
+	}];
+
+    [[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredCheckNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	OrangeredProvider *notificationProvider = [OrangeredProvider sharedInstance];
 		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
 

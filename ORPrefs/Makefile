@@ -10,6 +10,7 @@ ORPrefs_FRAMEWORKS = Foundation UIKit Twitter
 ORPrefs_PRIVATE_FRAMEWORKS = Preferences MobileCoreServices MobileInstallation
 ORPrefs_LDFLAGS = -lapplist
 ORPrefs_LIBRARIES = cepheiprefs cephei
+ORPrefs_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 
