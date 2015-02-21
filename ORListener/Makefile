@@ -4,7 +4,7 @@ ARCHS = armv7 arm64
 include theos/makefiles/common.mk
 
 TWEAK_NAME = ORListener
-ORListener_OBJC_FILES = ORListener.xm
+ORListener_FILES = ORListener.xm
 ORListener_FRAMEWORKS = Foundation UIKit
 ORListener_LDFLAGS = -lactivator -L../theos/lib
 

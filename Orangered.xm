@@ -3,19 +3,9 @@
 #import "External/FDKeychain/FDKeychain.h" 
 #import "External/RedditKit/RedditKit.h"
 #import "External/RedditKit/AFNetworking/AFNetworking.h"
-
-
-@interface SBIconModel (Orangered7)
-- (id)applicationIconForDisplayIdentifier:(id)arg1;
-@end
-
-@interface SBIconModel (Orangered8)
-- (id)applicationIconForBundleIdentifier:(id)arg1;
-@end
-
-@interface SBApplicationController (Orangered8)
-- (id)applicationWithBundleIdentifier:(id)arg1;
-@end
+#import <PersistentConnection/PersistentConnection.h>
+#import <UIKit/UIApplication+Private.h>
+#import <BulletinBoard/BulletinBoard.h>
 
 /*                                                                                                                                                  
            /$$                       /$$             /$$                        
@@ -30,8 +20,11 @@
 */
 
 @interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
+
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex;
+
 + (NSURL *)sharedLaunchPreferencesURL;
+
 @end
 
 @implementation ORAlertViewDelegate
@@ -77,12 +70,6 @@ static PCPersistentTimer *orangeredTimer;
 static NSError *orangeredError;
 static BOOL checkOnUnlock;
 static NSTimeInterval lastRequestInterval;
-static BBBulletinRequest *lastBulletin;
-
-static NSString * orangeredPhrase() {
-	NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
-	return [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
-}
 
 static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSInteger badgeValue) {
 	SBIconModel *iconModel = MSHookIvar<SBIconModel *>([%c(SBIconController) sharedInstance], "_iconModel");
@@ -445,7 +432,6 @@ static BBServer *orangeredServer;
 			password = passwordKey;
 		}
 
-	    // Set-up some variables...
 		RKClient *client = [RKClient sharedClient];
 		RKListingCompletionBlock unreadCompletionBlock = ^(NSArray *messages, RKPagination *pagination, NSError *error) {
 			[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
@@ -460,10 +446,7 @@ static BBServer *orangeredServer;
 
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
 	    	NSString *sectionID = [provider sectionIdentifier];
-
 	    	orangeredSetDisplayIdentifierBadge(sectionID, messages.count);
-    		// BBDataProviderWithdrawBulletinsWithRecordID(provider, sectionID);
-			// [server withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionID];
 
 			if (messages && messages.count > 0) {	
             	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
@@ -497,28 +480,8 @@ static BBServer *orangeredServer;
 					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
 				}
 
-				// lastBulletin = (BBBulletin *)[(NSSet *)[orangeredServer _allBulletinsForSectionID] anyObject]
-
-				if (lastBulletin && [lastBulletin.message isEqualToString:bulletin.message]) {
-					ORLOG(@"Not publishing duplicate bulletin request (%@ equiv to %@).", bulletin, lastBulletin);
-				}
-
-				else {
-			    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
-
-					ORLOG(@"Publishing bulletin request (%@) to provider (%@). (not equiv in %@).", bulletin, provider, lastBulletin);
-					orangeredAddBulletin(orangeredServer, provider, bulletin);
-
-					lastBulletin = bulletin;
-				}
-
-				// [orangeredServer _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
-				// [orangeredServer publishBulletinRequest:bulletin destinations:2];
-
-				// [provider pushBulletin:bulletin intoServer:orangeredServer];
-				// BBDataProviderAddBulletin(provider, bulletin);
-				// [server _publishBulletinRequest:bulletin forSectionID:sectionID forDestinations:2];
-				// [(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
+		    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+				orangeredAddBulletin(orangeredServer, provider, bulletin);
 			}
 
 			else if (alwaysNotify) {
@@ -526,8 +489,10 @@ static BBServer *orangeredServer;
 
             	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
 				request.title = @"Orangered";
-				request.message = orangeredPhrase();
 				request.sectionID = sectionID;
+
+				NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
+				request.message = [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
 
 				[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
 			}

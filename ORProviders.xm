@@ -49,7 +49,6 @@
 	return [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
 }
 
-
 - (void)fireAway {
 	ORLOG(@"[Orangered] Sending check message from Timer...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredCheckNotificationName object:nil userInfo:@{ @"sender" : @"Timer" }];

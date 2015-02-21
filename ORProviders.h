@@ -5,13 +5,11 @@
 
 @end
 
-@interface OrangeredProvider : NSObject <BBRemoteDataProvider> {
-	BOOL loaded;
-}
+@interface OrangeredProvider : NSObject <BBRemoteDataProvider>
 
-@property(nonatomic, retain) NSObject<BBDataProviderFactory> *factory;
+@property (strong, nonatomic) NSObject<BBDataProviderFactory> *factory;
 
-@property(nonatomic, retain) NSString *customSectionID;
+@property (strong, nonatomic) NSString *customSectionID;
 
 + (instancetype)sharedInstance;
 

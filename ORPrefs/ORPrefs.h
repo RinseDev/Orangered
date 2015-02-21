@@ -4,12 +4,9 @@
 #import <Twitter/Twitter.h>
 #import <ToneLibrary/ToneLibrary.h>
 #import <MobileInstallation/MobileInstallation.h>
-#import <Preferences/Preferences.h>
-// #import <ToneKit/ToneKit.h>
 #import <AppList/AppList.h>
 #import <Cephei/HBPreferences.h>
 #import <Cephei/prefs/HBRootListController.h>
-#import <Cephei/prefs/HBListController.h>
 #import <Cephei/prefs/HBListItemsController.h>
 
 @interface ORListController : HBRootListController
@@ -34,7 +31,6 @@
 
 @end
 
-
 @interface ORCreditsCell : PSTableCell <UITextViewDelegate> {
 	UITextView *_plainTextView;
 }
@@ -45,7 +41,7 @@
 
 @end
 
-@interface ORRingtoneController : HBListItemsController // TKTonePickerViewController
+@interface ORRingtoneController : HBListItemsController
 
 @end
 

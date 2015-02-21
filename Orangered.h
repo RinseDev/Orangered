@@ -1,14 +1,9 @@
 #import <UIKit/UIKit.h>
+#import <Preferences/Preferences.h>
 #import <SpringBoard/SpringBoard.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
-#import <BulletinBoard/BulletinBoard.h>
-#import <PersistentConnection/PersistentConnection.h>
-#import <objc/runtime.h>
-#import "substrate.h"
-#import <UIKit/UIApplication+Private.h>
 #import <Cephei/HBPreferences.h>
-
-#define URL_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
+#import "substrate.h"
 
 #define PREFS [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"]
 #define CLIENTS @{@"com.reddit.alienblue" : @"Alien Blue", @"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
@@ -30,11 +25,4 @@
 // #define ORLOG(fmt, ...) 
 
 static UIColor *kOrangeredTintColor = [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
-
 static NSString *kOrangeredErrorNotificationName = @"Orangered.Notification.Error", *kOrangeredOpenNCNotificationName = @"Orangered.Notification.OpenNC", *kOrangeredOpenPrefsNotificationName = @"Orangered.Notification.Prefs", *kOrangeredCheckNotificationName = @"Orangered.Notification.Check", *kOrangeredIntervalNotificationName = @"Orangered.Notification.Interval", *kOrangeredSecureNotificationName = @"Orangered.Notification.Secure";
-
-@interface PSNotificationSettingsDetail : NSObject
-
-+ (NSURL *)preferencesURL;
-
-@end
