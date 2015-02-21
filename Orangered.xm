@@ -282,8 +282,7 @@ static BBServer *orangeredServer;
 		orangeredSetDisplayIdentifierBadge(sectionIdentifier, 0);
 
     	// Load some preferences...
-
-		BOOL enabled = [orangeredPreferences boolForKey:@"enabled" default:NO];
+		BOOL enabled = [orangeredPreferences boolForKey:@"enabled" default:YES];
 		if (!enabled) {
 			return;
 		}

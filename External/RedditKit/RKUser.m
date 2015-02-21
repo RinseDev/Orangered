@@ -34,7 +34,7 @@
         @"hasModeratorMail": @"data.has_mod_mail",
         @"hasVerifiedEmailAddress": @"data.has_verified_email",
         @"gold": @"data.is_gold",
-        @"friend": @"data.is_friend",
+        @"isFriend": @"data.is_friend",
         @"mod": @"data.is_mod",
         @"over18": @"data.over_18"
     };

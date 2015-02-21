@@ -26,6 +26,10 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	return [NSURL URLWithString:@"http://insanj.com/orangered"];
 }
 
+- (BOOL)canBeShownFromSuspendedState {
+	return NO; 
+}
+
 - (void)loadView {
 	[super loadView];
 
@@ -62,14 +66,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 - (void)viewDidAppear:(BOOL)animated {
 	[super viewDidAppear:animated];
 
-	[self reloadClientTitlesAndValues];
-	[self reloadToneTitlesAndValues];
-	[self reloadSpecifiers];
-
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredCheckInterval, CFSTR("com.insanj.orangered/Interval"), NULL, 0);
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, &orangeredSecure, CFSTR("com.insanj.orangered/Secure"), NULL, 0);
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(intervalDisable) name:kOrangeredIntervalNotificationName object:nil];
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(secureTapped) name:kOrangeredSecureNotificationName object:nil];
+
+	[self reloadClientTitlesAndValues];
+	[self reloadToneTitlesAndValues];
+	[self reloadSpecifiers];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -121,42 +125,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	return self.savedToneValues;
 }
 
-- (BOOL)canBeShownFromSuspendedState {
-	return NO; 
-}
-
-- (void)reloadToneTitlesAndValues {
-	/* Thanks, https://github.com/TUNER88/iOSSystemSoundsLibrary/blob/master/SystemSoundLibrary/SoundListViewController.m
-	NSMutableArray *audioFileList = [NSMutableArray array];
-	
-	NSFileManager *fileManager = [[NSFileManager alloc] init];
-	NSURL *directoryURL = [NSURL URLWithString:@"/System/Library/Audio/UISounds"];
-	NSArray *keys = [NSArray arrayWithObject:NSURLIsDirectoryKey];
-	
-	NSDirectoryEnumerator *enumerator = [fileManager enumeratorAtURL:directoryURL includingPropertiesForKeys:keys options:0 errorHandler:^(NSURL *url, NSError *error) {
-		 return YES;
-	 }];
-	
-	for (NSURL *url in enumerator) {
-		NSError *error;
-		NSNumber *isDirectory = nil;
-		if ([url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:&error] && ![isDirectory boolValue]) {
-			[audioFileList addObject:[url lastPathComponent]];
-		}
-	}*/
-
-	TLToneManager *toneManager = [%c(TLToneManager) sharedToneManager];
-	NSDictionary *savedTones = MSHookIvar<NSDictionary *>(toneManager, "_alertTonesByIdentifier");
-	self.savedToneValues = [savedTones allKeys];
-
-	NSMutableArray *localizedTitles = [NSMutableArray arrayWithCapacity:self.savedToneValues.count];
-	for (int i = 0; i < self.savedToneValues.count; i++) {
-		localizedTitles[i] = [toneManager _localizedNameOfToneWithIdentifier:self.savedToneValues[i]];
-	}
-
-	self.savedToneTitles = localizedTitles;
-}
-
 - (void)reloadClientTitlesAndValues {
 	NSMutableArray *reloadingClientTitles = [NSMutableArray array];
 	NSMutableArray *reloadingClientValues = [NSMutableArray array];
@@ -178,6 +146,20 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		self.savedClientTitles = reloadingClientTitles;
 		self.savedClientValues = reloadingClientValues;
 	}
+}
+
+- (void)reloadToneTitlesAndValues {
+	TLToneManager *toneManager = [%c(TLToneManager) sharedToneManager];
+	NSDictionary *savedTones = MSHookIvar<NSDictionary *>(toneManager, "_alertTonesByIdentifier");
+	self.savedToneValues = [savedTones allKeys];
+
+	NSMutableArray *localizedTitles = [NSMutableArray arrayWithCapacity:self.savedToneValues.count];
+	for (int i = 0; i < self.savedToneValues.count; i++) {
+		NSString *saveToneIdentifier = self.savedToneValues[i]; // like texttone:Aurora
+		localizedTitles[i] = [toneManager _localizedNameOfToneWithIdentifier:saveToneIdentifier] ?: saveToneIdentifier;
+	}
+
+	self.savedToneTitles = localizedTitles;
 }
 
 - (void)updateSoundCellValueLabel {
