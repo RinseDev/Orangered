@@ -7,26 +7,64 @@
 #import <UIKit/UIApplication+Private.h>
 #import <BulletinBoard/BulletinBoard.h>
 
-/*                                                                                                                                                  
-           /$$                       /$$             /$$                        
-          | $$                      | $$            |__/                        
-  /$$$$$$ | $$  /$$$$$$   /$$$$$$  /$$$$$$ /$$    /$$/$$  /$$$$$$  /$$  /$$  /$$
- |____  $$| $$ /$$__  $$ /$$__  $$|_  $$_/|  $$  /$$/ $$ /$$__  $$| $$ | $$ | $$
-  /$$$$$$$| $$| $$$$$$$$| $$  \__/  | $$   \  $$/$$/| $$| $$$$$$$$| $$ | $$ | $$
- /$$__  $$| $$| $$_____/| $$        | $$ /$$\  $$$/ | $$| $$_____/| $$ | $$ | $$
-|  $$$$$$$| $$|  $$$$$$$| $$        |  $$$$/ \  $/  | $$|  $$$$$$$|  $$$$$/$$$$/
- \_______/|__/ \_______/|__/         \___/    \_/   |__/ \_______/ \_____/\___/ 
-                                                                                
+/*
+ /$$                       /$$                    
+| $$                      | $$                    
+| $$$$$$$   /$$$$$$   /$$$$$$$  /$$$$$$   /$$$$$$ 
+| $$__  $$ |____  $$ /$$__  $$ /$$__  $$ /$$__  $$
+| $$  \ $$  /$$$$$$$| $$  | $$| $$  \ $$| $$$$$$$$
+| $$  | $$ /$$__  $$| $$  | $$| $$  | $$| $$_____/
+| $$$$$$$/|  $$$$$$$|  $$$$$$$|  $$$$$$$|  $$$$$$$
+|_______/  \_______/ \_______/ \____  $$ \_______/
+                               /$$  \ $$          
+                              |  $$$$$$/          
+                               \______/                                                                                                                                                                      
 */
+static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSInteger badgeValue) {
+	SBIconModel *iconModel = MSHookIvar<SBIconModel *>([%c(SBIconController) sharedInstance], "_iconModel");
+	NSString *stringBadgeValue;
+	if (badgeValue > 0)  {
+		NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+		[formatter setNumberStyle:NSNumberFormatterDecimalStyle];
+		stringBadgeValue = [formatter stringForObjectValue:@(badgeValue)];
+	}
 
-@interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
+	SBApplicationIcon *clientAppIcon = [iconModel applicationIconForBundleIdentifier:displayIdentifier]; 
+	[clientAppIcon setBadge:stringBadgeValue];
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex;
+	ORLOG(@"set badge %@ to %@", stringBadgeValue, clientAppIcon);
+}
 
-+ (NSURL *)sharedLaunchPreferencesURL;
+/*
+ /$$                 /$$ /$$             /$$     /$$          
+| $$                | $$| $$            | $$    |__/          
+| $$$$$$$  /$$   /$$| $$| $$  /$$$$$$  /$$$$$$   /$$ /$$$$$$$ 
+| $$__  $$| $$  | $$| $$| $$ /$$__  $$|_  $$_/  | $$| $$__  $$
+| $$  \ $$| $$  | $$| $$| $$| $$$$$$$$  | $$    | $$| $$  \ $$
+| $$  | $$| $$  | $$| $$| $$| $$_____/  | $$ /$$| $$| $$  | $$
+| $$$$$$$/|  $$$$$$/| $$| $$|  $$$$$$$  |  $$$$/| $$| $$  | $$
+|_______/  \______/ |__/|__/ \_______/   \___/  |__/|__/  |__/
+*/                                                            
+static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
+	BBDataProviderAddBulletin(provider, bulletin); //This works in iOS 8.1.2
+}
 
-@end
+static ORAlertViewDelegate *orangeredAlertDelegate;
+static PCPersistentTimer *orangeredTimer;
+static NSError *orangeredError;
+static BOOL checkOnUnlock;
+static NSTimeInterval lastRequestInterval;
 
+/*                                                                                                                                         
+                     /$$                                           /$$
+                    | $$                                          | $$
+  /$$$$$$  /$$$$$$$ | $$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$$
+ /$$__  $$| $$__  $$| $$__  $$ /$$__  $$ |____  $$ /$$__  $$ /$$__  $$
+| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$  /$$$$$$$| $$  \__/| $$  | $$
+| $$  | $$| $$  | $$| $$  | $$| $$  | $$ /$$__  $$| $$      | $$  | $$
+|  $$$$$$/| $$  | $$| $$$$$$$/|  $$$$$$/|  $$$$$$$| $$      |  $$$$$$$
+ \______/ |__/  |__/|_______/  \______/  \_______/|__/       \_______/                                                                                                                                                                      
+*/
 @implementation ORAlertViewDelegate
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
@@ -53,60 +91,18 @@
 @end
 
 /*
-                                                                                      
-  /$$$$$$                               /$$     /$$                              
- /$$__  $$                             | $$    |__/                              
-| $$  \__/$$   /$$ /$$$$$$$   /$$$$$$$/$$$$$$   /$$  /$$$$$$  /$$$$$$$   /$$$$$$$
-| $$$$  | $$  | $$| $$__  $$ /$$_____/_  $$_/  | $$ /$$__  $$| $$__  $$ /$$_____/
-| $$_/  | $$  | $$| $$  \ $$| $$       | $$    | $$| $$  \ $$| $$  \ $$|  $$$$$$ 
-| $$    | $$  | $$| $$  | $$| $$       | $$ /$$| $$| $$  | $$| $$  | $$ \____  $$
-| $$    |  $$$$$$/| $$  | $$|  $$$$$$$ |  $$$$/| $$|  $$$$$$/| $$  | $$ /$$$$$$$/
-|__/     \______/ |__/  |__/ \_______/  \___/  |__/ \______/ |__/  |__/|_______/ 
-                                                                                                                                                               
-*/
-
-static ORAlertViewDelegate *orangeredAlertDelegate;
-static PCPersistentTimer *orangeredTimer;
-static NSError *orangeredError;
-static BOOL checkOnUnlock;
-static NSTimeInterval lastRequestInterval;
-
-static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSInteger badgeValue) {
-	SBIconModel *iconModel = MSHookIvar<SBIconModel *>([%c(SBIconController) sharedInstance], "_iconModel");
-	NSString *stringBadgeValue;
-	if (badgeValue > 0)  {
-		NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-		[formatter setNumberStyle:NSNumberFormatterDecimalStyle];
-		stringBadgeValue = [formatter stringForObjectValue:@(badgeValue)];
-	}
-
-	SBApplicationIcon *clientAppIcon = [iconModel applicationIconForBundleIdentifier:displayIdentifier]; 
-	[clientAppIcon setBadge:stringBadgeValue];
-
-	ORLOG(@"set badge %@ to %@", stringBadgeValue, clientAppIcon);
-}
-
-static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
-	BBDataProviderAddBulletin(provider, bulletin); //This works in iOS 8.1.2
-}
-
-/*
-
-                               /$$                     /$$                                         /$$
-                              |__/                    | $$                                        | $$
-  /$$$$$$$  /$$$$$$   /$$$$$$  /$$ /$$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$  /$$$$$$   /$$$$$$  /$$$$$$$
- /$$_____/ /$$__  $$ /$$__  $$| $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$|____  $$ /$$__  $$/$$__  $$
-|  $$$$$$ | $$  \ $$| $$  \__/| $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$ /$$$$$$$| $$  \__/ $$  | $$
- \____  $$| $$  | $$| $$      | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$/$$__  $$| $$     | $$  | $$
- /$$$$$$$/| $$$$$$$/| $$      | $$| $$  | $$|  $$$$$$$| $$$$$$$/|  $$$$$$/  $$$$$$$| $$     |  $$$$$$$
-|_______/ | $$____/ |__/      |__/|__/  |__/ \____  $$|_______/  \______/ \_______/|__/      \_______/
-          | $$                               /$$  \ $$                                                
-          | $$                              |  $$$$$$/                                                
-          |__/                               \______/                                                 
-
-*/
-
-%group SpringBoard
+                               /$$                     /$$                                           /$$
+                              |__/                    | $$                                          | $$
+  /$$$$$$$  /$$$$$$   /$$$$$$  /$$ /$$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$$
+ /$$_____/ /$$__  $$ /$$__  $$| $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$ |____  $$ /$$__  $$ /$$__  $$
+|  $$$$$$ | $$  \ $$| $$  \__/| $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$  /$$$$$$$| $$  \__/| $$  | $$
+ \____  $$| $$  | $$| $$      | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$ /$$__  $$| $$      | $$  | $$
+ /$$$$$$$/| $$$$$$$/| $$      | $$| $$  | $$|  $$$$$$$| $$$$$$$/|  $$$$$$/|  $$$$$$$| $$      |  $$$$$$$
+|_______/ | $$____/ |__/      |__/|__/  |__/ \____  $$|_______/  \______/  \_______/|__/       \_______/
+          | $$                               /$$  \ $$                                                  
+          | $$                              |  $$$$$$/                                                  
+          |__/                               \______/    
+*/                                               
 
 %hook SBLockScreenManager
 
@@ -144,18 +140,15 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 %end
 
 /*
-
- /$$       /$$                                                                 
-| $$      | $$                                                                 
-| $$$$$$$ | $$$$$$$   /$$$$$$$  /$$$$$$   /$$$$$$  /$$    /$$/$$$$$$   /$$$$$$ 
-| $$__  $$| $$__  $$ /$$_____/ /$$__  $$ /$$__  $$|  $$  /$$/$$__  $$ /$$__  $$
-| $$  \ $$| $$  \ $$|  $$$$$$ | $$$$$$$$| $$  \__/ \  $$/$$/ $$$$$$$$| $$  \__/
-| $$  | $$| $$  | $$ \____  $$| $$_____/| $$        \  $$$/| $$_____/| $$      
-| $$$$$$$/| $$$$$$$/ /$$$$$$$/|  $$$$$$$| $$         \  $/ |  $$$$$$$| $$      
-|_______/ |_______/ |_______/  \_______/|__/          \_/   \_______/|__/      
-                                                                               
-*/
-
+                                                            
+                                                            
+  /$$$$$$$  /$$$$$$   /$$$$$$  /$$    /$$ /$$$$$$   /$$$$$$ 
+ /$$_____/ /$$__  $$ /$$__  $$|  $$  /$$//$$__  $$ /$$__  $$
+|  $$$$$$ | $$$$$$$$| $$  \__/ \  $$/$$/| $$$$$$$$| $$  \__/
+ \____  $$| $$_____/| $$        \  $$$/ | $$_____/| $$      
+ /$$$$$$$/|  $$$$$$$| $$         \  $/  |  $$$$$$$| $$      
+|_______/  \_______/|__/          \_/    \_______/|__/      
+*/                                                       
 static BBServer *orangeredServer;
 
 %hook BBServer
@@ -170,37 +163,6 @@ static BBServer *orangeredServer;
 
 %end
 
-%end // %group SpringBoard
-
-/*
-                               /$$$$$$        
-                              /$$__  $$       
-  /$$$$$$   /$$$$$$  /$$$$$$ | $$  \__/$$$$$$$
- /$$__  $$ /$$__  $$/$$__  $$| $$$$  /$$_____/
-| $$  \ $$| $$  \__/ $$$$$$$$| $$_/ |  $$$$$$ 
-| $$  | $$| $$     | $$_____/| $$    \____  $$
-| $$$$$$$/| $$     |  $$$$$$$| $$    /$$$$$$$/
-| $$____/ |__/      \_______/|__/   |_______/ 
-| $$                                          
-| $$                                          
-|__/  
-
-*/
-%group Preferences
-
-%hook PreferencesAppController
-
-- (void)applicationOpenURL:(NSURL *)arg1 {
-	// if ([arg1 isEqual:[ORAlertViewDelegate sharedLaunchPreferencesURL]]) {
-		// [[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredOpenPrefsNotificationName object:nil];
-	// }
-
-	return %orig();
-}
-
-%end
-
-%end // %group Preferences
 
 /*
             /$$                        
@@ -215,37 +177,45 @@ static BBServer *orangeredServer;
 */
 
 %ctor {
-	// Because screw stupid class comparisons, they suck.
-	NSString *bundleIdentifier = [NSBundle mainBundle].bundleIdentifier; // NSStringFromClass([UIApplication sharedApplication].class);
-	ORLOG(@"Comparing %@ to detect proper injections...", bundleIdentifier);
-
 	HBPreferences *orangeredPreferences = PREFS;
 
-	if ([bundleIdentifier isEqualToString:@"com.apple.Preferences"]) {
-		ORLOG(@"Injecting Preferences hooks...");
-		%init(Preferences);
-		return;
-	}
+	/*
+	                                                                  
+	  /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$$        /$$$$$$$   /$$$$$$$
+	 /$$__  $$ /$$__  $$ /$$__  $$| $$__  $$      | $$__  $$ /$$_____/
+	| $$  \ $$| $$  \ $$| $$$$$$$$| $$  \ $$      | $$  \ $$| $$      
+	| $$  | $$| $$  | $$| $$_____/| $$  | $$      | $$  | $$| $$      
+	|  $$$$$$/| $$$$$$$/|  $$$$$$$| $$  | $$      | $$  | $$|  $$$$$$$
+	 \______/ | $$____/  \_______/|__/  |__/      |__/  |__/ \_______/
+	          | $$                                                    
+	          | $$                                                    
+	          |__/                                                    
+      */
+	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredOpenNCNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
+		NSURL *notificationCenterURL;
+		if (clientIdentifier) {
+			notificationCenterURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@&path=%@", [%c(PSNotificationSettingsDetail) preferencesURL].absoluteString, clientIdentifier]];
+		}
 
-	else {
-		ORLOG(@"Injecting SpringBoard hooks and registering listeners...");
-		%init(SpringBoard);
+		else {
+			notificationCenterURL = [%c(PSNotificationSettingsDetail) preferencesURL];
+		}
 
-		[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredOpenNCNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-			NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
-			NSURL *notificationCenterURL;
-			if (clientIdentifier) {
-				notificationCenterURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@&path=%@", [%c(PSNotificationSettingsDetail) preferencesURL].absoluteString, clientIdentifier]];
-			}
+		[[UIApplication sharedApplication] openURL:notificationCenterURL];
+	}];
 
-			else {
-				notificationCenterURL = [%c(PSNotificationSettingsDetail) preferencesURL];
-			}
+	/*
 
-			[[UIApplication sharedApplication] openURL:notificationCenterURL];
-		}];
-	}
-
+	                                                  
+	  /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$ 
+	 /$$__  $$ /$$__  $$ /$$__  $$ /$$__  $$ /$$__  $$
+	| $$$$$$$$| $$  \__/| $$  \__/| $$  \ $$| $$  \__/
+	| $$_____/| $$      | $$      | $$  | $$| $$      
+	|  $$$$$$$| $$      | $$      |  $$$$$$/| $$      
+	 \_______/|__/      |__/       \______/ |__/      
+	                                                                                                
+    */                                            
 	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredErrorNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 		NSLog(@"Responding to error: %@", orangeredError);
 		if (orangeredError) {
@@ -255,11 +225,36 @@ static BBServer *orangeredServer;
 			orangeredError = nil;
 		}
 	}];
-    	
+    
+    /*
+	                                                                              /$$$$$$ 
+	                                                                             /$$__  $$
+	  /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$$         /$$$$$$   /$$$$$$   /$$$$$$ | $$  \__/
+	 /$$__  $$ /$$__  $$ /$$__  $$| $$__  $$       /$$__  $$ /$$__  $$ /$$__  $$| $$$$    
+	| $$  \ $$| $$  \ $$| $$$$$$$$| $$  \ $$      | $$  \ $$| $$  \__/| $$$$$$$$| $$_/    
+	| $$  | $$| $$  | $$| $$_____/| $$  | $$      | $$  | $$| $$      | $$_____/| $$      
+	|  $$$$$$/| $$$$$$$/|  $$$$$$$| $$  | $$      | $$$$$$$/| $$      |  $$$$$$$| $$      
+	 \______/ | $$____/  \_______/|__/  |__/      | $$____/ |__/       \_______/|__/      
+	          | $$                                | $$                                    
+	          | $$                                | $$                                    
+	          |__/                                |__/       
+	*/                             
 	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredOpenPrefsNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 		[[UIApplication sharedApplication] openURL:[ORAlertViewDelegate sharedLaunchPreferencesURL]];
 	}];
 
+	/*
+		       /$$                           /$$      
+	          | $$                          | $$      
+	  /$$$$$$$| $$$$$$$   /$$$$$$   /$$$$$$$| $$   /$$
+	 /$$_____/| $$__  $$ /$$__  $$ /$$_____/| $$  /$$/
+	| $$      | $$  \ $$| $$$$$$$$| $$      | $$$$$$/ 
+	| $$      | $$  | $$| $$_____/| $$      | $$_  $$ 
+	|  $$$$$$$| $$  | $$|  $$$$$$$|  $$$$$$$| $$ \  $$
+	 \_______/|__/  |__/ \_______/ \_______/|__/  \__/
+	                                                  
+	                                                  
+    */                                           
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredCheckNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	OrangeredProvider *notificationProvider = [OrangeredProvider sharedInstance];
 		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
