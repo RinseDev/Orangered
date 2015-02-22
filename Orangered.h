@@ -6,7 +6,7 @@
 #import "substrate.h"
 
 #define PREFS [[HBPreferences alloc] initWithIdentifier:@"com.insanj.orangered"]
-#define CLIENTS @{@"com.reddit.alienblue" : @"Alien Blue", @"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", \
+#define CLIENTS @{@"com.reddit.alienblue" : @"Alien Blue", @"com.designshed.alienblue" : @"Alien Blue", @"com.designshed.alienbluehd" : @"Alien Blue HD", @"com.reddit.alienbluehd" : @"Alien Blue HD", \
 				@"com.madeawkward.beam" : @"beam", @"com.rickharrison.narwhal" : @"narwhal", @"com.madeawkward.Cake" : @"Cake", \
 				@"com.yapstudios.appstore.feedworthy" : @"Feedworthy", @"com.biscuitapp.biscuit" : @"Biscuit", \
 				@"com.syntaxstudios.reddme" : @"Reddme", @"com.appseedinc.aliens" : @"Aliens", \

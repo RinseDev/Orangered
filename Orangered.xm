@@ -297,7 +297,8 @@ static BBServer *orangeredServer;
 		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
 
 		if (intervalUnit > 0.0) {
-			CGFloat refreshInterval = [orangeredPreferences floatForKey:@"refreshInterval" default:60.0];
+			NSString *refreshIntervalString = [orangeredPreferences objectForKey:@"refreshInterval" default:nil];
+			CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
 			orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
 			[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
