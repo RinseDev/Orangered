@@ -143,6 +143,7 @@
 
 		<dict>
 			<key>cell</key> 		<string>PSEditTextCell</string>
+			<key>cellClass</key> 	<string>OREditDoneTextCell</string>
 			<key>detail</key> 		<string>PSDetailController</string>
 			<key>defaults</key> 	<string>com.insanj.orangered</string>
 			<key>isNumeric</key> 	<true/>
