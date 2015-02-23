@@ -3,7 +3,7 @@
 #import "External/FDKeychain/FDKeychain.h" 
 #import "External/RedditKit/RedditKit.h"
 #import "External/RedditKit/AFNetworking/AFNetworking.h"
-#import <PersistentConnection/PersistentConnection.h>
+#import <PersistentConnection/PCSimpleTimer.h>
 #import <UIKit/UIApplication+Private.h>
 #import <BulletinBoard/BulletinBoard.h>
 
@@ -50,7 +50,7 @@ static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, 
 }
 
 static ORAlertViewDelegate *orangeredAlertDelegate;
-static PCPersistentTimer *orangeredTimer;
+static PCSimpleTimer *orangeredTimer;
 static NSError *orangeredError;
 static BOOL checkOnUnlock;
 static NSTimeInterval lastRequestInterval;
@@ -300,7 +300,7 @@ static BBServer *orangeredServer;
 			NSString *refreshIntervalString = [orangeredPreferences objectForKey:@"refreshInterval" default:nil];
 			CGFloat refreshInterval = (refreshIntervalString ? [refreshIntervalString floatValue] : 60.0) * intervalUnit;
 
-			orangeredTimer = [[PCPersistentTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
+			orangeredTimer = [[PCSimpleTimer alloc] initWithTimeInterval:refreshInterval serviceIdentifier:@"com.insanj.orangered" target:notificationProvider selector:@selector(fireAway) userInfo:nil];
 			[orangeredTimer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
 
 			ORLOG(@"Spun up timer (%@) to ping Reddit every %f seconds.", orangeredTimer, refreshInterval);
