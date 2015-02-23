@@ -10,6 +10,107 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 @implementation ORListController
 
+- (id)specifiers {
+	if (!_specifiers) {
+		_specifiers = [super specifiers];
+
+		TLToneManager *manager = [objc_getClass("TLToneManager") sharedToneManager];
+
+		NSMutableArray *indexes = [[NSMutableArray alloc] init];
+
+		NSArray *toneNames = nil;
+		NSArray *toneValues = nil;
+		NSMutableArray *installedToneNames = nil;
+		NSMutableArray *installedToneValues = nil;
+
+		NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+
+		for (NSString __strong *key in [manager _alertTonesByIdentifier]) {
+			NSString *name = [manager _localizedNameOfToneWithIdentifier:key];
+			if (name) {
+				[dictionary setObject:name forKey:key];
+			}
+		}
+
+		if ([dictionary count]) {
+			toneValues = [dictionary keysSortedByValueUsingComparator:^(id obj1, id obj2) {
+				return [obj1 localizedCaseInsensitiveCompare:obj2];
+			}];
+
+			toneNames = [[dictionary allValues] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+		}
+
+		dictionary = nil;
+		dictionary = [[NSMutableDictionary alloc] init];
+		for (id tone in [manager _installedTones]) {
+			if (![tone isKindOfClass:objc_getClass("TLITunesTone")]) {
+				continue;
+			}
+
+			if ([tone name] && [tone identifier]) {
+				[dictionary setObject:[tone name] forKey:[tone identifier]];
+			}
+		}
+
+		if ([dictionary count]) {
+			installedToneValues = [NSMutableArray arrayWithArray:[dictionary keysSortedByValueUsingComparator:^(id obj1, id obj2) {
+				return [obj1 localizedCaseInsensitiveCompare:obj2];
+			}]];
+
+			installedToneNames = [NSMutableArray arrayWithArray:[[dictionary allValues] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)]];
+		} else {
+			installedToneNames = [[NSMutableArray alloc] init];
+			installedToneValues = [[NSMutableArray alloc] init];
+		}
+
+		[installedToneNames insertObject:@"None" atIndex:0];
+		[installedToneValues insertObject:@"<none>" atIndex:0];
+
+		[indexes addObject:[NSNumber numberWithInt:[installedToneNames count]]];
+		if (toneNames && [toneNames count] > 0) {
+			[indexes addObject:[NSNumber numberWithInt:[toneNames count]]];
+
+			toneNames = [installedToneNames arrayByAddingObjectsFromArray:toneNames];
+			toneValues = [installedToneValues arrayByAddingObjectsFromArray:toneValues];
+		} else {
+			toneNames = installedToneNames;
+			toneValues = installedToneValues;
+		}
+
+		NSMutableArray *systemToneNames = [[NSMutableArray alloc] init];
+		NSMutableArray *systemToneValues = [[NSMutableArray alloc] init];
+
+		NSString *tonesDirectory = @"/Library/Ringtones";
+		NSFileManager *localFileManager = [[NSFileManager alloc] init];
+		NSDirectoryEnumerator *dirEnum = [localFileManager enumeratorAtPath:tonesDirectory];
+		NSString *file;
+		while ((file = [dirEnum nextObject])) {
+			if ([[file pathExtension] isEqualToString: @"m4r"]) {
+				NSString *properToneIdentifier = [NSString stringWithFormat:@"system:%@", [file stringByDeletingPathExtension]];
+
+				[systemToneNames addObject:[file stringByDeletingPathExtension]];
+				[systemToneValues addObject:properToneIdentifier];
+			}
+		}
+
+		if ([systemToneNames count] > 0) {
+			[indexes addObject:[NSNumber numberWithInt:[systemToneNames count]]];
+		}
+
+		while ([indexes count] < 3) {
+			[indexes addObject:[NSNumber numberWithInt:0]];
+		}
+
+		self.savedToneValues = [toneValues arrayByAddingObjectsFromArray:systemToneValues];
+		self.savedToneTitles = [toneNames arrayByAddingObjectsFromArray:systemToneNames];
+
+		PSSpecifier *soundSpecifier = [self specifierForID:@"SoundPicker"];
+		[soundSpecifier setProperty:indexes forKey:@"indexes"];
+	}
+
+	return _specifiers;
+}
+
 + (NSString *)hb_specifierPlist {
 	return @"ORPrefs";
 }
@@ -72,7 +173,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(secureTapped) name:kOrangeredSecureNotificationName object:nil];
 
 	[self reloadClientTitlesAndValues];
-	[self reloadToneTitlesAndValues];
 	[self reloadSpecifiers];
 }
 
@@ -146,20 +246,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		self.savedClientTitles = reloadingClientTitles;
 		self.savedClientValues = reloadingClientValues;
 	}
-}
-
-- (void)reloadToneTitlesAndValues {
-	TLToneManager *toneManager = [%c(TLToneManager) sharedToneManager];
-	NSDictionary *savedTones = MSHookIvar<NSDictionary *>(toneManager, "_alertTonesByIdentifier");
-	self.savedToneValues = [savedTones allKeys];
-
-	NSMutableArray *localizedTitles = [NSMutableArray arrayWithCapacity:self.savedToneValues.count];
-	for (int i = 0; i < self.savedToneValues.count; i++) {
-		NSString *saveToneIdentifier = self.savedToneValues[i]; // like texttone:Aurora
-		localizedTitles[i] = [toneManager _localizedNameOfToneWithIdentifier:saveToneIdentifier] ?: saveToneIdentifier;
-	}
-
-	self.savedToneTitles = localizedTitles;
 }
 
 - (void)updateSoundCellValueLabel {
@@ -282,21 +368,3 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 @end
-
-%subclass ORRingtoneController : HBListItemsController // RingtonePane, SoundsPrefController
-
-- (void)viewWillAppear:(BOOL)animated {
-	self.view.tintColor = kOrangeredTintColor;
-	self.navigationController.navigationController.navigationBar.tintColor = kOrangeredTintColor;
-
-	%orig();
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-	%orig();
-
-	self.view.tintColor = nil;
-	self.navigationController.navigationController.navigationBar.tintColor = nil;
-}
-
-%end
