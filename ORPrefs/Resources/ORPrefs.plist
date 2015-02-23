@@ -107,6 +107,14 @@
 			<key>cell</key> 	<string>PSSwitchCell</string>
 			<key>default</key> 	<true/>
 			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>repeatNotify</string>
+			<key>label</key> 	<string>Repeat Notifications</string>
+		</dict>
+
+		<dict>
+			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<true/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
 			<key>key</key> 		<string>alwaysNotify</string>
 			<key>label</key> 	<string>Always Notify</string>
 		</dict>

@@ -54,6 +54,7 @@ static PCSimpleTimer *orangeredTimer;
 static NSError *orangeredError;
 static BOOL checkOnUnlock;
 static NSTimeInterval lastRequestInterval;
+static BBBulletinRequest *lastBulletin;
 
 /*                                                                                                                                         
                      /$$                                           /$$
@@ -362,6 +363,7 @@ static BBServer *orangeredServer;
 			return;
 	    }
 
+		BOOL repeatNotify = [orangeredPreferences boolForKey:@"repeatNotify" default:YES];
 		BOOL alwaysNotify = [orangeredPreferences boolForKey:@"alwaysNotify" default:YES];
 		BOOL alwaysMarkRead = [orangeredPreferences boolForKey:@"alwaysMarkRead" default:NO];
 		BOOL securePassword = [orangeredPreferences boolForKey:@"secure" default:YES];
@@ -476,8 +478,16 @@ static BBServer *orangeredServer;
 					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
 				}
 
-		    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
-				orangeredAddBulletin(orangeredServer, provider, bulletin);
+				if (!repeatNotify && lastBulletin && [lastBulletin.message isEqualToString:bulletin.message]) {
+					ORLOG(@"Not publishing duplicate bulletin request (%@ equiv to %@).", bulletin, lastBulletin);
+				}
+
+				else {
+					[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+					orangeredAddBulletin(orangeredServer, provider, bulletin);
+
+					lastBulletin = bulletin;
+				}
 			}
 
 			else if (alwaysNotify) {
