@@ -54,7 +54,7 @@ static PCSimpleTimer *orangeredTimer;
 static NSError *orangeredError;
 static BOOL checkOnUnlock;
 static NSTimeInterval lastRequestInterval;
-static BBBulletinRequest *lastBulletin;
+static NSDate *lastMessageDate;
 
 /*                                                                                                                                         
                      /$$                                           /$$
@@ -478,15 +478,15 @@ static BBServer *orangeredServer;
 					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
 				}
 
-				if (!repeatNotify && lastBulletin && [lastBulletin.message isEqualToString:bulletin.message]) {
-					ORLOG(@"Not publishing duplicate bulletin request (%@ equiv to %@).", bulletin, lastBulletin);
+				if (!repeatNotify && lastMessageDate && [lastMessageDate compare:message.created] != NSOrderedAscending) {
+					ORLOG(@"Not publishing duplicate bulletin request (current message date '%@' is equal to or earlier than previous message date '%@').", message.created, lastMessageDate);
 				}
 
 				else {
 					[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 					orangeredAddBulletin(orangeredServer, provider, bulletin);
 
-					lastBulletin = bulletin;
+					lastMessageDate = message.created;
 				}
 			}
 
