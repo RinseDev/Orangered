@@ -4,7 +4,7 @@ ARCHS = armv7 arm64
 include theos/makefiles/common.mk
 
 BUNDLE_NAME = ORPrefs
-ORPrefs_OBJC_FILES = ORPrefs.xm ORSounds.mm
+ORPrefs_FILES = ORPrefs.xm
 ORPrefs_INSTALL_PATH = /Library/PreferenceBundles
 ORPrefs_FRAMEWORKS = Foundation UIKit Twitter AudioToolbox
 ORPrefs_PRIVATE_FRAMEWORKS = Preferences MobileCoreServices MobileInstallation

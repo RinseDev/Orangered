@@ -14,16 +14,14 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	if (!_specifiers) {
 		_specifiers = [super specifiers];
 
-		TLToneManager *manager = [objc_getClass("TLToneManager") sharedToneManager];
+		TLToneManager *manager = [%c(TLToneManager) sharedToneManager];
 
-		NSMutableArray *indexes = [[NSMutableArray alloc] init];
+		NSMutableArray *indexes = [NSMutableArray array];
 
-		NSArray *toneNames = nil;
-		NSArray *toneValues = nil;
-		NSMutableArray *installedToneNames = nil;
-		NSMutableArray *installedToneValues = nil;
+		NSArray *toneNames, *toneValues;
+		NSMutableArray *installedToneNames, *installedToneValues;
 
-		NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+		NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
 
 		for (NSString __strong *key in [manager _alertTonesByIdentifier]) {
 			NSString *name = [manager _localizedNameOfToneWithIdentifier:key];
@@ -43,7 +41,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		dictionary = nil;
 		dictionary = [[NSMutableDictionary alloc] init];
 		for (id tone in [manager _installedTones]) {
-			if (![tone isKindOfClass:objc_getClass("TLITunesTone")]) {
+			if (![tone isKindOfClass:%c(TLITunesTone)]) {
 				continue;
 			}
 
@@ -120,11 +118,11 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 + (NSString *)hb_shareText {
-	return @"I love having Reddit in my pocket, thanks to #Orangered by @insanj and @phillipten.";
+	return @"I love having Reddit in my pocket, thanks to #Orangered by github.com/RinseDev/.";
 }
 
 + (NSURL *)hb_shareURL {
-	return [NSURL URLWithString:@"http://insanj.com/orangered"];
+	return [NSURL URLWithString:@"http://github.com/RinseDev/Orangered"];
 }
 
 - (BOOL)canBeShownFromSuspendedState {
@@ -156,10 +154,6 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		[self reloadSpecifier:refreshControlSpecifier];
 	}
 
-	PSSpecifier *activationSpecifier = [self specifierForID:@"ActivationMethods"];
-	[activationSpecifier setProperty:@(NSClassFromString(@"LAActivator") != nil) forKey:@"enabled"];
-	[self reloadSpecifier:activationSpecifier];
-
 	[self intervalDisable];
 	[self updateSoundCellValueLabel];
 }
@@ -174,6 +168,10 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 	[self reloadClientTitlesAndValues];
 	[self reloadSpecifiers];
+
+	PSSpecifier *activationSpecifier = [self specifierForID:@"ActivationMethods"];
+	[activationSpecifier setProperty:@(NSClassFromString(@"LAActivator") != nil) forKey:@"enabled"];
+	[self reloadSpecifier:activationSpecifier];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -199,11 +197,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
 	if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1) {
-		if (indexPath.row == 0) {	// Apply Changes Now
-			cell.separatorInset = UIEdgeInsetsMake(0.0, -15.0, 0.0, 0.0);
-		}
-
-		else if (indexPath.row == 1) {	// Credits cell
+		if (indexPath.row == 1) {	// Credits cell
 			[cell _setDrawsSeparatorAtBottomOfSection:NO];
 		}
 	}
@@ -318,7 +312,7 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 
 	if (self) {
 		self.backgroundColor = self.superview.superview.backgroundColor; // UITableView
-		CGFloat padding = 10.0, savedHeight = 74.0;
+		CGFloat padding = 10.0, savedHeight = 68.0;
 
 		_plainTextView = [[UITextView alloc] initWithFrame:CGRectMake(padding, 0.0, self.frame.size.width - (padding * 2.0), savedHeight)];
 
@@ -333,14 +327,13 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		UIColor *vanillaColor = [UIColor colorWithRed:0.427451 green:0.427451 blue:0.447059 alpha:1.0];
 		UIColor *darkColor = [UIColor grayColor];
 
-		NSMutableAttributedString *clickable = [[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian (insanj) Weiss. © 2014 Phillip Tennen, Kyle Paul. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }];
+		NSMutableAttributedString *clickable = [[NSMutableAttributedString alloc] initWithString:@"© 2013-2015 Julian (insanj) Weiss and Rinse Developer Collective. Powered by RedditKit and FDKeychain. Support available in Cydia." attributes:@{ NSFontAttributeName : vanillaFont, NSForegroundColorAttributeName : vanillaColor, NSKernAttributeName : @(0.4) }];
 
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"Julian (insanj) Weiss"]];
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/phillipten"]} range:[clickable.string rangeOfString:@"Phillip Tennen"]];
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://www.twitter.com/"]} range:[clickable.string rangeOfString:@"Kyle Paul"]];
-		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"on Twitter"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"https://twitter.com/insanj"]} range:[clickable.string rangeOfString:@"Julian (insanj) Weiss"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"https://www.github.com/RinseDev"]} range:[clickable.string rangeOfString:@"Rinse Developer Collective"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"https://github.com/samsymons/RedditKit"]} range:[clickable.string rangeOfString:@"RedditKit"]];
 		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"https://github.com/reidmain/FDKeychain"]} range:[clickable.string rangeOfString:@"FDKeychain"]];
+		[clickable setAttributes:@{ NSFontAttributeName : darkFont, NSLinkAttributeName : [NSURL URLWithString:@"http://cydia.saurik.com/package/com.insanj.orangered8/"]} range:[clickable.string rangeOfString:@"Cydia"]];
 
 		_plainTextView.linkTextAttributes = @{ NSForegroundColorAttributeName : darkColor, NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle), NSKernAttributeName : @(0.5) };
 
@@ -349,6 +342,13 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 	}
 
 	return self;
+}
+
+- (void)layoutSubviews {
+	[super layoutSubviews];
+
+	CGFloat padding = 10.0, savedHeight = 68.0;
+	_plainTextView.frame = CGRectMake(padding, 0.0, self.frame.size.width - (padding * 2.0), savedHeight);
 }
 
 - (BOOL)textView:(UITextView *)textView shouldInteractWithURL:(NSURL *)URL inRange:(NSRange)characterRange {

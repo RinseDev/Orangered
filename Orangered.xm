@@ -3,7 +3,7 @@
 #import "External/FDKeychain/FDKeychain.h" 
 #import "External/RedditKit/RedditKit.h"
 #import "External/RedditKit/AFNetworking/AFNetworking.h"
-#import <PersistentConnection/PCSimpleTimer.h>
+#import <PersistentConnection/PersistentConnection.h>
 #import <UIKit/UIApplication+Private.h>
 #import <BulletinBoard/BulletinBoard.h>
 

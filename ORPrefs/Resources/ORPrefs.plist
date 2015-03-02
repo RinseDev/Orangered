@@ -24,6 +24,7 @@
 			<key>isController</key> 		<true/>
 			<key>bundle</key> 				<string>LibActivator</string>			
 			<key>activatorListener</key> 	<string>com.insanj.orangered.listener</string>
+			<key>enabled</key> 				<false/>
 		</dict>
 
 		<dict>
@@ -195,7 +196,7 @@
 		<dict>
 			<key>cell</key> 			<string>PSStaticTextCell</string>
 			<key>cellClass</key>		<string>ORCreditsCell</string>
-			<key>height</key> 	  	    <integer>74</integer>
+			<key>height</key> 	  	    <integer>68</integer>
 		</dict>
 
 	</array>
