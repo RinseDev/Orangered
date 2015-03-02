@@ -41,7 +41,10 @@
 
 @end
 
-@interface ORRingtoneController : HBListItemsController
+@interface ORRingtoneController : PSListItemsController {
+	UInt32 soundID;
+	BOOL validSoundID;
+}
 
 @end
 
