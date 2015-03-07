@@ -368,6 +368,7 @@ static BBServer *orangeredServer;
 		BOOL alwaysNotify = [orangeredPreferences boolForKey:@"alwaysNotify" default:YES];
 		BOOL alwaysMarkRead = [orangeredPreferences boolForKey:@"alwaysMarkRead" default:NO];
 		BOOL securePassword = [orangeredPreferences boolForKey:@"secure" default:YES];
+		BOOL useMessageTimeStamp = [orangeredPreferences boolForKey:@"useMessageTimeStamp" default:YES];
 
 		NSString *password;
 		if (securePassword) {
@@ -456,7 +457,6 @@ static BBServer *orangeredServer;
 				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.sectionID = sectionID;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
-				bulletin.date = [NSDate date];
 
 				BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
 				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
@@ -468,6 +468,14 @@ static BBServer *orangeredServer;
 
 				RKMessage *message = messages[0];
     			bulletin.showsUnreadIndicator = message.unread;
+
+				if (useMessageTimeStamp) {
+					bulletin.date = message.created;
+				}
+
+				else {
+					bulletin.date = [NSDate date];
+				}
 
 				if (messages.count == 1) {
 					bulletin.title = message.author;
