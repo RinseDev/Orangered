@@ -114,6 +114,14 @@
 
 		<dict>
 			<key>cell</key> 	<string>PSSwitchCell</string>
+			<key>default</key> 	<false/>
+			<key>defaults</key> <string>com.insanj.orangered</string>
+			<key>key</key> 		<string>disableNetworkIndicator</string>
+			<key>label</key> 	<string>Disable Statusbar Activity Icon</string>
+		</dict>
+
+		<dict>
+			<key>cell</key> 	<string>PSSwitchCell</string>
 			<key>default</key> 	<true/>
 			<key>defaults</key> <string>com.insanj.orangered</string>
 			<key>key</key> 		<string>repeatNotify</string>

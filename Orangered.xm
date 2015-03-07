@@ -434,7 +434,9 @@ static BBServer *orangeredServer;
 
 		RKClient *client = [RKClient sharedClient];
 		RKListingCompletionBlock unreadCompletionBlock = ^(NSArray *messages, RKPagination *pagination, NSError *error) {
-			[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
+			if (![orangeredPreferences boolForKey:@"disableNetworkIndicator" default:NO]) {
+				[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
+			}
 	    	ORLOG(@"Received unreadMessages response from Reddit: %@", messages);
 
 			if (alwaysMarkRead && [messages count] > 0) {
@@ -520,7 +522,9 @@ static BBServer *orangeredServer;
 			[client signOut];
 		}
 
-		[[UIApplication sharedApplication] _beginShowingNetworkActivityIndicator];
+		if (![orangeredPreferences boolForKey:@"disableNetworkIndicator" default:NO]) {
+			[[UIApplication sharedApplication] _beginShowingNetworkActivityIndicator];
+		}
 
 		if (![client isSignedIn]) {
 			ORLOG(@"No existing user session detected, signing in...");
@@ -563,7 +567,9 @@ static BBServer *orangeredServer;
 
 					orangeredError = error;
 					orangeredAddBulletin(orangeredServer, notificationProvider, bulletin);
-					[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
+					if (![orangeredPreferences boolForKey:@"disableNetworkIndicator" default:NO]) {
+						[[UIApplication sharedApplication] _endShowingNetworkActivityIndicator];
+					}
 					return;
 	    		}
 
