@@ -6,6 +6,7 @@
 #import <PersistentConnection/PersistentConnection.h>
 #import <UIKit/UIApplication+Private.h>
 #import <BulletinBoard/BulletinBoard.h>
+#import <SpringBoard/SBMediaController.h>
 
 /*
  /$$                       /$$                    
@@ -457,8 +458,9 @@ static BBServer *orangeredServer;
 				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
 				bulletin.date = [NSDate date];
 
+				BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
 				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
-				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
+				if (!isRingerMuted && ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
 					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
 					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
 					bulletin.sound = savedSound;
