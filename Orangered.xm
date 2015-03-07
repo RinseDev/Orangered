@@ -509,6 +509,11 @@ static BBServer *orangeredServer;
 
 				[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
 			}
+
+			else {
+				// When there are no new messages, remove all previous items from the Notification Center
+				[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+			}
 		}; // end unreadCompletionBlock
 
 		// Time to do some WERK
