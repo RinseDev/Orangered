@@ -157,8 +157,6 @@ static BBServer *orangeredServer;
 
 - (id)init {
 	orangeredServer = %orig();
-	OrangeredProvider *sharedProvider = [OrangeredProvider sharedInstance];
-	[orangeredServer _addActiveSectionID:[sharedProvider sectionIdentifier]];
 
 	return orangeredServer;
 }
@@ -281,9 +279,8 @@ static BBServer *orangeredServer;
 			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
 			ORLOG(@"Detected change in app, swapping around data providers...");
 
-			[orangeredServer _removeActiveSectionID:sectionIdentifier];
+			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-			[orangeredServer _addActiveSectionID:clientIdentifier];
 		}
 
 		// If the current clientIdentifier doesn't have an app associated with it, revert back
@@ -291,9 +288,7 @@ static BBServer *orangeredServer;
 		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
 			ORLOG(@"Detected bonkers app, reassigning data providers...");
 
-			[orangeredServer _removeActiveSectionID:sectionIdentifier];
 			notificationProvider.customSectionID = nil;
-			[orangeredServer _addActiveSectionID:[notificationProvider sectionIdentifier]];
 		}
 		
 		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
