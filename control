@@ -3,7 +3,7 @@ Replaces: com.insanj.orangered, com.insanj.orangered7
 Name: Orangered for iOS 8
 Pre-Depends: firmware (>= 8.0)
 Depends: mobilesubstrate, applist, ws.hbang.common (>= 1.2)
-Version: 1.0
+Version: 1.0.1
 Architecture: iphoneos-arm
 Description: Reddit push notifications.
 Homepage: http://insanj.com/orangered
