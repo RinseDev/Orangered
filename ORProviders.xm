@@ -30,7 +30,7 @@
 	if (!self.customSectionID) {
 		for (NSString *s in [CLIENTS allKeys]) {
 			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
-			if ([controller applicationWithDisplayIdentifier:s]) {
+			if ([controller applicationWithBundleIdentifier:s]) {
 				return ((self.customSectionID = s));
 			}
 		}
