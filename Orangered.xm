@@ -7,6 +7,7 @@
 #import <UIKit/UIApplication+Private.h>
 #import <BulletinBoard/BulletinBoard.h>
 #import <SpringBoard/SBMediaController.h>
+#import <ToneLibrary/ToneLibrary.h>
 
 /*
  /$$                       /$$                    
@@ -457,8 +458,16 @@ static BBServer *orangeredServer;
 
 				BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
 				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
-				if (!isRingerMuted && ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
-					BBSound *savedSound = [[BBSound alloc] initWithRingtone:ringtoneIdentifier vibrationPattern:nil repeats:NO];
+				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
+					NSString *ringtonePath;
+					if (isRingerMuted) {
+						ringtonePath = @"/Library/PreferenceBundles/ORPrefs.bundle/silent.caf";
+					} else {
+						TLToneManager *manager = [%c(TLToneManager) sharedToneManager];
+						ringtonePath = [manager filePathForToneIdentifier:ringtoneIdentifier];
+					}
+
+					BBSound *savedSound = [[BBSound alloc] initWithSystemSoundID:0 soundPath:ringtonePath behavior:1 vibrationPattern:nil];
 					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
 					bulletin.sound = savedSound;
 				}
