@@ -1,4 +1,6 @@
 #import "ORPrefs.h"
+#import <version.h>
+#import "Cephei/HBGlobal.h"
 
 void orangeredCheckInterval(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredIntervalNotificationName object:nil];
@@ -276,6 +278,12 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 
 - (void)notificationCenter {
+	if (IS_MOST_MODERN) {
+		self.navigationController.navigationController.navigationBar.tintColor = nil;
+	} else {
+		self.navigationController.navigationBar.tintColor = nil;
+	}
+
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredOpenNCNotificationName object:nil];
 }
 

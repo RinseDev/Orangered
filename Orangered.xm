@@ -378,7 +378,7 @@ static BBServer *orangeredServer;
 			}
 
 			else if (getItemForKeyError.code == -25300) {
-				NSLog(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
+				// NSLog(@"Error trying to retrieve secured password, have to secure it: %@", getItemForKeyError);
 				password = [NSString stringWithString:passwordKey];
 				NSMutableString *mutableKey = [[NSMutableString alloc] init];
 

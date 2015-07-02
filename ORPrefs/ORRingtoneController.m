@@ -1,8 +1,15 @@
-#import "ORPrefs.h"
-
+#import "ORRingtoneController.h"
 #import <AudioToolbox/AudioToolbox.h>
+#import <ToneLibrary/ToneLibrary.h>
+#import <objc/runtime.h>
+
+#define kOrangeredTintColor [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
 @implementation ORRingtoneController
+
++ (UIColor *)hb_tintColor {
+	return kOrangeredTintColor;
+}
 
 - (void)viewWillDisappear:(BOOL)animated
 {
@@ -14,7 +21,7 @@
 	[super viewWillDisappear:animated];
 }
 
--(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+/*-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = (UITableViewCell *)[super tableView:tableView cellForRowAtIndexPath:indexPath];
 	int idx1 = [[[self specifier] propertyForKey:@"indexes"][0] intValue];
@@ -26,7 +33,7 @@
 	}
 
 	return cell;
-}
+}*/
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {

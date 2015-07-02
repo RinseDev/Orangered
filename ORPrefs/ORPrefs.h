@@ -1,4 +1,3 @@
-#import "../Orangered.h"
 #import <UIKit/UITableViewCell+Private.h>
 #import <UIKit/UIImage+Private.h>
 #import <Twitter/Twitter.h>
@@ -38,13 +37,6 @@
 @end
 
 @interface ORClientListItemsController : HBListItemsController
-
-@end
-
-@interface ORRingtoneController : PSListItemsController {
-	UInt32 soundID;
-	BOOL validSoundID;
-}
 
 @end
 
