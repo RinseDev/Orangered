@@ -57,6 +57,8 @@ static NSError *orangeredError;
 static BOOL checkOnUnlock;
 static NSTimeInterval lastRequestInterval;
 static NSDate *lastMessageDate;
+static NSMutableSet *previousUnreadMessages;
+static NSDateFormatter *orangeredDateFormatter;
 
 /*                                                                                                                                         
                      /$$                                           /$$
@@ -136,6 +138,8 @@ static NSDate *lastMessageDate;
 - (void)applicationDidFinishLaunching:(UIApplication *)application {
 	%orig();
 
+	orangeredDateFormatter = [[NSDateFormatter alloc] init];
+	[orangeredDateFormatter setDateFormat:@"yyyyMMdd_HHmmss"];
 	ORLOG(@"Sending check message from SpringBoard...");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredCheckNotificationName object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
 }
@@ -311,6 +315,7 @@ static BBServer *orangeredServer;
 
 		else {
 			ORLOG(@"Appears our interval is set for Never. Sulking time... :/");
+			return;
 		}
 
 		CGFloat rateGuard = [orangeredPreferences floatForKey:@"rateGuard" default:0];
@@ -364,6 +369,7 @@ static BBServer *orangeredServer;
 		BOOL alwaysNotify = [orangeredPreferences boolForKey:@"alwaysNotify" default:YES];
 		BOOL alwaysMarkRead = [orangeredPreferences boolForKey:@"alwaysMarkRead" default:NO];
 		BOOL securePassword = [orangeredPreferences boolForKey:@"secure" default:YES];
+		BOOL combineMessages = [orangeredPreferences boolForKey:@"combineMessages" default:YES];
 		BOOL useMessageTimeStamp = [orangeredPreferences boolForKey:@"useMessageTimeStamp" default:YES];
 
 		NSString *password;
@@ -446,62 +452,133 @@ static BBServer *orangeredServer;
 	    	NSString *sectionID = [provider sectionIdentifier];
 	    	orangeredSetDisplayIdentifierBadge(sectionID, messages.count);
 
-			if (messages && messages.count > 0) {	
-            	BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
-				bulletin.recordID = @"com.insanj.orangered.bulletin";
-				CFUUIDRef uuidRef = CFUUIDCreate(NULL);
-				CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
-				CFRelease(uuidRef);
-				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
-				bulletin.sectionID = sectionID;
-				bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
-
-				BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
-				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
-				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
-					NSString *ringtonePath;
-					if (isRingerMuted) {
-						ringtonePath = @"/Library/PreferenceBundles/ORPrefs.bundle/silent.caf";
-					} else {
-						TLToneManager *manager = [%c(TLToneManager) sharedToneManager];
-						ringtonePath = [manager filePathForToneIdentifier:ringtoneIdentifier];
-					}
-
-					BBSound *savedSound = [[BBSound alloc] initWithSystemSoundID:0 soundPath:ringtonePath behavior:1 vibrationPattern:nil];
-					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
-					bulletin.sound = savedSound;
-				}
-
+			if (messages && messages.count > 0) {
 				RKMessage *message = messages[0];
-    			bulletin.showsUnreadIndicator = message.unread;
-
-				if (useMessageTimeStamp) {
-					bulletin.date = message.created;
-				}
-
-				else {
-					bulletin.date = [NSDate date];
-				}
-
-				if (messages.count == 1) {
-					bulletin.title = message.author;
-					bulletin.subtitle = message.subject;
-					bulletin.message = message.messageBody;
-				}
-
-				else {
-					bulletin.title = @"Orangered";
-					bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
-				}
 
 				if (!repeatNotify && lastMessageDate && [lastMessageDate compare:message.created] != NSOrderedAscending) {
 					ORLOG(@"Not publishing duplicate bulletin request (current message date '%@' is equal to or earlier than previous message date '%@').", message.created, lastMessageDate);
+
+					if (previousUnreadMessages) {
+						// Previous Notification Center items exist. Loop through current list of unread messages so we can remove previous NC items that are now marked as read
+						NSMutableSet *currentUnreadMessages = [[NSMutableSet alloc] init];
+						for (int i = [messages count] - 1; i >= 0; i--) {
+							RKMessage *message = messages[i];
+							NSString *publisherBulletinID = [NSString stringWithFormat:@"com.insanj.orangered.bulletin/%@/%@", [orangeredDateFormatter stringFromDate:message.created], message.author];
+							[currentUnreadMessages addObject:publisherBulletinID];
+						}
+
+						if (previousUnreadMessages && [currentUnreadMessages count] > 0) {
+							[previousUnreadMessages minusSet:currentUnreadMessages];
+
+							for (NSString *publisherID in previousUnreadMessages) {
+								[orangeredServer withdrawBulletinRequestsWithPublisherBulletinID:publisherID forSectionID:sectionIdentifier];
+							}
+						} else if (previousUnreadMessages) {
+							[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+						}
+
+						previousUnreadMessages = currentUnreadMessages;
+					}
 				}
 
 				else {
-					[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
-					orangeredAddBulletin(orangeredServer, provider, bulletin);
+					BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
+					BBSound *savedSound = nil;
+					NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
+					if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
+						NSString *ringtonePath;
+						if (isRingerMuted) {
+							ringtonePath = @"/Library/PreferenceBundles/ORPrefs.bundle/silent.caf";
+						} else {
+							TLToneManager *manager = [%c(TLToneManager) sharedToneManager];
+							ringtonePath = [manager filePathForToneIdentifier:ringtoneIdentifier];
+						}
 
+						savedSound = [[BBSound alloc] initWithSystemSoundID:0 soundPath:ringtonePath behavior:1 vibrationPattern:nil];
+						ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
+					}
+
+					NSMutableSet *currentUnreadMessages = [[NSMutableSet alloc] init];
+					// Reverse through the array so the oldest messages get added first
+					for (int i = [messages count] - 1; i >= 0; i--) {
+						RKMessage *message = messages[i];
+						NSString *publisherBulletinID = [NSString stringWithFormat:@"com.insanj.orangered.bulletin/%@/%@", [orangeredDateFormatter stringFromDate:message.created], message.author];
+
+						[currentUnreadMessages addObject:publisherBulletinID];
+						if (!repeatNotify && previousUnreadMessages && [previousUnreadMessages containsObject:publisherBulletinID]) {
+							ORLOG(@"Skipping already notified message %@", publisherBulletinID);
+							continue;
+						}
+
+						BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+						bulletin.recordID = @"com.insanj.orangered.bulletin";
+						bulletin.publisherBulletinID = combineMessages ? @"com.insanj.orangered.bulletin" : publisherBulletinID;
+
+						CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+						CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+						CFRelease(uuidRef);
+						bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
+						bulletin.sectionID = sectionID;
+
+						if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
+							bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
+						}
+
+						else {
+							bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
+						}
+
+						if (useMessageTimeStamp) {
+							bulletin.date = message.created;
+						}
+
+						else {
+							bulletin.date = [NSDate date];
+						}
+
+						if (savedSound) {
+							bulletin.sound = savedSound;
+						}
+
+						bulletin.showsUnreadIndicator = message.unread;
+
+						if (!combineMessages || messages.count == 1) {
+							bulletin.title = message.author;
+							bulletin.subtitle = message.subject;
+							bulletin.message = message.messageBody;
+						}
+
+						else {
+							if (useMessageTimeStamp) {
+								// Use the date of the newest message
+								bulletin.date = lastMessageDate;
+							}
+
+							bulletin.title = @"Orangered";
+							bulletin.message = [NSString stringWithFormat:@"You have %i unread messages.", (int)messages.count];
+						}
+
+						orangeredAddBulletin(orangeredServer, provider, bulletin);
+
+						if (combineMessages) {
+							break;
+						}
+					}
+
+					if (!combineMessages && previousUnreadMessages && [currentUnreadMessages count] > 0) {
+						// Always try to remove the bulletin used for combined messages
+						[orangeredServer withdrawBulletinRequestsWithPublisherBulletinID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+
+						[previousUnreadMessages minusSet:currentUnreadMessages];
+
+						for (NSString *publisherID in previousUnreadMessages) {
+							[orangeredServer withdrawBulletinRequestsWithPublisherBulletinID:publisherID forSectionID:sectionIdentifier];
+						}
+					} else if (previousUnreadMessages || combineMessages) {
+						[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+					}
+
+					previousUnreadMessages = currentUnreadMessages;
 					lastMessageDate = message.created;
 				}
 			}
