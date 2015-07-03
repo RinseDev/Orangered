@@ -66,19 +66,29 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		[installedToneNames insertObject:@"None" atIndex:0];
 		[installedToneValues insertObject:@"<none>" atIndex:0];
 
-		[indexes addObject:[NSNumber numberWithInt:[installedToneNames count]]];
+		[installedToneNames insertObject:@"" atIndex:0];
+		[installedToneValues insertObject:@"<INSTALLED TONES>" atIndex:0];
+
+		[installedToneNames addObject:@""];
+		[installedToneValues addObject:@"<ALERT TONES>"];
+
+		[indexes addObject:[NSNumber numberWithInt:([installedToneNames count] - 1)]];
 		if (toneNames && [toneNames count] > 0) {
-			[indexes addObject:[NSNumber numberWithInt:[toneNames count]]];
+			[indexes addObject:[NSNumber numberWithInt:([toneNames count] + 1)]];
 
 			toneNames = [installedToneNames arrayByAddingObjectsFromArray:toneNames];
 			toneValues = [installedToneValues arrayByAddingObjectsFromArray:toneValues];
 		} else {
 			toneNames = installedToneNames;
 			toneValues = installedToneValues;
+			[indexes addObject:[NSNumber numberWithInt:1]];
 		}
 
 		NSMutableArray *systemToneNames = [[NSMutableArray alloc] init];
 		NSMutableArray *systemToneValues = [[NSMutableArray alloc] init];
+
+		[systemToneNames addObject:@""];
+		[systemToneValues addObject:@"<RINGTONES>"];
 
 		NSString *tonesDirectory = @"/Library/Ringtones";
 		NSFileManager *localFileManager = [[NSFileManager alloc] init];
