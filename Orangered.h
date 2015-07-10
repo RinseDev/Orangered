@@ -25,7 +25,12 @@
 #define ORLOG(fmt, ...) 
 
 #define kOrangeredTintColor [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
-static NSString *kOrangeredErrorNotificationName = @"Orangered.Notification.Error", *kOrangeredOpenNCNotificationName = @"Orangered.Notification.OpenNC", *kOrangeredOpenPrefsNotificationName = @"Orangered.Notification.Prefs", *kOrangeredCheckNotificationName = @"Orangered.Notification.Check", *kOrangeredIntervalNotificationName = @"Orangered.Notification.Interval", *kOrangeredSecureNotificationName = @"Orangered.Notification.Secure";
+#define kOrangeredErrorNotificationName @"Orangered.Notification.Error"
+#define kOrangeredOpenNCNotificationName @"Orangered.Notification.OpenNC"
+#define kOrangeredOpenPrefsNotificationName @"Orangered.Notification.Prefs"
+#define kOrangeredCheckNotificationName @"Orangered.Notification.Check"
+#define kOrangeredIntervalNotificationName @"Orangered.Notification.Interval"
+#define kOrangeredSecureNotificationName @"Orangered.Notification.Secure"
 
 @interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
 

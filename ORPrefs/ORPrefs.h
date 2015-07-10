@@ -7,6 +7,8 @@
 #import <Cephei/HBPreferences.h>
 #import <Cephei/prefs/HBRootListController.h>
 #import <Cephei/prefs/HBListItemsController.h>
+#import <Preferences/Preferences.h>
+#import <Foundation/NSDistributedNotificationCenter.h>
 
 @interface ORListController : HBRootListController
 
