@@ -246,8 +246,8 @@ void orangeredSecure(CFNotificationCenterRef center, void *observer, CFStringRef
 		}
 	}
 
-	[reloadingClientTitles addObject:@"Safari"];
-	[reloadingClientValues addObject:@"com.apple.mobilesafari"];
+	[reloadingClientTitles addObject:@"SpringBoard"];
+	[reloadingClientValues addObject:@"com.apple.SocialBulletinBoardProvider"];
 
 	if (![self.savedClientTitles isEqualToArray:reloadingClientTitles]) {
 		self.savedClientTitles = reloadingClientTitles;

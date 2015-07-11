@@ -47,7 +47,7 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 | $$$$$$$/|  $$$$$$/| $$| $$|  $$$$$$$  |  $$$$/| $$| $$  | $$
 |_______/  \______/ |__/|__/ \_______/   \___/  |__/|__/  |__/
 */        
-static void orangeredAddProviderlessBulletin(BBBulletinRequest *bulletin) {
+static void orangeredAddProviderlessBulletin(BBServer *server, BBBulletinRequest *bulletin) {
 	if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:)]) {
 		ORLOG(@"now adding providerless bulletin for iOS 7 (pre-playLightsAndSirens) device");
 		[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:bulletin forFeed:2];
@@ -57,17 +57,14 @@ static void orangeredAddProviderlessBulletin(BBBulletinRequest *bulletin) {
 		ORLOG(@"now adding providerless bulletin for iOS 8 (playLightsAndSirens) device");
 		[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:bulletin forFeed:2 playLightsAndSirens:YES withReply:nil];
 	}
+
+	// Works on lockscreen, unlike above workaround (thanks @tateu), but still not without provider?!
+	// [server publishBulletin:bulletin destinations:14 alwaysToLockScreen:NO];
 }
 
 static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
-	if ([bulletin.sectionID isEqualToString:@"com.apple.mobilesafari"]) {
-		orangeredAddProviderlessBulletin(bulletin);
-	}
-
-	else {
-		ORLOG(@"now adding bulletin to existing data provider %@", provider);
-		BBDataProviderAddBulletin(provider, bulletin); // This works in iOS 8.1.2
-	}
+	ORLOG(@"now adding bulletin to existing data provider %@", provider);
+	BBDataProviderAddBulletin(provider, bulletin); // This works in iOS 8.1.2
 }
 
 static ORAlertViewDelegate *orangeredAlertDelegate;
@@ -375,7 +372,7 @@ static BBServer *orangeredServer;
 			bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 			bulletin.title = @"Orangered";
 			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
-			bulletin.sectionID = @"com.apple.Preferences";
+			bulletin.sectionID = @"com.apple.SocialBulletinBoardProvider";
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -435,7 +432,7 @@ static BBServer *orangeredServer;
 				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
-				bulletin.sectionID = @"com.apple.Preferences";
+				bulletin.sectionID = @"com.apple.SocialBulletinBoardProvider";
 				bulletin.date = [NSDate date];
 
 				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -538,7 +535,7 @@ static BBServer *orangeredServer;
 						bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 						bulletin.sectionID = sectionID;
 
-						if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
+						if ([sectionID isEqualToString:@"com.apple.SocialBulletinBoardProvider"]) {
 							bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
 						}
 
@@ -611,7 +608,7 @@ static BBServer *orangeredServer;
 				NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
 				request.message = [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
 
-				orangeredAddProviderlessBulletin(request);
+				orangeredAddProviderlessBulletin(orangeredServer, request);
 			}
 
 			else {
@@ -664,7 +661,7 @@ static BBServer *orangeredServer;
 					}
 
 					bulletin.message = relevantMessage;
-					bulletin.sectionID = @"com.apple.Preferences";
+					bulletin.sectionID = @"com.apple.SocialBulletinBoardProvider";
 					bulletin.date = [NSDate date];
 
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];

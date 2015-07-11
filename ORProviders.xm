@@ -35,7 +35,7 @@
 			}
 		}
 
-		return ((self.customSectionID = @"com.apple.mobilesafari"));
+		return ((self.customSectionID = @"com.apple.SocialBulletinBoardProvider"));
 	}
 
 	return self.customSectionID;
