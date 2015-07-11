@@ -46,9 +46,28 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 | $$  | $$| $$  | $$| $$| $$| $$_____/  | $$ /$$| $$| $$  | $$
 | $$$$$$$/|  $$$$$$/| $$| $$|  $$$$$$$  |  $$$$/| $$| $$  | $$
 |_______/  \______/ |__/|__/ \_______/   \___/  |__/|__/  |__/
-*/                                                            
+*/        
+static void orangeredAddProviderlessBulletin(BBBulletinRequest *bulletin) {
+	if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:)]) {
+		ORLOG(@"now adding providerless bulletin for iOS 7 (pre-playLightsAndSirens) device");
+		[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:bulletin forFeed:2];
+	}
+
+	else if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:playLightsAndSirens:withReply:)]) {
+		ORLOG(@"now adding providerless bulletin for iOS 8 (playLightsAndSirens) device");
+		[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:bulletin forFeed:2 playLightsAndSirens:YES withReply:nil];
+	}
+}
+
 static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
-	BBDataProviderAddBulletin(provider, bulletin); //This works in iOS 8.1.2
+	if ([bulletin.sectionID isEqualToString:@"com.apple.mobilesafari"]) {
+		orangeredAddProviderlessBulletin(bulletin);
+	}
+
+	else {
+		ORLOG(@"now adding bulletin to existing data provider %@", provider);
+		BBDataProviderAddBulletin(provider, bulletin); // This works in iOS 8.1.2
+	}
 }
 
 static ORAlertViewDelegate *orangeredAlertDelegate;
@@ -592,13 +611,7 @@ static BBServer *orangeredServer;
 				NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
 				request.message = [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
 
-				if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:)]) {
-					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2];
-				}
-
-				else if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:playLightsAndSirens:withReply:)]) {
-					[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:request forFeed:2 playLightsAndSirens:YES withReply:nil];
-				}
+				orangeredAddProviderlessBulletin(request);
 			}
 
 			else {

@@ -1,10 +1,9 @@
 #import "ORRingtoneController.h"
+#import "../Orangered.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <ToneLibrary/ToneLibrary.h>
 #import <objc/runtime.h>
 #import <UIKit/UITableViewCell+Private.h>
-
-#define kOrangeredTintColor [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
 
 @implementation ORRingtoneController
 

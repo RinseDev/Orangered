@@ -21,16 +21,16 @@
 
 // Because of some weird DEBUG effects in Mantle, this is a must...
 // Other locations ORLOG can be found at (that I didn't feel like consolidating): ORListener.xm
-// #define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define ORLOG(fmt, ...) 
+#define ORLOG(fmt, ...) NSLog((@"[Orangered] %s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+// #define ORLOG(fmt, ...) 
 
-#define kOrangeredTintColor [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0];
-#define kOrangeredErrorNotificationName @"Orangered.Notification.Error"
-#define kOrangeredOpenNCNotificationName @"Orangered.Notification.OpenNC"
-#define kOrangeredOpenPrefsNotificationName @"Orangered.Notification.Prefs"
-#define kOrangeredCheckNotificationName @"Orangered.Notification.Check"
-#define kOrangeredIntervalNotificationName @"Orangered.Notification.Interval"
-#define kOrangeredSecureNotificationName @"Orangered.Notification.Secure"
+#define kOrangeredTintColor [UIColor colorWithRed:232.0/255.0 green:98.0/255.0 blue:49.0/255.0 alpha:1.0]
+static NSString *kOrangeredErrorNotificationName = @"Orangered.Notification.Error",
+				*kOrangeredOpenNCNotificationName = @"Orangered.Notification.OpenNC",
+				*kOrangeredOpenPrefsNotificationName = @"Orangered.Notification.Prefs",
+				*kOrangeredCheckNotificationName = @"Orangered.Notification.Check",
+				*kOrangeredIntervalNotificationName = @"Orangered.Notification.Interval",
+				*kOrangeredSecureNotificationName = @"Orangered.Notification.Secure";
 
 @interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
 

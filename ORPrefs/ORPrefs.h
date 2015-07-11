@@ -1,6 +1,5 @@
 #import <UIKit/UITableViewCell+Private.h>
 #import <UIKit/UIImage+Private.h>
-#import <Twitter/Twitter.h>
 #import <ToneLibrary/ToneLibrary.h>
 #import <MobileInstallation/MobileInstallation.h>
 #import <AppList/AppList.h>
@@ -8,7 +7,6 @@
 #import <Cephei/prefs/HBRootListController.h>
 #import <Cephei/prefs/HBListItemsController.h>
 #import <Preferences/Preferences.h>
-#import <Foundation/NSDistributedNotificationCenter.h>
 
 @interface ORListController : HBRootListController
 
