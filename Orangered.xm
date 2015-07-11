@@ -315,7 +315,6 @@ static BBServer *orangeredServer;
 
 		else {
 			ORLOG(@"Appears our interval is set for Never. Sulking time... :/");
-			return;
 		}
 
 		CGFloat rateGuard = [orangeredPreferences floatForKey:@"rateGuard" default:0];
