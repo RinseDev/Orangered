@@ -59,6 +59,7 @@ static NSTimeInterval lastRequestInterval;
 static NSDate *lastMessageDate;
 static NSMutableSet *previousUnreadMessages;
 static NSDateFormatter *orangeredDateFormatter;
+static NSString *previousClientIdentifier;
 
 /*                                                                                                                                         
                      /$$                                           /$$
@@ -176,8 +177,7 @@ static BBDataProviderConnection *dataProviderConnection;
 
 %hook BBDataProviderConnection
 
-- (id)initWithServiceName:(id)arg1 onQueue:(id)arg2
-{
+- (id)initWithServiceName:(id)arg1 onQueue:(id)arg2 {
 	dataProviderConnection = self;
 	return %orig;
 }
@@ -284,6 +284,12 @@ static BBDataProviderConnection *dataProviderConnection;
     	// Let's cancel our appointments...
     	[orangeredTimer invalidate];
 		orangeredSetDisplayIdentifierBadge(clientIdentifier, 0);
+
+		if (previousClientIdentifier && ![previousClientIdentifier isEqualToString:clientIdentifier]) {
+			orangeredSetDisplayIdentifierBadge(previousClientIdentifier, 0);
+		}
+
+		previousClientIdentifier = clientIdentifier;
 
     	// Load some preferences...
 		BOOL enabled = [orangeredPreferences boolForKey:@"enabled" default:YES];

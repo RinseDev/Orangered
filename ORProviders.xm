@@ -16,7 +16,7 @@
 }
 
 - (NSString *)sectionDisplayName {
-	return [[[self sectionIdentifier] componentsSeparatedByString:@"."] lastObject];
+	return @"Orangered";
 }
 
 - (BBSectionInfo *)defaultSectionInfo {
@@ -29,7 +29,6 @@
 	sectionInfo.showsInLockScreen = YES;
 	sectionInfo.alertType = 1;
 	sectionInfo.pushSettings = 63;
-	sectionInfo.displayName = @"Orangered";
 
 	return sectionInfo;
 }
