@@ -47,23 +47,7 @@ static void orangeredSetDisplayIdentifierBadge(NSString *displayIdentifier, NSIn
 | $$$$$$$/|  $$$$$$/| $$| $$|  $$$$$$$  |  $$$$/| $$| $$  | $$
 |_______/  \______/ |__/|__/ \_______/   \___/  |__/|__/  |__/
 */        
-static void orangeredAddProviderlessBulletin(BBServer *server, BBBulletinRequest *bulletin) {
-	if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:)]) {
-		ORLOG(@"now adding providerless bulletin for iOS 7 (pre-playLightsAndSirens) device");
-		[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:bulletin forFeed:2];
-	}
-
-	else if ([%c(SBBulletinBannerController) instancesRespondToSelector:@selector(observer:addBulletin:forFeed:playLightsAndSirens:withReply:)]) {
-		ORLOG(@"now adding providerless bulletin for iOS 8 (playLightsAndSirens) device");
-		[(SBBulletinBannerController *)[%c(SBBulletinBannerController) sharedInstance] observer:nil addBulletin:bulletin forFeed:2 playLightsAndSirens:YES withReply:nil];
-	}
-
-	// Works on lockscreen, unlike above workaround (thanks @tateu), but still not without provider?!
-	// [server publishBulletin:bulletin destinations:14 alwaysToLockScreen:NO];
-}
-
 static void orangeredAddBulletin(BBServer *server, OrangeredProvider *provider, BBBulletinRequest *bulletin) {
-	ORLOG(@"now adding bulletin to existing data provider %@", provider);
 	BBDataProviderAddBulletin(provider, bulletin); // This works in iOS 8.1.2
 }
 
@@ -173,6 +157,7 @@ static NSDateFormatter *orangeredDateFormatter;
 |_______/  \_______/|__/          \_/    \_______/|__/      
 */                                                       
 static BBServer *orangeredServer;
+static BBDataProviderConnection *dataProviderConnection;
 
 %hook BBServer
 
@@ -180,6 +165,21 @@ static BBServer *orangeredServer;
 	orangeredServer = %orig();
 
 	return orangeredServer;
+}
+
+- (void)_loadDataProvidersAndSettings {
+	%orig;
+	[dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
+}
+
+%end
+
+%hook BBDataProviderConnection
+
+- (id)initWithServiceName:(id)arg1 onQueue:(id)arg2
+{
+	dataProviderConnection = self;
+	return %orig;
 }
 
 %end
@@ -279,11 +279,11 @@ static BBServer *orangeredServer;
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredCheckNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	OrangeredProvider *notificationProvider = [OrangeredProvider sharedInstance];
 		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
-		[orangeredServer dpManager:MSHookIvar<BBDataProviderManager *>(orangeredServer, "_dataProviderManager") addDataProvider:notificationProvider withSectionInfo:notificationProvider.defaultSectionInfo];
+		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
 
     	// Let's cancel our appointments...
     	[orangeredTimer invalidate];
-		orangeredSetDisplayIdentifierBadge(sectionIdentifier, 0);
+		orangeredSetDisplayIdentifierBadge(clientIdentifier, 0);
 
     	// Load some preferences...
 		BOOL enabled = [orangeredPreferences boolForKey:@"enabled" default:YES];
@@ -291,28 +291,27 @@ static BBServer *orangeredServer;
 			return;
 		}
 
-		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
+		// I don't think this is needed anymore...but I haven't thoroughly tested it's removal yet.
+//		// If there's a saved client identifier, which is different from the current identifier,
+//		// and an app with that identifier is installed, then swap out the data provider so it
+//		// uses the correct section identifier.
+//		if (clientIdentifier &&
+//			![clientIdentifier isEqualToString:sectionIdentifier] &&
+//			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
+//			ORLOG(@"Detected change in app, swapping around data providers...");
+//
+//			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+//			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
+//		}
+//
+//		// If the current clientIdentifier doesn't have an app associated with it, revert back
+//		// to a random check.
+//		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
+//			ORLOG(@"Detected bonkers app, reassigning data providers...");
+//
+//			notificationProvider.customSectionID = nil;
+//		}
 
-		// If there's a saved client identifier, which is different from the current identifier,
-		// and an app with that identifier is installed, then swap out the data provider so it
-		// uses the correct section identifier.
-		if (clientIdentifier &&
-			![clientIdentifier isEqualToString:sectionIdentifier] &&
-			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
-			ORLOG(@"Detected change in app, swapping around data providers...");
-
-			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
-			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-		}
-
-		// If the current clientIdentifier doesn't have an app associated with it, revert back
-		// to a random check.
-		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
-			ORLOG(@"Detected bonkers app, reassigning data providers...");
-
-			notificationProvider.customSectionID = nil;
-		}
-		
 		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
 
 		if (intervalUnit > 0.0) {
@@ -373,7 +372,7 @@ static BBServer *orangeredServer;
 			bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 			bulletin.title = @"Orangered";
 			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
-			bulletin.sectionID = @"com.apple.mobilesafari";
+			bulletin.sectionID = @"com.insanj.orangered";
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -433,7 +432,7 @@ static BBServer *orangeredServer;
 				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
-				bulletin.sectionID = @"com.apple.mobilesafari";
+				bulletin.sectionID = @"com.insanj.orangered";
 				bulletin.date = [NSDate date];
 
 				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -466,7 +465,7 @@ static BBServer *orangeredServer;
 
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
 	    	NSString *sectionID = [provider sectionIdentifier];
-	    	orangeredSetDisplayIdentifierBadge(sectionID, messages.count);
+			orangeredSetDisplayIdentifierBadge(clientIdentifier, messages.count);
 
 			if (messages && messages.count > 0) {
 				RKMessage *message = messages[0];
@@ -534,7 +533,7 @@ static BBServer *orangeredServer;
 						CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
 						CFRelease(uuidRef);
 						bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
-						bulletin.sectionID = sectionID;
+						bulletin.sectionID = @"com.insanj.orangered";
 
 						if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
 							bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
@@ -602,14 +601,52 @@ static BBServer *orangeredServer;
 			else if (alwaysNotify) {
 		    	[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 
-            	BBBulletinRequest *request = [[BBBulletinRequest alloc] init];
-				request.title = @"Orangered";
-				request.sectionID = sectionID;
+				BBBulletinRequest *bulletin = [[BBBulletinRequest alloc] init];
+				bulletin.recordID = @"com.insanj.orangered.bulletin";
+				CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+				CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+				CFRelease(uuidRef);
+				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
+				bulletin.title = @"Orangered";
+
+				bulletin.sectionID = @"com.insanj.orangered";
+				bulletin.date = [NSDate date];
+
+				BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
+				BBSound *savedSound = nil;
+				NSString *ringtoneIdentifier = [orangeredPreferences objectForKey:@"alertTone" default:nil];
+				if (ringtoneIdentifier && ![ringtoneIdentifier isEqualToString:@"<none>"]) {
+					NSString *ringtonePath;
+					if (isRingerMuted) {
+						ringtonePath = @"/Library/PreferenceBundles/ORPrefs.bundle/silent.caf";
+					} else {
+						TLToneManager *manager = [%c(TLToneManager) sharedToneManager];
+						ringtonePath = [manager filePathForToneIdentifier:ringtoneIdentifier];
+					}
+
+					savedSound = [[BBSound alloc] initWithSystemSoundID:0 soundPath:ringtonePath behavior:1 vibrationPattern:nil];
+					ORLOG(@"Assigning saved sound %@ to ringtone %@ to play...", ringtoneIdentifier, savedSound);
+				}
+
+				if (savedSound) {
+					bulletin.sound = savedSound;
+				}
+
+//				bulletin.defaultAction = [%c(BBAction) action];
+//				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
+				if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
+					bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
+				}
+
+				else {
+					bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
+				}
 
 				NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];
-				request.message = [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
+				bulletin.message = [phrases[arc4random_uniform(phrases.count)] stringByAppendingString:@" No new messages found."];
 
-				orangeredAddProviderlessBulletin(orangeredServer, request);
+				orangeredAddBulletin(orangeredServer, notificationProvider, bulletin);
+
 			}
 
 			else {
@@ -662,7 +699,7 @@ static BBServer *orangeredServer;
 					}
 
 					bulletin.message = relevantMessage;
-					bulletin.sectionID = @"com.apple.mobilesafari";
+					bulletin.sectionID = @"com.insanj.orangered";
 					bulletin.date = [NSDate date];
 
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];

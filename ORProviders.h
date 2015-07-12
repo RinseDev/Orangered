@@ -5,7 +5,7 @@
 
 @end
 
-@interface OrangeredProvider : BBLocalDataProvider <BBDataProvider>
+@interface OrangeredProvider : NSObject <BBRemoteDataProvider>
 
 @property (strong, nonatomic) NSObject<BBDataProviderFactory> *factory;
 

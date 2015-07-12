@@ -8,9 +8,7 @@
 
 	static dispatch_once_t provider_token = 0;
 	dispatch_once(&provider_token, ^{
-		__strong dispatch_queue_t serverDispatchQueue = dispatch_queue_create("com.apple.mobilesafari", NULL);
-		sharedInstance = [self dataProviderWithDataProvider:[[self alloc] init] serverQueue:serverDispatchQueue];
-
+		sharedInstance = [[self alloc] init];
 		sharedInstance.factory = [[OrangeredProviderFactory alloc] init];
 	});
 
@@ -25,19 +23,20 @@
 	BBSectionInfo *sectionInfo = [BBSectionInfo defaultSectionInfoForType:0];
 	sectionInfo.notificationCenterLimit = 10;
 	sectionInfo.sectionID = [self sectionIdentifier];
+
+	sectionInfo.allowsNotifications = YES;
+	sectionInfo.showsInNotificationCenter = YES;
+	sectionInfo.showsInLockScreen = YES;
+	sectionInfo.alertType = 1;
+	sectionInfo.pushSettings = 63;
+	sectionInfo.displayName = @"Orangered";
+
 	return sectionInfo;
 }
 
 - (id)sectionIdentifier {
 	if (!self.customSectionID) {
-		for (NSString *s in [CLIENTS allKeys]) {
-			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
-			if ([controller applicationWithBundleIdentifier:s]) {
-				return ((self.customSectionID = s));
-			}
-		}
-
-		return ((self.customSectionID = @"com.apple.mobilesafari"));
+		return ((self.customSectionID = @"com.insanj.orangered"));
 	}
 
 	return self.customSectionID;
