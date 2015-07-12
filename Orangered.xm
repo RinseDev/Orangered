@@ -279,6 +279,7 @@ static BBServer *orangeredServer;
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredCheckNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	OrangeredProvider *notificationProvider = [OrangeredProvider sharedInstance];
 		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
+		[orangeredServer dpManager:MSHookIvar<BBDataProviderManager *>(orangeredServer, "_dataProviderManager") addDataProvider:notificationProvider withSectionInfo:notificationProvider.defaultSectionInfo];
 
     	// Let's cancel our appointments...
     	[orangeredTimer invalidate];
@@ -372,7 +373,7 @@ static BBServer *orangeredServer;
 			bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 			bulletin.title = @"Orangered";
 			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
-			bulletin.sectionID = @"com.apple.SocialBulletinBoardProvider";
+			bulletin.sectionID = @"com.apple.mobilesafari";
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -432,7 +433,7 @@ static BBServer *orangeredServer;
 				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
-				bulletin.sectionID = @"com.apple.SocialBulletinBoardProvider";
+				bulletin.sectionID = @"com.apple.mobilesafari";
 				bulletin.date = [NSDate date];
 
 				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -535,7 +536,7 @@ static BBServer *orangeredServer;
 						bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 						bulletin.sectionID = sectionID;
 
-						if ([sectionID isEqualToString:@"com.apple.SocialBulletinBoardProvider"]) {
+						if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
 							bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
 						}
 
@@ -661,7 +662,7 @@ static BBServer *orangeredServer;
 					}
 
 					bulletin.message = relevantMessage;
-					bulletin.sectionID = @"com.apple.SocialBulletinBoardProvider";
+					bulletin.sectionID = @"com.apple.mobilesafari";
 					bulletin.date = [NSDate date];
 
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];

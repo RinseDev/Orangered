@@ -8,7 +8,9 @@
 
 	static dispatch_once_t provider_token = 0;
 	dispatch_once(&provider_token, ^{
-		sharedInstance = [[self alloc] init];
+		__strong dispatch_queue_t serverDispatchQueue = dispatch_queue_create("com.apple.mobilesafari", NULL);
+		sharedInstance = [self dataProviderWithDataProvider:[[self alloc] init] serverQueue:serverDispatchQueue];
+
 		sharedInstance.factory = [[OrangeredProviderFactory alloc] init];
 	});
 
@@ -35,7 +37,7 @@
 			}
 		}
 
-		return ((self.customSectionID = @"com.apple.SocialBulletinBoardProvider"));
+		return ((self.customSectionID = @"com.apple.mobilesafari"));
 	}
 
 	return self.customSectionID;
