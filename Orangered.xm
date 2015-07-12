@@ -470,7 +470,6 @@ static BBDataProviderConnection *dataProviderConnection;
 			}
 
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
-	    	NSString *sectionID = [provider sectionIdentifier];
 			orangeredSetDisplayIdentifierBadge(clientIdentifier, messages.count);
 
 			if (messages && messages.count > 0) {
@@ -541,12 +540,12 @@ static BBDataProviderConnection *dataProviderConnection;
 						bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 						bulletin.sectionID = @"com.insanj.orangered";
 
-						if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
+						if ([clientIdentifier isEqualToString:@"com.apple.mobilesafari"]) {
 							bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
 						}
 
 						else {
-							bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
+							bulletin.defaultAction = [BBAction actionWithLaunchBundleID:clientIdentifier callblock:nil];
 						}
 
 						if (useMessageTimeStamp) {
@@ -638,14 +637,12 @@ static BBDataProviderConnection *dataProviderConnection;
 					bulletin.sound = savedSound;
 				}
 
-//				bulletin.defaultAction = [%c(BBAction) action];
-//				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
-				if ([sectionID isEqualToString:@"com.apple.mobilesafari"]) {
+				if ([clientIdentifier isEqualToString:@"com.apple.mobilesafari"]) {
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
 				}
 
 				else {
-					bulletin.defaultAction = [BBAction actionWithLaunchBundleID:sectionID callblock:nil];
+					bulletin.defaultAction = [BBAction actionWithLaunchBundleID:clientIdentifier callblock:nil];
 				}
 
 				NSArray *phrases = @[@"Take a coffee break.", @"Relax.", @"Time to pick up that old ten-speed.", @"Reserve your cat facts.", @"Channel your zen.", @"Why stress?", @"Orange you glad I didn't say Orangered?", @"Let's chill.", @"Head over to 4chan.", @"Buy yourself a tweak.", @"Hey, don't blame me.", @"Orangered powering down.", @"Have a nice day!", @"Don't even trip."];

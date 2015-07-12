@@ -11,6 +11,8 @@
 
 @property (strong, nonatomic) NSString *customSectionID;
 
+@property (strong, nonatomic) BBSectionIcon *customSectionIcon;
+
 + (instancetype)sharedInstance;
 
 - (void)fireAway;

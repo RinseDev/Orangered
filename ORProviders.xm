@@ -19,6 +19,16 @@
 	return @"Orangered";
 }
 
+- (BBSectionIcon *)sectionIcon {
+	if (!self.customSectionIcon) {
+		BBSectionIconVariant *iconVariant = [BBSectionIconVariant variantWithFormat:0 imagePath:@"/Library/PreferenceBundles/ORPrefs.bundle/modern.png"];
+		self.customSectionIcon = [[BBSectionIcon alloc] init];
+		[self.customSectionIcon addVariant:iconVariant];
+	}
+
+	return self.customSectionIcon;
+}
+
 - (BBSectionInfo *)defaultSectionInfo {
 	BBSectionInfo *sectionInfo = [BBSectionInfo defaultSectionInfoForType:0];
 	sectionInfo.notificationCenterLimit = 10;
