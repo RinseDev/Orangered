@@ -16,18 +16,12 @@
 }
 
 - (NSString *)sectionDisplayName {
-	return @"Orangered";
+	if ([self.customSectionID isEqualToString:@"com.apple.mobilesafari"]) {
+		return @"Safari";
 }
 
-- (BBSectionIcon *)sectionIcon {
-	if (!self.customSectionIcon) {
-		BBSectionIconVariant *iconVariant = [BBSectionIconVariant variantWithFormat:0 imagePath:@"/Library/PreferenceBundles/ORPrefs.bundle/modern.png"];
-		self.customSectionIcon = [[BBSectionIcon alloc] init];
-		[self.customSectionIcon addVariant:iconVariant];
+	return [[[[self sectionIdentifier] componentsSeparatedByString:@"."] lastObject] capitalizedString];
 	}
-
-	return self.customSectionIcon;
-}
 
 - (BBSectionInfo *)defaultSectionInfo {
 	BBSectionInfo *sectionInfo = [BBSectionInfo defaultSectionInfoForType:0];
@@ -45,7 +39,14 @@
 
 - (id)sectionIdentifier {
 	if (!self.customSectionID) {
-		return ((self.customSectionID = @"com.insanj.orangered"));
+		for (NSString *s in [CLIENTS allKeys]) {
+			SBApplicationController *controller = (SBApplicationController *)[%c(SBApplicationController) sharedInstance];
+			if ([controller applicationWithBundleIdentifier:s]) {
+				return ((self.customSectionID = s));
+			}
+		}
+
+		return ((self.customSectionID = @"com.apple.mobilesafari"));
 	}
 
 	return self.customSectionID;

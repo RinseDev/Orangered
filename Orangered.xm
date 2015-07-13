@@ -159,18 +159,20 @@ static NSString *previousClientIdentifier;
 */                                                       
 static BBServer *orangeredServer;
 static BBDataProviderConnection *dataProviderConnection;
+static BBDataProviderManager *dataProviderManager;
 
 %hook BBServer
 
 - (id)init {
 	orangeredServer = %orig();
 
-	return orangeredServer;
-}
+	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredRegisterProviderNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+		if (![dataProviderManager dataProviderForSectionID:[OrangeredProvider sharedInstance].sectionIdentifier]) {
+			[dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
+		}
+	}];
 
-- (void)_loadDataProvidersAndSettings {
-	%orig;
-	[dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
+	return orangeredServer;
 }
 
 %end
@@ -184,6 +186,14 @@ static BBDataProviderConnection *dataProviderConnection;
 
 %end
 
+%hook BBDataProviderManager
+
+- (id)initWithDelegate:(id)arg1 queue:(id)arg2 {
+	dataProviderManager = self;
+	return %orig;
+}
+
+%end
 
 /*
             /$$                        
@@ -279,17 +289,10 @@ static BBDataProviderConnection *dataProviderConnection;
     [[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredCheckNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
     	OrangeredProvider *notificationProvider = [OrangeredProvider sharedInstance];
 		NSString *sectionIdentifier = [notificationProvider sectionIdentifier];
-		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
 
     	// Let's cancel our appointments...
     	[orangeredTimer invalidate];
-		orangeredSetDisplayIdentifierBadge(clientIdentifier, 0);
-
-		if (previousClientIdentifier && ![previousClientIdentifier isEqualToString:clientIdentifier]) {
-			orangeredSetDisplayIdentifierBadge(previousClientIdentifier, 0);
-		}
-
-		previousClientIdentifier = clientIdentifier;
+		orangeredSetDisplayIdentifierBadge(sectionIdentifier, 0);
 
     	// Load some preferences...
 		BOOL enabled = [orangeredPreferences boolForKey:@"enabled" default:YES];
@@ -297,26 +300,28 @@ static BBDataProviderConnection *dataProviderConnection;
 			return;
 		}
 
-		// I don't think this is needed anymore...but I haven't thoroughly tested it's removal yet.
-//		// If there's a saved client identifier, which is different from the current identifier,
-//		// and an app with that identifier is installed, then swap out the data provider so it
-//		// uses the correct section identifier.
-//		if (clientIdentifier &&
-//			![clientIdentifier isEqualToString:sectionIdentifier] &&
-//			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
-//			ORLOG(@"Detected change in app, swapping around data providers...");
-//
-//			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
-//			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-//		}
-//
-//		// If the current clientIdentifier doesn't have an app associated with it, revert back
-//		// to a random check.
-//		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
-//			ORLOG(@"Detected bonkers app, reassigning data providers...");
-//
-//			notificationProvider.customSectionID = nil;
-//		}
+		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
+
+		// If there's a saved client identifier, which is different from the current identifier,
+		// and an app with that identifier is installed, then swap out the data provider so it
+		// uses the correct section identifier.
+		if (clientIdentifier &&
+			![clientIdentifier isEqualToString:sectionIdentifier] &&
+			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
+			ORLOG(@"Detected change in app, swapping around data providers...");
+
+			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
+			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
+			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredRegisterProviderNotificationName object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
+		}
+
+		// If the current clientIdentifier doesn't have an app associated with it, revert back
+		// to a random check.
+		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
+			ORLOG(@"Detected bonkers app, reassigning data providers...");
+
+			notificationProvider.customSectionID = nil;
+		}
 
 		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
 
@@ -378,7 +383,7 @@ static BBDataProviderConnection *dataProviderConnection;
 			bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 			bulletin.title = @"Orangered";
 			bulletin.message = @"Uh-oh! Please check your username and password in the settings.";
-			bulletin.sectionID = @"com.insanj.orangered";
+			bulletin.sectionID = clientIdentifier;
 			bulletin.date = [NSDate date];
 
 			bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -438,7 +443,7 @@ static BBDataProviderConnection *dataProviderConnection;
 				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 				bulletin.message = [NSString stringWithFormat:@"Had trouble securing your password. Fix to authenticate: %@", getItemForKeyError];
-				bulletin.sectionID = @"com.insanj.orangered";
+				bulletin.sectionID = clientIdentifier;
 				bulletin.date = [NSDate date];
 
 				bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
@@ -470,7 +475,8 @@ static BBDataProviderConnection *dataProviderConnection;
 			}
 
 			OrangeredProvider *provider = [OrangeredProvider sharedInstance];
-			orangeredSetDisplayIdentifierBadge(clientIdentifier, messages.count);
+			NSString *sectionID = [provider sectionIdentifier];
+			orangeredSetDisplayIdentifierBadge(sectionID, messages.count);
 
 			if (messages && messages.count > 0) {
 				RKMessage *message = messages[0];
@@ -538,7 +544,7 @@ static BBDataProviderConnection *dataProviderConnection;
 						CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
 						CFRelease(uuidRef);
 						bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
-						bulletin.sectionID = @"com.insanj.orangered";
+						bulletin.sectionID = sectionID;
 
 						if ([clientIdentifier isEqualToString:@"com.apple.mobilesafari"]) {
 							bulletin.defaultAction = [BBAction actionWithLaunchURL:[NSURL URLWithString:@"https://www.reddit.com/message/inbox/"] callblock:nil];
@@ -614,7 +620,7 @@ static BBDataProviderConnection *dataProviderConnection;
 				bulletin.bulletinID = (__bridge_transfer NSString *)uuidStringRef;
 				bulletin.title = @"Orangered";
 
-				bulletin.sectionID = @"com.insanj.orangered";
+				bulletin.sectionID = sectionID;
 				bulletin.date = [NSDate date];
 
 				BOOL isRingerMuted = [[%c(SBMediaController) sharedInstance] isRingerMuted];
@@ -702,7 +708,7 @@ static BBDataProviderConnection *dataProviderConnection;
 					}
 
 					bulletin.message = relevantMessage;
-					bulletin.sectionID = @"com.insanj.orangered";
+					bulletin.sectionID = clientIdentifier;
 					bulletin.date = [NSDate date];
 
 					bulletin.defaultAction = [BBAction actionWithLaunchURL:[ORAlertViewDelegate sharedLaunchPreferencesURL] callblock:nil];
