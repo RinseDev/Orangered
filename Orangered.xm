@@ -294,7 +294,7 @@ static BBDataProviderManager *dataProviderManager;
 		}
 
 		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
-		BOOL hasApplicationWithIdentifier = [(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier];
+		BOOL hasApplicationWithIdentifier = [(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier] != nil;
 		
 		// If there's a saved client identifier, which is different from the current identifier,
 		// and an app with that identifier is installed, then swap out the data provider so it
@@ -308,7 +308,7 @@ static BBDataProviderManager *dataProviderManager;
 
 		// If the current clientIdentifier doesn't have an app associated with it, revert back
 		// to a random check.
-		if (!hasApplicationWithIdentifier) {
+		else if (!hasApplicationWithIdentifier) {
 			ORLOG(@"Detected bonkers app, reassigning data providers...");
 
 			notificationProvider.customSectionID = nil;
