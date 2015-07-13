@@ -294,19 +294,12 @@ static BBDataProviderManager *dataProviderManager;
 		}
 
 		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
-
-		// If our data provider has yet to be registered with the manager, go ahead and do that now.
-		// All bulletins will be ignored without a proper dataProvider (LOCAL or REMOTE) registered for a bulletin request
-		if (![dataProviderManager dataProviderForSectionID:[OrangeredProvider sharedInstance].sectionIdentifier]) {
-			[dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
-		}
-
+		BOOL hasApplicationWithIdentifier = [(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier];
+		
 		// If there's a saved client identifier, which is different from the current identifier,
 		// and an app with that identifier is installed, then swap out the data provider so it
 		// uses the correct section identifier.
-		if (clientIdentifier &&
-			![clientIdentifier isEqualToString:sectionIdentifier] &&
-			[(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:clientIdentifier]) {
+		if (clientIdentifier && ![clientIdentifier isEqualToString:sectionIdentifier] && hasApplicationWithIdentifier) {
 			ORLOG(@"Detected change in app, swapping around data providers...");
 
 			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
@@ -315,11 +308,17 @@ static BBDataProviderManager *dataProviderManager;
 
 		// If the current clientIdentifier doesn't have an app associated with it, revert back
 		// to a random check.
-		if (![(SBApplicationController *)[%c(SBApplicationController) sharedInstance] applicationWithBundleIdentifier:sectionIdentifier]) {
+		if (!hasApplicationWithIdentifier) {
 			ORLOG(@"Detected bonkers app, reassigning data providers...");
 
 			notificationProvider.customSectionID = nil;
 		}
+
+		// If our data provider has yet to be registered with the manager, go ahead and do that now.
+        // All bulletins will be ignored without a proper dataProvider (LOCAL or REMOTE) registered for a bulletin request
+        if (![dataProviderManager dataProviderForSectionID:[OrangeredProvider sharedInstance].sectionIdentifier]) {
+            [dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
+        }
 
 		CGFloat intervalUnit = [orangeredPreferences floatForKey:@"intervalControl" default:60.0];
 
