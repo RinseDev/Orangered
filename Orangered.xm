@@ -165,13 +165,6 @@ static BBDataProviderManager *dataProviderManager;
 
 - (id)init {
 	orangeredServer = %orig();
-
-	[[NSDistributedNotificationCenter defaultCenter] addObserverForName:kOrangeredRegisterProviderNotificationName object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-		if (![dataProviderManager dataProviderForSectionID:[OrangeredProvider sharedInstance].sectionIdentifier]) {
-			[dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
-		}
-	}];
-
 	return orangeredServer;
 }
 
@@ -302,6 +295,12 @@ static BBDataProviderManager *dataProviderManager;
 
 		NSString *clientIdentifier = [orangeredPreferences objectForKey:@"clientIdentifier" default:nil];
 
+		// If our data provider has yet to be registered with the manager, go ahead and do that now.
+		// All bulletins will be ignored without a proper dataProvider (LOCAL or REMOTE) registered for a bulletin request
+		if (![dataProviderManager dataProviderForSectionID:[OrangeredProvider sharedInstance].sectionIdentifier]) {
+			[dataProviderConnection addDataProvider:[OrangeredProvider sharedInstance]];
+		}
+
 		// If there's a saved client identifier, which is different from the current identifier,
 		// and an app with that identifier is installed, then swap out the data provider so it
 		// uses the correct section identifier.
@@ -312,7 +311,6 @@ static BBDataProviderManager *dataProviderManager;
 
 			[orangeredServer withdrawBulletinRequestsWithRecordID:@"com.insanj.orangered.bulletin" forSectionID:sectionIdentifier];
 			notificationProvider.customSectionID = sectionIdentifier = clientIdentifier;
-			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kOrangeredRegisterProviderNotificationName object:nil userInfo:@{ @"sender" : @"SpringBoard" }];
 		}
 
 		// If the current clientIdentifier doesn't have an app associated with it, revert back

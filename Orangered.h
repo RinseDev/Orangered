@@ -30,8 +30,7 @@ static NSString *kOrangeredErrorNotificationName = @"Orangered.Notification.Erro
 				*kOrangeredOpenPrefsNotificationName = @"Orangered.Notification.Prefs",
 				*kOrangeredCheckNotificationName = @"Orangered.Notification.Check",
 				*kOrangeredIntervalNotificationName = @"Orangered.Notification.Interval",
-				*kOrangeredSecureNotificationName = @"Orangered.Notification.Secure",
-				*kOrangeredRegisterProviderNotificationName = @"Orangered.Notification.RegisterProvider";
+				*kOrangeredSecureNotificationName = @"Orangered.Notification.Secure";
 
 @interface ORAlertViewDelegate : NSObject <UIAlertViewDelegate>
 
