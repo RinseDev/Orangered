@@ -180,8 +180,8 @@ static BBDataProviderManager *dataProviderManager;
 %hook BBDataProviderConnection
 
 - (id)initWithServiceName:(id)arg1 onQueue:(id)arg2 {
-	dataProviderConnection = self;
-	return %orig;
+	dataProviderConnection = %orig;
+	return dataProviderConnection;
 }
 
 %end
@@ -189,8 +189,8 @@ static BBDataProviderManager *dataProviderManager;
 %hook BBDataProviderManager
 
 - (id)initWithDelegate:(id)arg1 queue:(id)arg2 {
-	dataProviderManager = self;
-	return %orig;
+	dataProviderManager = %orig;
+	return dataProviderManager;
 }
 
 %end
